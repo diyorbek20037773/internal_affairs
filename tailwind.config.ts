@@ -51,6 +51,10 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        elevated: {
+          DEFAULT: "hsl(var(--elevated))",
+          foreground: "hsl(var(--elevated-foreground))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -62,9 +66,20 @@ const config: Config = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "calc(var(--radius) + 4px)",
+        "2xl": "calc(var(--radius) + 10px)",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+      },
+      boxShadow: {
+        xs: "0 1px 2px 0 hsl(var(--shadow-color) / 0.06)",
+        card: "0 1px 2px hsl(var(--shadow-color) / 0.04), 0 8px 20px -12px hsl(var(--shadow-color) / 0.18)",
+        "card-hover":
+          "0 2px 4px hsl(var(--shadow-color) / 0.06), 0 16px 32px -14px hsl(var(--shadow-color) / 0.28)",
+        elevated:
+          "0 4px 12px hsl(var(--shadow-color) / 0.08), 0 20px 40px -16px hsl(var(--shadow-color) / 0.32)",
+        glow: "0 0 0 1px hsl(var(--accent) / 0.15), 0 8px 24px -8px hsl(var(--accent) / 0.35)",
       },
       keyframes: {
         "accordion-down": {

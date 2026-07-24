@@ -18,20 +18,23 @@ export default async function GuidePage({
 
       <div className="space-y-3">
         {STEP_KEYS.map((key, idx) => (
-          <Card key={key} className="flex items-start gap-4 p-4">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+          <Card
+            key={key}
+            className="flex items-start gap-4 p-4 transition-all hover:border-primary/30 hover:shadow-card-hover"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-glow">
               {idx + 1}
             </span>
-            <p className="pt-1 text-sm">{t(`steps.${key}`)}</p>
+            <p className="pt-1.5 text-sm leading-relaxed">{t(`steps.${key}`)}</p>
           </Card>
         ))}
       </div>
 
-      <Card className="mt-6 overflow-hidden brand-gradient p-6 text-white">
-        <p className="text-xs font-medium uppercase tracking-wide text-white/70">
+      <Card className="mt-6 overflow-hidden border-0 shadow-none brand-gradient p-6 text-white">
+        <p className="text-xs font-semibold uppercase tracking-wider text-white/60">
           {t("sloganTitle")}
         </p>
-        <p className="mt-2 text-lg font-semibold leading-snug text-balance">
+        <p className="mt-2.5 text-lg font-semibold leading-snug text-balance">
           {t("slogan")}
         </p>
       </Card>

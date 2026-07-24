@@ -184,14 +184,14 @@ export function InspektorClient({ initialCaseId, initialIncidentType }: Props) {
   return (
     <div className="grid h-full grid-cols-1 gap-4 lg:grid-cols-[1fr_380px]">
       {/* CHAT */}
-      <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border bg-card">
+      <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border bg-card shadow-card">
         <div
           ref={scrollRef}
           className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4 scrollbar-thin"
         >
           {empty ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
-              <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.12)]">
                 <span className="text-2xl">🚔</span>
               </div>
               <p className="max-w-sm text-sm text-muted-foreground">
@@ -224,7 +224,7 @@ export function InspektorClient({ initialCaseId, initialIncidentType }: Props) {
       </div>
 
       {/* RIGHT PANEL */}
-      <div className="hidden min-h-0 rounded-xl border bg-card p-3 lg:block">
+      <div className="hidden min-h-0 rounded-xl border bg-card p-3 shadow-card lg:block">
         <RightPanel
           state={workflow}
           parsed={parsed}

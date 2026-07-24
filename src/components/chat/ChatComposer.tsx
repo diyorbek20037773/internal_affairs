@@ -41,8 +41,8 @@ export function ChatComposer({
   };
 
   return (
-    <div className="border-t bg-background p-3">
-      <div className="flex items-end gap-2 rounded-xl border bg-card p-2 focus-within:ring-2 focus-within:ring-ring">
+    <div className="border-t border-border/70 bg-background p-3">
+      <div className="flex items-end gap-2 rounded-xl border border-border/80 bg-card p-2 shadow-xs transition-shadow focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-ring">
         {onMic && (
           <Button
             type="button"

@@ -20,7 +20,7 @@ export function Topbar() {
     ) ?? NAV_ENTRIES[0];
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur md:px-6">
+    <header className="glass-panel sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border/70 px-4 shadow-xs md:px-6">
       <Sheet>
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" className="md:hidden" aria-label="Menu">
@@ -32,7 +32,12 @@ export function Topbar() {
         </SheetContent>
       </Sheet>
 
-      <h1 className="text-base font-semibold md:text-lg">{t(active.key)}</h1>
+      <div className="flex min-w-0 items-center gap-2">
+        <span aria-hidden className="hidden h-5 w-1 rounded-full bg-accent sm:block" />
+        <h1 className="truncate text-base font-semibold tracking-tight md:text-lg">
+          {t(active.key)}
+        </h1>
+      </div>
 
       <div className="ml-auto flex items-center gap-1">
         <LanguageSwitcher />

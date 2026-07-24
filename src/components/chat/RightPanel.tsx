@@ -85,8 +85,10 @@ export function RightPanel({
                     <label
                       key={item.id}
                       className={cn(
-                        "flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors",
-                        checked ? "border-success/40 bg-success/5" : "hover:bg-muted/50"
+                        "flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-all",
+                        checked
+                          ? "border-success/30 bg-success/5"
+                          : "border-border/70 hover:border-primary/30 hover:bg-muted/50"
                       )}
                     >
                       <Checkbox
@@ -111,9 +113,7 @@ export function RightPanel({
 
                 {parsed.checklist.length > 0 && (
                   <div className="pt-2">
-                    <p className="px-1 pb-1 text-xs font-medium text-muted-foreground">
-                      AI
-                    </p>
+                    <p className="label-eyebrow px-1 pb-1">AI</p>
                     {parsed.checklist.map((item, i) => (
                       <div
                         key={i}
@@ -144,7 +144,7 @@ export function RightPanel({
                     <div
                       key={step.id}
                       className={cn(
-                        "flex items-start gap-3 rounded-lg border p-3",
+                        "flex items-start gap-3 rounded-lg border border-border/70 p-3 transition-colors",
                         current && "border-primary/50 bg-primary/5",
                         done && "opacity-70"
                       )}
@@ -199,7 +199,7 @@ export function RightPanel({
                 {stepDocs.map((doc) => (
                   <div
                     key={doc.id}
-                    className="flex items-center gap-3 rounded-lg border p-3"
+                    className="flex items-center gap-3 rounded-lg border border-border/70 p-3 transition-colors hover:border-primary/30"
                   >
                     <FileText className="h-4 w-4 shrink-0 text-primary" />
                     <span className="text-sm">{localized(doc.name, locale)}</span>
@@ -230,7 +230,7 @@ export function RightPanel({
             ) : (
               <div className="space-y-2 p-1">
                 {stepLaws.map((law, i) => (
-                  <div key={i} className="rounded-lg border p-3">
+                  <div key={i} className="rounded-lg border border-border/70 p-3 transition-colors hover:border-primary/30">
                     <div className="flex items-center gap-2">
                       <Scale className="h-4 w-4 shrink-0 text-primary" />
                       <span className="text-sm font-medium">{law.code}</span>
@@ -239,7 +239,7 @@ export function RightPanel({
                       )}
                     </div>
                     {!law.verified && (
-                      <div className="mt-2 flex items-start gap-1.5 rounded-md bg-accent/10 p-2 text-xs text-accent-foreground/90">
+                      <div className="mt-2 flex items-start gap-1.5 rounded-md border border-accent/25 bg-accent/10 p-2 text-xs text-foreground">
                         <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
                         <span>{tc("verifyOfficial")}</span>
                       </div>
@@ -252,16 +252,14 @@ export function RightPanel({
                   </div>
                 ))}
                 {parsed.legalBasis && (
-                  <div className="rounded-lg border border-dashed p-3">
-                    <p className="mb-1 text-xs font-medium text-muted-foreground">
-                      AI
-                    </p>
+                  <div className="rounded-lg border border-dashed border-border p-3">
+                    <p className="label-eyebrow mb-1">AI</p>
                     <p className="whitespace-pre-wrap text-sm">
                       {parsed.legalBasis}
                     </p>
                   </div>
                 )}
-                <div className="flex items-start gap-1.5 rounded-md bg-muted p-2 text-xs text-muted-foreground">
+                <div className="flex items-start gap-1.5 rounded-md border border-border/60 bg-muted p-2 text-xs text-muted-foreground">
                   <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                   <span>{tc("disclaimer")}</span>
                 </div>

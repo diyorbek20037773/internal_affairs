@@ -28,12 +28,16 @@ export default async function DashboardPage({
 
   return (
     <div className="mx-auto max-w-6xl p-4 md:p-8">
-      <div className="mb-8 overflow-hidden rounded-2xl brand-gradient p-6 text-white shadow-sm md:p-8">
-        <p className="text-sm font-medium text-white/70">{t("welcome")}</p>
-        <h2 className="mt-1 text-2xl font-bold md:text-3xl">
+      <div className="mb-8 overflow-hidden rounded-2xl brand-gradient p-6 text-white md:p-9">
+        <p className="text-xs font-semibold uppercase tracking-wider text-white/60">
+          {t("welcome")}
+        </p>
+        <h2 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">
           {t("title")}
         </h2>
-        <p className="mt-2 max-w-xl text-sm text-white/80">{t("subtitle")}</p>
+        <p className="mt-2.5 max-w-xl text-sm leading-relaxed text-white/75">
+          {t("subtitle")}
+        </p>
       </div>
 
       <section className="mb-8">

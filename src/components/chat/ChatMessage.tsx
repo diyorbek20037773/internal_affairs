@@ -20,7 +20,7 @@ export function ChatMessage({
     <div className={cn("flex gap-3 animate-fade-in", isUser && "flex-row-reverse")}>
       <div
         className={cn(
-          "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg shadow-xs",
           isUser
             ? "bg-secondary text-secondary-foreground"
             : "bg-primary text-primary-foreground"
@@ -30,10 +30,10 @@ export function ChatMessage({
       </div>
       <div
         className={cn(
-          "min-w-0 max-w-[85%] rounded-2xl px-4 py-3",
+          "min-w-0 max-w-[85%] rounded-2xl px-4 py-3 shadow-xs",
           isUser
             ? "rounded-tr-sm bg-primary text-primary-foreground"
-            : "rounded-tl-sm border bg-card"
+            : "rounded-tl-sm border border-border/80 bg-card"
         )}
       >
         <p className="mb-1 text-[11px] font-medium opacity-70">

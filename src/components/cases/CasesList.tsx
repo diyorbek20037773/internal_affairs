@@ -22,10 +22,10 @@ export function CasesList() {
   if (loaded && cases.length === 0) {
     return (
       <Card className="flex flex-col items-center justify-center gap-2 p-12 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted shadow-[inset_0_0_0_1px_hsl(var(--border))]">
           <Icon name="Briefcase" className="h-6 w-6 text-muted-foreground" />
         </div>
-        <p className="font-medium">{t("empty")}</p>
+        <p className="font-medium tracking-tight">{t("empty")}</p>
         <p className="text-sm text-muted-foreground">{t("emptyHint")}</p>
       </Card>
     );
@@ -34,13 +34,16 @@ export function CasesList() {
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {cases.map((c) => (
-        <Card key={c.id} className="flex flex-col p-4">
+        <Card
+          key={c.id}
+          className="flex flex-col p-4 transition-all hover:border-primary/30 hover:shadow-card-hover"
+        >
           <div className="mb-3 flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.12)]">
               <Icon name={INCIDENT_ICON[c.incidentType]} className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold">
+              <p className="truncate text-sm font-semibold tracking-tight">
                 {tType(c.incidentType)}
               </p>
               <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
