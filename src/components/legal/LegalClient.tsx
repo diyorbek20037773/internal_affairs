@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Scale, AlertTriangle, FileText } from "lucide-react";
+import { Scale, AlertTriangle, FileText, ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ChatMessage } from "@/components/chat/ChatMessage";
@@ -14,14 +14,29 @@ const DOC_KEYS = [
   "constitution",
   "criminal",
   "criminalProc",
-  "civil",
-  "civilProc",
   "family",
   "admin",
   "police",
+  "prevention",
+  "dv",
+  "inspectorReg",
+  "civil",
+  "civilProc",
   "decrees",
   "resolutions",
 ] as const;
+
+// lex.uz source per document (only where a confident document id exists).
+const DOC_URL: Partial<Record<(typeof DOC_KEYS)[number], string>> = {
+  criminal: "https://lex.uz/docs/-111453",
+  criminalProc: "https://lex.uz/docs/-111460",
+  family: "https://lex.uz/docs/-104720",
+  admin: "https://lex.uz/docs/-97664",
+  police: "https://lex.uz/acts/-3027843",
+  prevention: "https://lex.uz/docs/-2387357",
+  dv: "https://lex.uz/docs/-4494709",
+  inspectorReg: "https://lex.uz/docs/-3175732",
+};
 
 export function LegalClient() {
   const t = useTranslations("legal");
@@ -107,9 +122,21 @@ export function LegalClient() {
                   <p className="text-xs font-medium leading-tight">
                     {t(`documents.${key}`)}
                   </p>
-                  <Badge variant="outline" className="mt-1 text-[10px]">
-                    {t("pdfSoon")}
-                  </Badge>
+                  {DOC_URL[key] ? (
+                    <a
+                      href={DOC_URL[key]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      lex.uz
+                    </a>
+                  ) : (
+                    <Badge variant="outline" className="mt-1 text-[10px]">
+                      {t("pdfSoon")}
+                    </Badge>
+                  )}
                 </div>
               </div>
             ))}

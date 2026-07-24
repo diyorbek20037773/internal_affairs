@@ -9,6 +9,7 @@ import {
   ListChecks,
   Workflow as WorkflowIcon,
   AlertTriangle,
+  ExternalLink,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -231,23 +232,42 @@ export function RightPanel({
               <div className="space-y-2 p-1">
                 {stepLaws.map((law, i) => (
                   <div key={i} className="rounded-lg border border-border/70 p-3 transition-colors hover:border-primary/30">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <Scale className="h-4 w-4 shrink-0 text-primary" />
                       <span className="text-sm font-medium">{law.code}</span>
                       {law.article && (
                         <Badge variant="accent">{law.article}</Badge>
                       )}
+                      {law.verified ? (
+                        <Badge variant="success" className="gap-1">
+                          <CheckCircle2 className="h-3 w-3" />
+                          {tc("verified")}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="gap-1 border-accent/40 text-accent">
+                          <AlertTriangle className="h-3 w-3" />
+                          {tc("verifyShort")}
+                        </Badge>
+                      )}
                     </div>
-                    {!law.verified && (
-                      <div className="mt-2 flex items-start gap-1.5 rounded-md border border-accent/25 bg-accent/10 p-2 text-xs text-foreground">
-                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
-                        <span>{tc("verifyOfficial")}</span>
-                      </div>
+                    {law.title && (
+                      <p className="mt-1.5 text-sm">{law.title}</p>
                     )}
                     {law.note && (
                       <p className="mt-1 text-xs text-muted-foreground">
                         {law.note}
                       </p>
+                    )}
+                    {law.url && (
+                      <a
+                        href={law.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        lex.uz
+                      </a>
                     )}
                   </div>
                 ))}

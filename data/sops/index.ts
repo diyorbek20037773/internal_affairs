@@ -1,7 +1,14 @@
 import type { IncidentType } from "@/types/incident";
 import type { LocalizedText, Sop } from "./types";
-import { theftSop } from "./theft";
+import { buildCrimeSop } from "./crime";
 import { buildGenericSop } from "./generic";
+import { LAWS } from "./laws";
+import {
+  domesticViolenceSop,
+  missingPersonSop,
+  foundBodySop,
+  adminOffenseSop,
+} from "./special";
 
 export const INCIDENT_TITLES: Record<IncidentType, LocalizedText> = {
   theft: { uz: "O'g'irlik", ru: "Кража", en: "Theft" },
@@ -34,10 +41,30 @@ export const INCIDENT_TITLES: Record<IncidentType, LocalizedText> = {
   other: { uz: "Boshqa", ru: "Другое", en: "Other" },
 };
 
-const DEDICATED: Partial<Record<IncidentType, Sop>> = {
-  theft: theftSop,
-};
-
+/** Build the SOP for an incident type — dedicated where researched, else generic. */
 export function getSop(type: IncidentType): Sop {
-  return DEDICATED[type] ?? buildGenericSop(type, INCIDENT_TITLES[type]);
+  switch (type) {
+    case "theft":
+      return buildCrimeSop(type, INCIDENT_TITLES.theft, LAWS.jkTheft);
+    case "fraud":
+      return buildCrimeSop(type, INCIDENT_TITLES.fraud, LAWS.jkFraud);
+    case "robbery":
+      return buildCrimeSop(type, INCIDENT_TITLES.robbery, LAWS.jkRobbery);
+    case "mugging":
+      return buildCrimeSop(type, INCIDENT_TITLES.mugging, LAWS.jkMugging);
+    case "hooliganism":
+      return buildCrimeSop(type, INCIDENT_TITLES.hooliganism, LAWS.jkHooliganism);
+    case "cybercrime":
+      return buildCrimeSop(type, INCIDENT_TITLES.cybercrime, LAWS.jkCyber);
+    case "domestic_violence":
+      return domesticViolenceSop;
+    case "missing_person":
+      return missingPersonSop;
+    case "found_body":
+      return foundBodySop;
+    case "admin_offense":
+      return adminOffenseSop;
+    default:
+      return buildGenericSop(type, INCIDENT_TITLES[type]);
+  }
 }

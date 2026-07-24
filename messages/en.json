@@ -17,6 +17,8 @@
     "retry": "Retry",
     "disclaimer": "This information is advisory. Confirm the final legal basis with the official source (lex.uz).",
     "verifyOfficial": "Must be verified against an official source",
+    "verified": "Verified",
+    "verifyShort": "Verify",
     "aiUnavailable": "AI is temporarily busy. Please try again shortly.",
     "noKeys": "Gemini API keys are not configured. Contact the administrator.",
     "errorGeneric": "An error occurred. Please try again."
@@ -145,6 +147,9 @@
       "family": "Family Code",
       "admin": "Code of Administrative Responsibility",
       "police": "Law on Internal Affairs Bodies",
+      "prevention": "Law on Prevention of Offenses",
+      "dv": "Law on Protecting Women from Harassment and Violence",
+      "inspectorReg": "Prevention Inspector Regulation (PP-2896)",
       "decrees": "Presidential decrees",
       "resolutions": "Cabinet of Ministers resolutions"
     }

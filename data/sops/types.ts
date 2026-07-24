@@ -5,7 +5,9 @@ export type LocalizedText = { uz: string; ru?: string; en?: string };
 export interface LawRef {
   code: string; // e.g. "Jinoyat kodeksi"
   article?: string; // e.g. "169-modda" — omit if uncertain
+  title?: string; // short title of the article/law
   note?: string;
+  url?: string; // lex.uz source
   verified: boolean; // false => UI shows "tasdiqlanishi kerak"
 }
 
