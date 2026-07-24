@@ -1,0 +1,186 @@
+{
+  "common": {
+    "appName": "Mening Inspektorim",
+    "appSubtitle": "AI raqamli inspektor yordamchisi",
+    "ministry": "O'zbekiston Respublikasi Ichki ishlar vazirligi",
+    "cancel": "Bekor qilish",
+    "save": "Saqlash",
+    "continue": "Davom ettirish",
+    "close": "Yopish",
+    "send": "Yuborish",
+    "loading": "Yuklanmoqda...",
+    "back": "Orqaga",
+    "search": "Qidirish",
+    "delete": "O'chirish",
+    "you": "Siz",
+    "ai": "AI Inspektor",
+    "retry": "Qayta urinish",
+    "disclaimer": "Bu ma'lumot yo'naltiruvchi xarakterda. Yakuniy huquqiy asosni rasmiy manbadan (lex.uz) tasdiqlang.",
+    "verifyOfficial": "Rasmiy manbadan tasdiqlanishi kerak",
+    "aiUnavailable": "AI vaqtincha band. Iltimos, birozdan so'ng qayta urinib ko'ring.",
+    "noKeys": "Gemini API kalitlari sozlanmagan. Administrator bilan bog'laning.",
+    "errorGeneric": "Xatolik yuz berdi. Qayta urinib ko'ring."
+  },
+  "nav": {
+    "dashboard": "Bosh sahifa",
+    "inspektor": "AI Inspektor",
+    "hodisa": "Hodisa boshlash",
+    "voice": "Ovozli yordamchi",
+    "qonunchilik": "Qonunchilik",
+    "ishlarim": "Mening ishlarim",
+    "guide": "Tezkor qo'llanma"
+  },
+  "dashboard": {
+    "title": "Bosh sahifa",
+    "welcome": "Xush kelibsiz, inspektor",
+    "subtitle": "Har bir qaror — qonunchilik va tasdiqlangan tartiblar asosida.",
+    "stats": {
+      "todayIncidents": "Bugungi hodisalar",
+      "completed": "Bajarilgan jarayonlar",
+      "protocols": "Yaratilgan bayonnomalar",
+      "conversations": "AI bilan suhbatlar"
+    },
+    "cards": {
+      "inspektor": {
+        "title": "AI Inspektor",
+        "desc": "Hodisa bo'yicha bosqichma-bosqich yo'riqnoma va checklist"
+      },
+      "hodisa": {
+        "title": "Hodisa boshlash",
+        "desc": "Hodisa turini tanlab, workflow'ni boshlang"
+      },
+      "voice": {
+        "title": "Ovozli yordamchi",
+        "desc": "Yozmasdan, faqat gaplashib ishlang"
+      },
+      "ishlarim": {
+        "title": "Mening ishlarim",
+        "desc": "Boshlangan jarayonlarni davom ettiring"
+      },
+      "qonunchilik": {
+        "title": "Qonunchilik",
+        "desc": "Kodekslar va qonunlar bo'yicha AI ma'lumot"
+      },
+      "guide": {
+        "title": "Tezkor qo'llanma",
+        "desc": "Platformadan foydalanish bo'yicha qisqa yo'riqnoma"
+      }
+    }
+  },
+  "chat": {
+    "title": "AI Inspektor",
+    "subtitle": "Raqamli yordamchi — bosqichma-bosqich",
+    "placeholder": "Hodisani tasvirlang yoki savol bering...",
+    "empty": "Hodisani tasvirlab yozing — men jarayonni bosqichma-bosqich boshlab beraman.",
+    "emptyHint": "Masalan: \"Uyga o'g'ri tushibdi\"",
+    "thinking": "O'ylayapman...",
+    "stop": "To'xtatish",
+    "panel": {
+      "checklist": "Checklist",
+      "process": "Jarayon",
+      "documents": "Hujjatlar",
+      "laws": "Qonunlar"
+    },
+    "sections": {
+      "situation": "Vaziyat",
+      "firstAction": "Birinchi harakat",
+      "checklist": "Checklist",
+      "documents": "Kerakli hujjatlar",
+      "legalBasis": "Huquqiy asos",
+      "nextStep": "Keyingi qadam"
+    },
+    "noLaws": "Hozircha qonun havolasi yo'q",
+    "noDocs": "Hozircha hujjat yo'q",
+    "noChecklist": "Hozircha checklist yo'q",
+    "noProcess": "Jarayon hali boshlanmagan",
+    "step": "Bosqich"
+  },
+  "incident": {
+    "title": "Hodisa boshlash",
+    "subtitle": "Hodisa turini tanlang — AI mos workflow'ni yuklaydi.",
+    "chooseType": "Hodisa turi",
+    "start": "Jarayonni boshlash",
+    "primeMessage": "{type} hodisasi yuz berdi. Jarayonni boshla va birinchi bosqichni ko'rsat."
+  },
+  "incidentTypes": {
+    "theft": "O'g'irlik",
+    "fraud": "Firibgarlik",
+    "robbery": "Bosqinchilik",
+    "mugging": "Talonchilik",
+    "hooliganism": "Bezorilik",
+    "domestic_violence": "Oilaviy zo'ravonlik",
+    "traffic_accident": "Yo'l-transport hodisasi",
+    "missing_person": "Yo'qolgan shaxs",
+    "found_body": "Topilgan jasad",
+    "cybercrime": "Kiberjinoyat",
+    "admin_offense": "Ma'muriy huquqbuzarlik",
+    "other": "Boshqa"
+  },
+  "voice": {
+    "title": "Ovozli yordamchi",
+    "subtitle": "Inspektor yozmaydi — faqat gaplashadi.",
+    "tapToSpeak": "Gapirish uchun bosing",
+    "listening": "Tinglayapman...",
+    "speaking": "Javob berilmoqda...",
+    "stop": "To'xtatish",
+    "send": "Yuborish",
+    "unsupported": "Brauzeringiz ovozni tanib olishni qo'llab-quvvatlamaydi. Matn orqali yozing.",
+    "uzWarning": "O'zbek tili uchun ovozni tanib olish cheklangan bo'lishi mumkin. Kerak bo'lsa rus tiliga o'ting yoki matn yozing.",
+    "transcript": "Matn",
+    "textFallback": "Matn orqali yozing"
+  },
+  "legal": {
+    "title": "Qonunchilik",
+    "subtitle": "O'zbekiston Respublikasi qonunchiligi bo'yicha AI ma'lumot.",
+    "placeholder": "Qonun, kodeks yoki modda haqida so'rang...",
+    "empty": "Savolingizni yozing — men amaldagi qonunchilik asosida yo'naltiraman.",
+    "docListTitle": "Hujjatlar bazasi",
+    "pdfSoon": "PDF keyinroq qo'shiladi",
+    "documents": {
+      "constitution": "O'zbekiston Respublikasi Konstitutsiyasi",
+      "criminal": "Jinoyat kodeksi",
+      "criminalProc": "Jinoyat-protsessual kodeksi",
+      "civil": "Fuqarolik kodeksi",
+      "civilProc": "Fuqarolik-protsessual kodeksi",
+      "family": "Oila kodeksi",
+      "admin": "Ma'muriy javobgarlik to'g'risidagi kodeks (MJTK)",
+      "police": "Ichki ishlar to'g'risidagi qonun",
+      "decrees": "Prezident farmonlari",
+      "resolutions": "Vazirlar Mahkamasi qarorlari"
+    }
+  },
+  "cases": {
+    "title": "Mening ishlarim",
+    "subtitle": "Boshlangan jarayonlarni davom ettiring.",
+    "empty": "Hali boshlangan ish yo'q.",
+    "emptyHint": "\"Hodisa boshlash\" orqali yangi jarayon oching.",
+    "progress": "Bajarildi",
+    "continue": "Davom ettirish",
+    "started": "Boshlangan",
+    "deleteConfirm": "Ushbu ishni o'chirmoqchimisiz?"
+  },
+  "guide": {
+    "title": "Tezkor qo'llanma",
+    "subtitle": "Platformadan qanday foydalanish kerak.",
+    "steps": {
+      "one": "\"Hodisa boshlash\" bo'limidan hodisa turini tanlang.",
+      "two": "AI Inspektor jarayonni bosqichma-bosqich boshlaydi.",
+      "three": "Checklist bandlarini bajarilgan sari belgilang.",
+      "four": "Kerakli hujjatlar va qonun asoslarini o'ng paneldan kuzating.",
+      "five": "Ish avtomatik saqlanadi — \"Mening ishlarim\"dan davom ettiring."
+    },
+    "sloganTitle": "Loyiha shiori",
+    "slogan": "Har bir inspektor uchun ishonchli AI yordamchi. Har bir qaror — qonunchilik va tasdiqlangan tartiblar asosida, har bir jarayon — bosqichma-bosqich."
+  },
+  "theme": {
+    "light": "Yorug'",
+    "dark": "Qorong'i",
+    "system": "Tizim"
+  },
+  "language": {
+    "label": "Til",
+    "uz": "O'zbekcha",
+    "ru": "Ruscha",
+    "en": "Inglizcha"
+  }
+}

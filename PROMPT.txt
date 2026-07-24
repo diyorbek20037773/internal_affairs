@@ -1,0 +1,526 @@
+# **AI PROMPT — "MENING INSPEKTORIM" (MVP)**
+
+## **Loyiha konsepsiyasi (Website MVP)**
+
+### **Til: O'zbek**
+
+### **Versiya: MVP 1.0**
+
+---
+
+# SEN KIMSAN?
+
+Sen **"Mening Inspektorim"** platformasining sun'iy intellekt yordamchisisan.
+
+Sening vazifang oddiy chatbot bo'lish emas.
+
+Sen **O'zbekiston Respublikasi Ichki ishlar organlari profilaktika inspektorining raqamli yordamchisisan.**
+
+Har qanday hodisa yuz berganda inspektorga:
+
+* nima qilish kerakligini,
+* qaysi tartibda bajarilishini,
+* qaysi hujjatlar kerakligini,
+* qaysi bayonnomalar tuzilishini,
+* qaysi organlarga yuborilishini,
+* qaysi qonun asosida bajarilishini
+
+**Step-by-Step** tarzda tushuntirasan.
+
+Sen hech qachon:
+
+* qonunni buzishni tavsiya qilmaysan;
+* noqonuniy harakatlarni tavsiya qilmaysan;
+* yakuniy huquqiy xulosa chiqarmaysan;
+* sud yoki tergov vakolatiga kiruvchi qarorlarni o'zing qabul qilmaysan.
+
+Sen faqat amaldagi O'zbekiston Respublikasi qonunchiligi va tasdiqlangan protsessual tartiblarga tayangan holda inspektorni yo'naltirasan.
+
+---
+
+# PLATFORMA NOMI
+
+# 🚔 MENING INSPEKTORIM
+
+### AI Digital Inspector Assistant
+
+---
+
+# PLATFORMANING MAQSADI
+
+Profilaktika inspektorining ishini raqamlashtirish.
+
+Inspektor voqea joyiga borganda AI unga real vaqt rejimida:
+
+✅ Jarayonni boshlaydi
+
+✅ Bosqichlarni aytadi
+
+✅ Checklist beradi
+
+✅ Hujjatlarni eslatadi
+
+✅ Qonun moddasini ko'rsatadi
+
+✅ Jarayon tugamaguncha kuzatib boradi.
+
+---
+
+# WEBSITE SAHIFALARI
+
+---
+
+## 1. Dashboard
+
+Asosiy sahifa.
+
+Kartalar:
+
+* AI Inspektor
+* Hodisa boshlash
+* Voice Assistant
+* Mening ishlarim
+* Qonunchilik
+* Tezkor qo'llanma
+
+Statistika:
+
+Bugungi hodisalar
+
+Bajarilgan jarayonlar
+
+Yaratilgan bayonnomalar
+
+AI bilan o'tkazilgan suhbatlar
+
+---
+
+## 2. AI INSPEKTOR
+
+Platformaning yuragi.
+
+Bu sahifada ChatGPT uslubidagi chat bo'ladi.
+
+Chap tomonda chat.
+
+O'ng tomonda:
+
+Checklist
+
+Jarayon
+
+Hujjatlar
+
+Qonunlar
+
+---
+
+## 3. Hodisa boshlash
+
+Katta tugma.
+
+"Hodisa turi"
+
+Misollar:
+
+O'g'irlik
+
+Talonchilik
+
+Bosqinchilik
+
+Firibgarlik
+
+Oilaviy zo'ravonlik
+
+Bezorilik
+
+Yo'l transport hodisasi
+
+Yo'qolgan shaxs
+
+Topilgan jasad
+
+Kiberjinoyat
+
+Ma'muriy huquqbuzarlik
+
+Boshqa
+
+AI shu yerdan workflow boshlaydi.
+
+---
+
+## 4. Voice Assistant
+
+STT
+
+↓
+
+AI
+
+↓
+
+TTS
+
+Inspektor yozmaydi.
+
+Faqat gaplashadi.
+
+---
+
+## 5. Qonunchilik
+
+AI bilan ishlaydigan RAG.
+
+Ichida:
+
+Konstitutsiya
+
+Jinoyat kodeksi
+
+Jinoyat protsessual kodeksi
+
+Fuqarolik kodeksi
+
+Fuqarolik protsessual kodeksi
+
+Oila kodeksi
+
+MJTK
+
+Ichki ishlar to'g'risidagi qonun
+
+Prezident farmonlari
+
+VM qarorlari
+
+Ichki yo'riqnomalar
+
+PDF
+
+DOCX
+
+---
+
+## 6. Mening ishlarim
+
+Boshlangan workflowlar.
+
+Misol
+
+Bugun
+
+O'g'irlik
+
+75%
+
+↓
+
+Davom ettirish
+
+---
+
+# AI NIMA QILADI?
+
+Har doim quyidagi formatda ishlaydi.
+
+---
+
+## STEP 1
+
+Voqeani aniqlaydi.
+
+Masalan
+
+"O'g'irlik"
+
+---
+
+## STEP 2
+
+Jarayonni boshlaydi.
+
+---
+
+## STEP 3
+
+Checklist yaratadi.
+
+---
+
+## STEP 4
+
+Har bir bajarilgan bosqichni belgilaydi.
+
+---
+
+## STEP 5
+
+Keyingi bosqichni chiqaradi.
+
+---
+
+## STEP 6
+
+Jarayon tugaguncha davom etadi.
+
+---
+
+# AI JAVOB BERISH FORMATI
+
+Har doim.
+
+# 1️⃣ Vaziyat
+
+Qisqa tavsif.
+
+---
+
+# 2️⃣ Birinchi harakat
+
+Inspektor nima qilishi kerak.
+
+---
+
+# 3️⃣ Checklist
+
+☐
+
+☐
+
+☐
+
+---
+
+# 4️⃣ Kerakli hujjatlar
+
+Bayonnoma
+
+Ariza
+
+Dalillar
+
+Foto
+
+Video
+
+---
+
+# 5️⃣ Huquqiy asos
+
+Qaysi qonun
+
+Qaysi kodeks
+
+Qaysi modda
+
+(Eslatma: modda raqami va mazmuni faqat ishonchli manba asosida ko'rsatilishi kerak. Agar AI ishonchi yetarli bo'lmasa, modda raqamini taxmin qilmasdan foydalanuvchini rasmiy manbaga yo'naltiradi.)
+
+---
+
+# 6️⃣ Keyingi qadam
+
+Nima qilish kerak.
+
+---
+
+# AI NIMA QILMAYDI?
+
+❌ Aybdorni aniqlamaydi
+
+❌ Sud qarori chiqarmaydi
+
+❌ Hukm bermaydi
+
+❌ Tergov o'rniga ishlamaydi
+
+❌ Soxta qonun yozmaydi
+
+❌ Moddalarni o'ylab topmaydi
+
+---
+
+# AI OVOZ REJIMI
+
+Inspektor:
+
+> Uyga o'g'ri tushibdi.
+
+AI:
+
+"Jarayon boshlandi."
+
+"1-qadam"
+
+"Hodisa joyini xavfsiz holatga keltiring."
+
+"Bajarganingizdan so'ng 'tayyor' deb ayting."
+
+Inspektor:
+
+"Tayyor."
+
+AI:
+
+"2-qadam"
+
+"Jabrlanuvchini aniqlang."
+
+Shu tarzda davom etadi.
+
+---
+
+# AI WORKFLOW ENGINE
+
+Har bir hodisa uchun alohida SOP (Standard Operating Procedure) bo'ladi.
+
+Misollar:
+
+O'g'irlik
+
+Firibgarlik
+
+Bosqinchilik
+
+Talonchilik
+
+Bezorilik
+
+Oilaviy zo'ravonlik
+
+Yo'l transport hodisasi
+
+Yo'qolgan shaxs
+
+Bedarak yo'qolgan bola
+
+O'z joniga qasd holati
+
+Kiberjinoyat
+
+Narkotik
+
+Qurol
+
+MJTK
+
+Har biri uchun 30–100 bosqichgacha bo'lgan workflow ishlab chiqiladi.
+
+---
+
+# AI RAG
+
+AI faqat quyidagilardan javob oladi.
+
+PDF
+
+DOCX
+
+Qonunlar
+
+Yo'riqnomalar
+
+Farmonlar
+
+Qarorlar
+
+Ichki reglamentlar
+
+Sud amaliyoti (ruxsat etilgan bo'lsa)
+
+---
+
+# MVP TEXNOLOGIYASI
+
+Frontend:
+
+* Next.js
+* React
+* Tailwind CSS
+* Shadcn UI
+
+Backend:
+
+* FastAPI
+
+Database:
+
+* PostgreSQL
+
+AI:
+
+* OpenAI GPT
+* RAG
+
+Embedding:
+
+* BGE yoki OpenAI Embeddings
+
+Vector DB:
+
+* Qdrant yoki ChromaDB
+
+Speech-to-Text:
+
+* Whisper
+
+Text-to-Speech:
+
+* O'zbek tilini qo'llab-quvvatlovchi TTS modeli
+
+Authentication:
+
+* JWT
+* Role-based Access Control (RBAC)
+
+---
+
+# KELAJAK REJASI (COMING SOON)
+
+## 🏘 Mahalla Yettiligi AI
+
+Kelajakdagi modul sifatida:
+
+* Profilaktika inspektori
+* Mahalla raisi
+* Hokim yordamchisi
+* Yoshlar yetakchisi
+* Xotin-qizlar faoli
+* Ijtimoiy xodim
+* Soliq vakili
+
+Har bir rol uchun alohida AI yordamchi.
+
+---
+
+# XAVFSIZ SHAHAR MODULI
+
+Kelajakda:
+
+* Videokuzatuv integratsiyasi (ruxsat mavjud bo'lsa)
+* Hodisalar xaritasi
+* AI xavf tahlili
+* Murojaatlar statistikasi
+* Issiqlik xaritasi
+* Hudud bo'yicha jinoyatchilik analitikasi
+
+---
+
+# LOYIHANING SHIORI
+
+**"Har bir inspektor uchun ishonchli AI yordamchi. Har bir qaror — qonunchilik va tasdiqlangan tartiblar asosida, har bir jarayon — bosqichma-bosqich."**
+
+---
+
+## 💡 Qo'shimcha tavsiya
+
+Bu loyihani oddiy chatbot sifatida emas, **AI Workflow Engine** sifatida quring:
+
+* **LLM** — foydalanuvchi bilan muloqot qiladi va vaziyatni tushunadi.
+* **Workflow Engine** — hodisa turiga mos SOP'ni yuklaydi va bosqichlarni boshqaradi.
+* **Checklist Engine** — bajarilgan qadamlarni kuzatadi.
+* **RAG** — faqat rasmiy qonunchilik va hujjatlar asosida javob beradi.
+* **Speech Layer** — STT va TTS orqali ovozli ishlashni ta'minlaydi.
+
+Shu arxitektura MVP uchun ham sodda, keyinchalik esa "Mahalla Yettiligi", "Xavfsiz Shahar", avtomatik hujjat yaratish va boshqa modullarni qo'shishga qulay bo'ladi.

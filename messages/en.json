@@ -1,0 +1,186 @@
+{
+  "common": {
+    "appName": "My Inspector",
+    "appSubtitle": "AI digital inspector assistant",
+    "ministry": "Ministry of Internal Affairs of the Republic of Uzbekistan",
+    "cancel": "Cancel",
+    "save": "Save",
+    "continue": "Continue",
+    "close": "Close",
+    "send": "Send",
+    "loading": "Loading...",
+    "back": "Back",
+    "search": "Search",
+    "delete": "Delete",
+    "you": "You",
+    "ai": "AI Inspector",
+    "retry": "Retry",
+    "disclaimer": "This information is advisory. Confirm the final legal basis with the official source (lex.uz).",
+    "verifyOfficial": "Must be verified against an official source",
+    "aiUnavailable": "AI is temporarily busy. Please try again shortly.",
+    "noKeys": "Gemini API keys are not configured. Contact the administrator.",
+    "errorGeneric": "An error occurred. Please try again."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "inspektor": "AI Inspector",
+    "hodisa": "Start incident",
+    "voice": "Voice assistant",
+    "qonunchilik": "Legislation",
+    "ishlarim": "My work",
+    "guide": "Quick guide"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome, inspector",
+    "subtitle": "Every decision — grounded in legislation and approved procedures.",
+    "stats": {
+      "todayIncidents": "Today's incidents",
+      "completed": "Completed processes",
+      "protocols": "Protocols created",
+      "conversations": "AI conversations"
+    },
+    "cards": {
+      "inspektor": {
+        "title": "AI Inspector",
+        "desc": "Step-by-step guidance and checklist for the incident"
+      },
+      "hodisa": {
+        "title": "Start incident",
+        "desc": "Pick an incident type and launch the workflow"
+      },
+      "voice": {
+        "title": "Voice assistant",
+        "desc": "Work by voice, without typing"
+      },
+      "ishlarim": {
+        "title": "My work",
+        "desc": "Continue the processes you started"
+      },
+      "qonunchilik": {
+        "title": "Legislation",
+        "desc": "AI reference for codes and laws"
+      },
+      "guide": {
+        "title": "Quick guide",
+        "desc": "A short guide on using the platform"
+      }
+    }
+  },
+  "chat": {
+    "title": "AI Inspector",
+    "subtitle": "Digital assistant — step by step",
+    "placeholder": "Describe the incident or ask a question...",
+    "empty": "Describe the incident — I'll start the process step by step.",
+    "emptyHint": "For example: \"A thief broke into a house\"",
+    "thinking": "Thinking...",
+    "stop": "Stop",
+    "panel": {
+      "checklist": "Checklist",
+      "process": "Process",
+      "documents": "Documents",
+      "laws": "Laws"
+    },
+    "sections": {
+      "situation": "Situation",
+      "firstAction": "First action",
+      "checklist": "Checklist",
+      "documents": "Required documents",
+      "legalBasis": "Legal basis",
+      "nextStep": "Next step"
+    },
+    "noLaws": "No law references yet",
+    "noDocs": "No documents yet",
+    "noChecklist": "No checklist yet",
+    "noProcess": "The process has not started yet",
+    "step": "Step"
+  },
+  "incident": {
+    "title": "Start incident",
+    "subtitle": "Choose an incident type — the AI loads the matching workflow.",
+    "chooseType": "Incident type",
+    "start": "Start the process",
+    "primeMessage": "An incident occurred: {type}. Start the process and show the first step."
+  },
+  "incidentTypes": {
+    "theft": "Theft",
+    "fraud": "Fraud",
+    "robbery": "Robbery",
+    "mugging": "Mugging",
+    "hooliganism": "Hooliganism",
+    "domestic_violence": "Domestic violence",
+    "traffic_accident": "Traffic accident",
+    "missing_person": "Missing person",
+    "found_body": "Found body",
+    "cybercrime": "Cybercrime",
+    "admin_offense": "Administrative offense",
+    "other": "Other"
+  },
+  "voice": {
+    "title": "Voice assistant",
+    "subtitle": "The inspector doesn't type — only speaks.",
+    "tapToSpeak": "Tap to speak",
+    "listening": "Listening...",
+    "speaking": "Responding...",
+    "stop": "Stop",
+    "send": "Send",
+    "unsupported": "Your browser doesn't support speech recognition. Please type instead.",
+    "uzWarning": "Uzbek speech recognition may be limited. Switch to Russian or type if needed.",
+    "transcript": "Transcript",
+    "textFallback": "Type instead"
+  },
+  "legal": {
+    "title": "Legislation",
+    "subtitle": "AI reference on the legislation of the Republic of Uzbekistan.",
+    "placeholder": "Ask about a law, code or article...",
+    "empty": "Write your question — I'll guide you based on current legislation.",
+    "docListTitle": "Document base",
+    "pdfSoon": "PDF will be added later",
+    "documents": {
+      "constitution": "Constitution of the Republic of Uzbekistan",
+      "criminal": "Criminal Code",
+      "criminalProc": "Criminal Procedure Code",
+      "civil": "Civil Code",
+      "civilProc": "Civil Procedure Code",
+      "family": "Family Code",
+      "admin": "Code of Administrative Responsibility",
+      "police": "Law on Internal Affairs Bodies",
+      "decrees": "Presidential decrees",
+      "resolutions": "Cabinet of Ministers resolutions"
+    }
+  },
+  "cases": {
+    "title": "My work",
+    "subtitle": "Continue the processes you started.",
+    "empty": "No cases started yet.",
+    "emptyHint": "Open a new process via \"Start incident\".",
+    "progress": "Completed",
+    "continue": "Continue",
+    "started": "Started",
+    "deleteConfirm": "Delete this case?"
+  },
+  "guide": {
+    "title": "Quick guide",
+    "subtitle": "How to use the platform.",
+    "steps": {
+      "one": "Choose an incident type in \"Start incident\".",
+      "two": "The AI Inspector starts the process step by step.",
+      "three": "Check off checklist items as you complete them.",
+      "four": "Track the required documents and legal basis in the right panel.",
+      "five": "The case is saved automatically — continue from \"My work\"."
+    },
+    "sloganTitle": "Project motto",
+    "slogan": "A reliable AI assistant for every inspector. Every decision — grounded in legislation and approved procedures, every process — step by step."
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "label": "Language",
+    "uz": "Uzbek",
+    "ru": "Russian",
+    "en": "English"
+  }
+}
