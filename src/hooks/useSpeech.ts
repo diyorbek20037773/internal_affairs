@@ -28,6 +28,7 @@ export function useSpeech({ locale }: UseSpeechOptions) {
   const [transcript, setTranscript] = useState("");
   const [interim, setInterim] = useState("");
   const recognitionRef = useRef<any>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const SR =
@@ -78,14 +79,17 @@ export function useSpeech({ locale }: UseSpeechOptions) {
     setListening(false);
   }, []);
 
-  const speak = useCallback(
+  // Browser SpeechSynthesis — fallback only (limited/no Uzbek voice).
+  const browserSpeak = useCallback(
     (text: string) => {
       if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
       window.speechSynthesis.cancel();
       const utter = new SpeechSynthesisUtterance(text);
       utter.lang = TTS_LANG[locale] ?? "uz-UZ";
       const voices = window.speechSynthesis.getVoices();
-      const match = voices.find((v) => v.lang.startsWith(utter.lang.slice(0, 2)));
+      const match =
+        voices.find((v) => v.lang === utter.lang) ||
+        voices.find((v) => v.lang.startsWith(utter.lang.slice(0, 2)));
       if (match) utter.voice = match;
       utter.onstart = () => setSpeaking(true);
       utter.onend = () => setSpeaking(false);
@@ -94,11 +98,56 @@ export function useSpeech({ locale }: UseSpeechOptions) {
     [locale]
   );
 
+  // High-quality server TTS (Gemini) with browser fallback. Works for uz/ru/en.
+  const speak = useCallback(
+    async (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed) return;
+
+      // stop any current playback
+      audioRef.current?.pause();
+      audioRef.current = null;
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+
+      setSpeaking(true);
+      try {
+        const res = await fetch("/api/tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: trimmed.slice(0, 1200), locale }),
+        });
+        if (!res.ok) throw new Error("tts_failed");
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        audio.onended = () => {
+          setSpeaking(false);
+          URL.revokeObjectURL(url);
+          if (audioRef.current === audio) audioRef.current = null;
+        };
+        audio.onerror = () => {
+          setSpeaking(false);
+          URL.revokeObjectURL(url);
+        };
+        await audio.play();
+      } catch {
+        // fallback to browser voice
+        browserSpeak(trimmed);
+      }
+    },
+    [locale, browserSpeak]
+  );
+
   const stopSpeaking = useCallback(() => {
+    audioRef.current?.pause();
+    audioRef.current = null;
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       window.speechSynthesis.cancel();
-      setSpeaking(false);
     }
+    setSpeaking(false);
   }, []);
 
   return {
