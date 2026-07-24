@@ -8,7 +8,9 @@ import { ChatMessage } from "./ChatMessage";
 import { ChatComposer } from "./ChatComposer";
 import { RightPanel } from "./RightPanel";
 import { useChatStream } from "@/hooks/useChatStream";
+import { useSpeech } from "@/hooks/useSpeech";
 import { useCases } from "@/hooks/useCases";
+import { parseResponse } from "@/lib/parseResponse";
 import { localCasesRepo } from "@/lib/storage/cases";
 import { INCIDENT_TITLES, getSop } from "@/data/sops";
 import { localized } from "@/data/sops/types";
@@ -171,6 +173,58 @@ export function InspektorClient({ initialCaseId, initialIncidentType }: Props) {
     });
   }, [persist]);
 
+  // ---- Ovozli rejim (STT -> yuborish, TTS -> javobni o'qish) ----
+  const speech = useSpeech({ locale });
+  const prevListeningRef = useRef(false);
+  const spokenRef = useRef<string>("");
+  const voiceModeRef = useRef(false); // oxirgi kiritish ovozli bo'lganmi
+
+  // Tinglash tugagach (final transkript) -> avtomatik yuborish
+  useEffect(() => {
+    if (prevListeningRef.current && !speech.listening) {
+      const text = speech.transcript.trim();
+      if (text) {
+        voiceModeRef.current = true;
+        handleSend(text);
+        speech.setTranscript("");
+      }
+    }
+    prevListeningRef.current = speech.listening;
+  }, [speech.listening, speech.transcript, handleSend, speech]);
+
+  // Javobni faqat ovozli so'rovdan keyin ovozli o'qish
+  const lastAssistant = useMemo(
+    () => [...messages].reverse().find((m) => m.role === "assistant"),
+    [messages]
+  );
+  useEffect(() => {
+    if (isStreaming || !lastAssistant?.content) return;
+    if (spokenRef.current === lastAssistant.id) return;
+    spokenRef.current = lastAssistant.id;
+    if (!voiceModeRef.current) return;
+    const p = parseResponse(lastAssistant.content);
+    const toSay = [p.firstAction, p.nextStep].filter(Boolean).join(". ");
+    speech.speak(toSay || lastAssistant.content.slice(0, 400));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isStreaming, lastAssistant?.id]);
+
+  const handleComposerSend = useCallback(
+    (text: string) => {
+      voiceModeRef.current = false; // yozilgan matn -> ovozli o'qilmaydi
+      handleSend(text);
+    },
+    [handleSend]
+  );
+
+  const handleMic = useCallback(() => {
+    if (speech.speaking) {
+      speech.stopSpeaking();
+      return;
+    }
+    if (speech.listening) speech.stopListening();
+    else speech.startListening();
+  }, [speech]);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -215,11 +269,19 @@ export function InspektorClient({ initialCaseId, initialIncidentType }: Props) {
             ))
           )}
         </div>
+        {(speech.listening || speech.speaking) && (
+          <div className="flex items-center gap-2 border-t border-border/70 bg-accent/10 px-4 py-1.5 text-xs font-medium text-foreground">
+            <span className="flex h-2 w-2 animate-pulse rounded-full bg-accent" />
+            {speech.listening ? t("voiceListening") : t("voiceSpeaking")}
+          </div>
+        )}
         <ChatComposer
-          onSend={handleSend}
+          onSend={handleComposerSend}
           onStop={stop}
           isStreaming={isStreaming}
           placeholder={t("placeholder")}
+          onMic={speech.sttSupported ? handleMic : undefined}
+          micActive={speech.listening || speech.speaking}
         />
       </div>
 

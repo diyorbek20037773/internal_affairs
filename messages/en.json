@@ -45,7 +45,7 @@
     "cards": {
       "inspektor": {
         "title": "AI Inspector",
-        "desc": "Step-by-step guidance and checklist for the incident"
+        "desc": "Step-by-step guidance, checklist and voice mode (microphone)"
       },
       "hodisa": {
         "title": "Start incident",
@@ -95,7 +95,9 @@
     "noDocs": "No documents yet",
     "noChecklist": "No checklist yet",
     "noProcess": "The process has not started yet",
-    "step": "Step"
+    "step": "Step",
+    "voiceListening": "Listening...",
+    "voiceSpeaking": "Speaking the reply..."
   },
   "incident": {
     "title": "Start incident",

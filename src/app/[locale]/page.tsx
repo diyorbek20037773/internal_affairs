@@ -6,7 +6,6 @@ import { NAV_ENTRIES } from "@/components/layout/nav";
 const CARD_KEYS = [
   "inspektor",
   "hodisa",
-  "voice",
   "ishlarim",
   "qonunchilik",
   "guide",

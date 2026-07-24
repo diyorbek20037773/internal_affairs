@@ -45,7 +45,7 @@
     "cards": {
       "inspektor": {
         "title": "AI Inspektor",
-        "desc": "Hodisa bo'yicha bosqichma-bosqich yo'riqnoma va checklist"
+        "desc": "Bosqichma-bosqich yo'riqnoma, checklist va ovozli rejim (mikrofon)"
       },
       "hodisa": {
         "title": "Hodisa boshlash",
@@ -95,7 +95,9 @@
     "noDocs": "Hozircha hujjat yo'q",
     "noChecklist": "Hozircha checklist yo'q",
     "noProcess": "Jarayon hali boshlanmagan",
-    "step": "Bosqich"
+    "step": "Bosqich",
+    "voiceListening": "Tinglayapman...",
+    "voiceSpeaking": "Ovozli javob berilmoqda..."
   },
   "incident": {
     "title": "Hodisa boshlash",
