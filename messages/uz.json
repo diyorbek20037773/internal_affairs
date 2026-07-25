@@ -21,7 +21,25 @@
     "verifyShort": "Tekshiring",
     "aiUnavailable": "AI vaqtincha band. Iltimos, birozdan so'ng qayta urinib ko'ring.",
     "noKeys": "Gemini API kalitlari sozlanmagan. Administrator bilan bog'laning.",
-    "errorGeneric": "Xatolik yuz berdi. Qayta urinib ko'ring."
+    "errorGeneric": "Xatolik yuz berdi. Qayta urinib ko'ring.",
+    "comingSoon": "Tez orada",
+    "keysSetupHint": "GEMINI_API_KEYS sozlanmagan — AI hozircha javob bermaydi. Railway → Variables bo'limiga kalit(lar) qo'shing."
+  },
+  "modules": {
+    "title": "Modullar",
+    "subtitle": "IIV \"Mening Inspektorim\" ekotizimi modullari.",
+    "epatrul": "E-patrul",
+    "profilaktik_suhbat": "Profilaktik suhbat",
+    "shakl17": "Shakl 17",
+    "vaqtinchalik": "Vaqtinchalik ro'yxatga qo'yish",
+    "eprobatsiya": "E-Probatsiya",
+    "qalqon": "Qalqon Messenger",
+    "ijtimoiy": "Ijtimoiy profilaktika",
+    "migratsion": "Migratsion profilaktika",
+    "raqamli_mahalla": "Raqamli mahalla",
+    "xarita": "Xarita",
+    "yuz_qidiruv": "Yuz orqali qidirish",
+    "murojaatlar": "Murojaatlar"
   },
   "nav": {
     "dashboard": "Bosh sahifa",

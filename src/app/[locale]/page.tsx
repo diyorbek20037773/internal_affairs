@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
 import { FeatureCard } from "@/components/dashboard/FeatureCard";
+import { ModulesGrid } from "@/components/dashboard/ModulesGrid";
 import { NAV_ENTRIES } from "@/components/layout/nav";
 
 const CARD_KEYS = [
@@ -19,6 +20,7 @@ export default async function DashboardPage({
   setRequestLocale(params.locale);
   const t = await getTranslations("dashboard");
   const tc = await getTranslations("dashboard.cards");
+  const tm = await getTranslations("modules");
 
   const hrefOf = (key: string) =>
     NAV_ENTRIES.find((e) => e.key === key)?.href ?? "/";
@@ -53,6 +55,16 @@ export default async function DashboardPage({
             description={tc(`${key}.desc`)}
           />
         ))}
+      </section>
+
+      <section className="mt-10">
+        <div className="mb-4">
+          <h3 className="text-lg font-bold tracking-tight">{tm("title")}</h3>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            {tm("subtitle")}
+          </p>
+        </div>
+        <ModulesGrid />
       </section>
     </div>
   );

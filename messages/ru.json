@@ -21,7 +21,25 @@
     "verifyShort": "Проверьте",
     "aiUnavailable": "AI временно занят. Пожалуйста, повторите попытку позже.",
     "noKeys": "API-ключи Gemini не настроены. Обратитесь к администратору.",
-    "errorGeneric": "Произошла ошибка. Повторите попытку."
+    "errorGeneric": "Произошла ошибка. Повторите попытку.",
+    "comingSoon": "Скоро",
+    "keysSetupHint": "GEMINI_API_KEYS не настроен — ИИ пока не отвечает. Добавьте ключ(и) в Railway → Variables."
+  },
+  "modules": {
+    "title": "Модули",
+    "subtitle": "Модули экосистемы МВД «Мой Инспектор».",
+    "epatrul": "E-patrul",
+    "profilaktik_suhbat": "Профилактическая беседа",
+    "shakl17": "Форма 17",
+    "vaqtinchalik": "Временная регистрация",
+    "eprobatsiya": "E-Пробация",
+    "qalqon": "Qalqon Messenger",
+    "ijtimoiy": "Социальная профилактика",
+    "migratsion": "Миграционная профилактика",
+    "raqamli_mahalla": "Цифровая махалля",
+    "xarita": "Карта",
+    "yuz_qidiruv": "Поиск по лицу",
+    "murojaatlar": "Обращения"
   },
   "nav": {
     "dashboard": "Главная",

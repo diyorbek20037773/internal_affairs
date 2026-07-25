@@ -21,7 +21,25 @@
     "verifyShort": "Verify",
     "aiUnavailable": "AI is temporarily busy. Please try again shortly.",
     "noKeys": "Gemini API keys are not configured. Contact the administrator.",
-    "errorGeneric": "An error occurred. Please try again."
+    "errorGeneric": "An error occurred. Please try again.",
+    "comingSoon": "Coming soon",
+    "keysSetupHint": "GEMINI_API_KEYS not configured — the AI won't respond yet. Add key(s) in Railway → Variables."
+  },
+  "modules": {
+    "title": "Modules",
+    "subtitle": "Modules of the MIA \"My Inspector\" ecosystem.",
+    "epatrul": "E-patrol",
+    "profilaktik_suhbat": "Prevention talk",
+    "shakl17": "Form 17",
+    "vaqtinchalik": "Temporary registration",
+    "eprobatsiya": "E-Probation",
+    "qalqon": "Qalqon Messenger",
+    "ijtimoiy": "Social prevention",
+    "migratsion": "Migration prevention",
+    "raqamli_mahalla": "Digital mahalla",
+    "xarita": "Map",
+    "yuz_qidiruv": "Face search",
+    "murojaatlar": "Appeals"
   },
   "nav": {
     "dashboard": "Dashboard",

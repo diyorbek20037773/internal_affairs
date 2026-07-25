@@ -83,13 +83,12 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
       <div className="relative border-t border-sidebar-border/70 px-5 py-4">
         <div className="flex items-center gap-2.5">
-          <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md bg-white/10 ring-1 ring-white/10">
-            <Image
-              src="/iiv_logo.jpg"
-              alt="IIV"
-              fill
-              className="object-cover"
-              sizes="32px"
+          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/95 ring-1 ring-white/20">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/iiv_logo.svg"
+              alt="IIV gerbi"
+              className="h-8 w-8 object-contain"
             />
           </div>
           <p className="text-[11px] leading-tight text-sidebar-foreground/50">
