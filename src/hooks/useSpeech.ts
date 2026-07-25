@@ -27,6 +27,7 @@ export function useSpeech({ locale }: UseSpeechOptions) {
   const [speaking, setSpeaking] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [interim, setInterim] = useState("");
+  const [sttError, setSttError] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -42,11 +43,20 @@ export function useSpeech({ locale }: UseSpeechOptions) {
     const SR =
       (window as any).SpeechRecognition ||
       (window as any).webkitSpeechRecognition;
-    if (!SR) return;
+    if (!SR) {
+      setSttError("unsupported");
+      return;
+    }
+    // stop any previous instance
+    try {
+      recognitionRef.current?.abort?.();
+    } catch {}
+
     const recognition = new SR();
     recognition.lang = (STT_LANG[locale] ?? ["uz-UZ"])[0];
     recognition.continuous = false;
     recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
 
     recognition.onresult = (event: any) => {
       let finalText = "";
@@ -63,16 +73,25 @@ export function useSpeech({ locale }: UseSpeechOptions) {
       setListening(false);
       setInterim("");
     };
-    recognition.onerror = () => {
+    recognition.onerror = (e: any) => {
       setListening(false);
       setInterim("");
+      setSttError(e?.error || "error");
     };
 
     recognitionRef.current = recognition;
     setTranscript("");
-    recognition.start();
-    setListening(true);
+    setSttError(null);
+    try {
+      recognition.start();
+      setListening(true);
+    } catch (err: any) {
+      setListening(false);
+      setSttError(err?.name === "InvalidStateError" ? "busy" : "start_failed");
+    }
   }, [locale]);
+
+  const clearSttError = useCallback(() => setSttError(null), []);
 
   const stopListening = useCallback(() => {
     recognitionRef.current?.stop();
@@ -157,6 +176,8 @@ export function useSpeech({ locale }: UseSpeechOptions) {
     speaking,
     transcript,
     interim,
+    sttError,
+    clearSttError,
     setTranscript,
     startListening,
     stopListening,

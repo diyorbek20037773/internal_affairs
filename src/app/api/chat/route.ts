@@ -73,7 +73,9 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "ai_unavailable" }, { status: 503 });
     }
     console.error("[/api/chat] error", err);
-    return Response.json({ error: "internal_error" }, { status: 500 });
+    const detail =
+      err instanceof Error ? err.message.slice(0, 300) : String(err).slice(0, 300);
+    return Response.json({ error: "internal_error", detail }, { status: 500 });
   }
 
   const encoder = new TextEncoder();

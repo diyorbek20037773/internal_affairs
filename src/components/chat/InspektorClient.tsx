@@ -225,6 +225,23 @@ export function InspektorClient({ initialCaseId, initialIncidentType }: Props) {
     else speech.startListening();
   }, [speech]);
 
+  // Surface STT errors (mic permission, no speech, no mic, network, unsupported)
+  useEffect(() => {
+    if (!speech.sttError) return;
+    const map: Record<string, string> = {
+      "not-allowed": "voiceErrPermission",
+      "service-not-allowed": "voiceErrPermission",
+      "no-speech": "voiceErrNoSpeech",
+      "audio-capture": "voiceErrMic",
+      network: "voiceErrNetwork",
+      unsupported: "voiceErrUnsupported",
+    };
+    const key = map[speech.sttError] || "voiceErrGeneric";
+    toast.error(t(key));
+    speech.clearSttError();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speech.sttError]);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -301,5 +318,8 @@ export function InspektorClient({ initialCaseId, initialIncidentType }: Props) {
 function errorMessage(code: string, tc: (k: string) => string): string {
   if (code === "ai_unavailable") return tc("aiUnavailable");
   if (code === "no_keys_configured") return tc("noKeys");
-  return tc("errorGeneric");
+  if (code === "invalid_request") return tc("errorGeneric");
+  if (code === "internal_error" || !code) return tc("errorGeneric");
+  // Otherwise surface the real (Gemini) error text to help diagnose.
+  return `${tc("errorGeneric")} (${code})`;
 }

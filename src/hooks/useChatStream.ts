@@ -70,7 +70,7 @@ export function useChatStream({
 
         if (!res.ok || !res.body) {
           const data = await res.json().catch(() => ({}));
-          throw new Error(data?.error || `HTTP ${res.status}`);
+          throw new Error(data?.detail || data?.error || `HTTP ${res.status}`);
         }
 
         const reader = res.body.getReader();

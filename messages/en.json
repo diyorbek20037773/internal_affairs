@@ -115,7 +115,13 @@
     "noProcess": "The process has not started yet",
     "step": "Step",
     "voiceListening": "Listening...",
-    "voiceSpeaking": "Speaking the reply..."
+    "voiceSpeaking": "Speaking the reply...",
+    "voiceErrPermission": "Microphone permission denied. Enable the microphone in browser settings.",
+    "voiceErrNoSpeech": "No speech detected. Please try again.",
+    "voiceErrMic": "No microphone found.",
+    "voiceErrNetwork": "Network error — speech recognition needs internet.",
+    "voiceErrUnsupported": "Your browser doesn't support speech recognition. Please type.",
+    "voiceErrGeneric": "Speech recognition error. Try again or type instead."
   },
   "incident": {
     "title": "Start incident",

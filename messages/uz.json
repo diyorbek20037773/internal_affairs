@@ -115,7 +115,13 @@
     "noProcess": "Jarayon hali boshlanmagan",
     "step": "Bosqich",
     "voiceListening": "Tinglayapman...",
-    "voiceSpeaking": "Ovozli javob berilmoqda..."
+    "voiceSpeaking": "Ovozli javob berilmoqda...",
+    "voiceErrPermission": "Mikrofonga ruxsat berilmadi. Brauzer sozlamalaridan mikrofonni yoqing.",
+    "voiceErrNoSpeech": "Ovoz eshitilmadi. Qayta urinib ko'ring.",
+    "voiceErrMic": "Mikrofon topilmadi.",
+    "voiceErrNetwork": "Tarmoq xatosi — ovozni tanib olish uchun internet kerak.",
+    "voiceErrUnsupported": "Brauzer ovozni tanib olishni qo'llab-quvvatlamaydi. Matn yozing.",
+    "voiceErrGeneric": "Ovozni tanib olishda xatolik. Qayta urinib ko'ring yoki matn yozing."
   },
   "incident": {
     "title": "Hodisa boshlash",
