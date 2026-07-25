@@ -167,8 +167,13 @@
       "family": "Family Code",
       "admin": "Code of Administrative Responsibility",
       "police": "Law on Internal Affairs Bodies",
+      "penalExec": "Penal Enforcement Code",
       "prevention": "Law on Prevention of Offenses",
       "dv": "Law on Protecting Women from Harassment and Violence",
+      "juvenile": "Law on Prevention of Juvenile Neglect",
+      "childRights": "Law on Guarantees of the Rights of the Child",
+      "probation": "Law on Probation (LRU-938)",
+      "traffic": "Law on Road Traffic",
       "inspectorReg": "Prevention Inspector Regulation (PP-2896)",
       "decrees": "Presidential decrees",
       "resolutions": "Cabinet of Ministers resolutions"

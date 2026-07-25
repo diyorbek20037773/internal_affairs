@@ -167,8 +167,13 @@
       "family": "Oila kodeksi",
       "admin": "Ma'muriy javobgarlik to'g'risidagi kodeks (MJTK)",
       "police": "«Ichki ishlar organlari to'g'risida»gi Qonun",
+      "penalExec": "Jinoyat-ijroiya kodeksi",
       "prevention": "«Huquqbuzarliklar profilaktikasi to'g'risida»gi Qonun",
       "dv": "«Xotin-qizlarni tazyiq va zo'ravonlikdan himoya qilish to'g'risida»gi Qonun",
+      "juvenile": "«Voyaga yetmaganlar profilaktikasi to'g'risida»gi Qonun",
+      "childRights": "«Bola huquqlari kafolatlari to'g'risida»gi Qonun",
+      "probation": "«Probatsiya to'g'risida»gi Qonun (O'RQ-938)",
+      "traffic": "«Yo'l harakati to'g'risida»gi Qonun",
       "inspectorReg": "Profilaktika inspektori Nizomi (PQ-2896)",
       "decrees": "Prezident farmonlari",
       "resolutions": "Vazirlar Mahkamasi qarorlari"
