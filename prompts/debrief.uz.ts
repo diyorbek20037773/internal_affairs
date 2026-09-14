@@ -19,7 +19,14 @@ import type { LawRef } from "@/data/sops/types";
  * The model explains and scores; it never invents legal article numbers —
  * only the scenario's own `laws[]` may be cited.
  */
-export function buildDebriefSystemInstruction(laws: LawRef[]): string {
+const REF_RULE: Record<string, string> = {
+  dialog: `"turn:N" — xodimning N-navbati (yozuvda ko'rsatilgan). Boshqa ref turi ISHLATILMAYDI.`,
+  decision: '"node:ID" yoki "node:ID/option:ID" — yozuvdagi tugun/variant idlari. Boshqa ref turi ISHLATILMAYDI.',
+  mahalla: '"problem:ID" — muammo idlari. Boshqa ref turi ISHLATILMAYDI.',
+  document: '"element:ID" — rubrika element idlari, yoki "fakt", "huquq". Boshqa ref turi ISHLATILMAYDI.',
+};
+
+export function buildDebriefSystemInstruction(laws: LawRef[], kind: string = "dialog"): string {
   const defs = COMPETENCIES.map((c) => `- ${c}: ${COMPETENCY_DEFINITIONS_UZ[c]}`).join("\n");
   const lawList = laws.length
     ? laws
@@ -31,7 +38,7 @@ export function buildDebriefSystemInstruction(laws: LawRef[]): string {
 
 # TAMOYILLAR
 - Xato JAZOLANMAYDI — u keyingi to'g'ri qaror uchun TAJRIBAGA aylantiriladi. Ohang: hurmatli, aniq, konstruktiv, o'zbek tilida.
-- Har bir xato uchun ANIQ JOYNI ko'rsat: "turn:N" (dialogda xodimning N-navbati), "node:ID/option:ID" (qaror simulyatorida), "problem:ID" (mahallada).
+- Har bir xato uchun ANIQ JOYNI ko'rsat. Bu mashg'ulot uchun ref formati: ${REF_RULE[kind] ?? REF_RULE.dialog} Shablon matn ("ID", "N") yozma — haqiqiy qiymat bo'lsin.
 - Baholanadigan narsa TEZLIK EMAS — qarorning QONUNIYLIGI va MUTANOSIBLIGI, muloqot sifati, natija.
 - Qurol/kuch ishlatmaslik, agar shart bo'lmagan bo'lsa — A'LO baho.
 - Huquqiy asos sifatida FAQAT quyidagi ro'yxatdagi hujjatlarni tilga ol. Yangi modda raqami O'YLAB TOPMA. Ishonch bo'lmasa "rasmiy manbadan (lex.uz) tasdiqlash kerak" deb yoz.

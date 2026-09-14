@@ -185,7 +185,10 @@ export function applySessionToHimoyaId(
 export function strengthsAndGaps(h: HimoyaId, k = 3) {
   const rated = COMPETENCIES.filter((c) => (h.samples[c] ?? 0) > 0);
   const sorted = [...rated].sort((a, b) => h.scores[b] - h.scores[a]);
-  return { strengths: sorted.slice(0, k), gaps: sorted.slice(-k).reverse() };
+  const strengths = sorted.slice(0, k);
+  // Gaps never overlap strengths; with few rated axes show only what is left.
+  const gaps = sorted.filter((c) => !strengths.includes(c)).slice(-k).reverse();
+  return { strengths, gaps };
 }
 
 /**

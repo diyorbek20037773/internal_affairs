@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
   try {
     const llm = await generateJson({
       contents: [{ role: "user", parts: [{ text: evidence + langNote }] }],
-      systemInstruction: buildDebriefSystemInstruction(lawsFor(scenario.laws)),
+      systemInstruction: buildDebriefSystemInstruction(lawsFor(scenario.laws), scenario.kind),
       responseSchema: DEBRIEF_RESPONSE_SCHEMA as unknown as Schema,
       parse: (raw) => {
         // Clamp scores before strict validation so an off-by-one doesn't fail the turn.

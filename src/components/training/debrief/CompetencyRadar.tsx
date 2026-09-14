@@ -20,7 +20,7 @@ export function CompetencyRadar({
   const n = COMPETENCIES.length;
   const cx = size / 2;
   const cy = size / 2;
-  const r = size / 2 - 34;
+  const r = size / 2 - 58;
   const ratedSet = new Set(rated ?? COMPETENCIES);
 
   const angle = (i: number) => (Math.PI * 2 * i) / n - Math.PI / 2;
@@ -33,7 +33,7 @@ export function CompetencyRadar({
     COMPETENCIES.map((c, i) => pt(i, ratedSet.has(c) ? s[c] : 0).join(",")).join(" ");
 
   return (
-    <svg viewBox={`0 0 ${size} ${size}`} className="mx-auto h-auto w-full max-w-[260px]" role="img">
+    <svg viewBox={`-30 0 ${size + 60} ${size}`} className="mx-auto h-auto w-full max-w-[320px] overflow-visible" role="img">
       {[25, 50, 75, 100].map((lvl) => (
         <polygon
           key={lvl}
@@ -55,7 +55,7 @@ export function CompetencyRadar({
         return <circle key={c} cx={x} cy={y} r={2.5} className={ratedSet.has(c) ? "fill-primary" : "fill-muted-foreground/40"} />;
       })}
       {COMPETENCIES.map((c, i) => {
-        const [x, y] = pt(i, 122);
+        const [x, y] = pt(i, 126);
         const a = angle(i);
         const anchor = Math.cos(a) > 0.2 ? "start" : Math.cos(a) < -0.2 ? "end" : "middle";
         return (
