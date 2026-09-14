@@ -5,7 +5,7 @@ import {
   type Competency,
   type CompetencyScores,
 } from "@/data/scenarios/competencies";
-import type { DecisionScenario, DialogScenario, MahallaGrade } from "@/data/scenarios/types";
+import type { DecisionScenario, DialogScenario, DocumentGrade, MahallaGrade } from "@/data/scenarios/types";
 import type {
   DecisionPayload,
   DialogPayload,
@@ -106,6 +106,17 @@ export function mahallaDeterministic(grade: MahallaGrade): Partial<CompetencySco
   };
 }
 
+export function documentDeterministic(grade: DocumentGrade): Partial<CompetencyScores> {
+  const total = Object.keys(grade.elements).length || 1;
+  const present = Object.values(grade.elements).filter((e) => e.present).length;
+  const coverage = (present / total) * 100;
+  return {
+    hujjatlashtirish: clampScore(grade.score),
+    huquqiy_qaror: clampScore(100 - grade.legalErrors.length * 25),
+    vaziyat_tahlili: clampScore(coverage - grade.factErrors.length * 15),
+  };
+}
+
 /* ------------------------------------------------------------------------ */
 /* Blend + HIMOYA-ID update                                                  */
 /* ------------------------------------------------------------------------ */
@@ -175,4 +186,22 @@ export function strengthsAndGaps(h: HimoyaId, k = 3) {
   const rated = COMPETENCIES.filter((c) => (h.samples[c] ?? 0) > 0);
   const sorted = [...rated].sort((a, b) => h.scores[b] - h.scores[a]);
   return { strengths: sorted.slice(0, k), gaps: sorted.slice(-k).reverse() };
+}
+
+/**
+ * "Amaliy xizmat" (pptx slide 2/10): a 30–90 day service KPI entered by the
+ * instructor feeds the natijadorlik axis so training ↔ service stay linked.
+ */
+export function applyKpiToHimoyaId(current: HimoyaId, kpi: number, at = new Date().toISOString()): HimoyaId {
+  const c: Competency = "natijadorlik";
+  const n = current.samples[c] ?? 0;
+  const score = clampScore((current.scores[c] * n + clampScore(kpi)) / (n + 1));
+  const scores = { ...current.scores, [c]: score };
+  return {
+    ...current,
+    scores,
+    samples: { ...current.samples, [c]: n + 1 },
+    updatedAt: at,
+    history: [...current.history, { sessionId: `kpi:${at}`, at, scores }],
+  };
 }

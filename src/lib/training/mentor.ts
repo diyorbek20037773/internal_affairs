@@ -59,7 +59,7 @@ export function recommendNext(
   const pool = (tagged.length ? tagged : candidates).filter((s) => !recent.has(s.id));
   const finalPool = pool.length ? pool : tagged.length ? tagged : candidates;
 
-  const kindRank = { dialog: 0, decision: 1, mahalla: 2, exam: 3 } as const;
+  const kindRank = { dialog: 0, decision: 1, mahalla: 2, document: 3, exam: 4 } as const;
   const pick = [...finalPool].sort((a, b) => {
     const da = a.difficulty <= maxDifficulty ? 0 : 1;
     const db = b.difficulty <= maxDifficulty ? 0 : 1;
@@ -79,6 +79,8 @@ export function scenarioHref(s: Scenario): string {
       return `/simulyator/qaror/${s.id}`;
     case "mahalla":
       return `/simulyator/mahalla/${s.id}`;
+    case "document":
+      return `/simulyator/hujjat/${s.id}`;
     case "exam":
       return `/simulyator/imtihon`;
   }

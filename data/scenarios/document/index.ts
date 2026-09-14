@@ -1,0 +1,113 @@
+import type { DocumentScenario } from "../types";
+
+/**
+ * Hujjatlashtirish — pptx slide 9, 15:00: "AI hujjat tekshiruvi: qonun va fakt".
+ * Trainee writes the document from given facts; AI checks completeness,
+ * factual accuracy (no invented facts / guilt conclusions) and legal basis.
+ */
+export const pichoqHodisaBayonnoma: DocumentScenario = {
+  id: "document-pichoq-hodisa",
+  kind: "document",
+  code: "H-01",
+  documentKind: "malumotnoma",
+  title: { uz: "Ma'lumotnoma: pichoqli shaxs hodisasi", ru: "Справка: происшествие с ножом", en: "Report: knife incident" },
+  brief: {
+    uz: "Kunduzi 13:00 dagi hovlidagi pichoqli shaxs hodisasi bo'yicha rahbariyatga ma'lumotnoma yozing. Faqat berilgan faktlar. Aybdorlik xulosasi yo'q. Huquqiy asos — aniq va tasdiqlangan.",
+    ru: "Напишите справку руководству о происшествии с ножом (13:00). Только данные факты. Без выводов о виновности. Правовая основа — точная.",
+    en: "Write a report to management about the 13:00 knife incident. Only given facts. No guilt conclusions. Precise legal basis.",
+  },
+  difficulty: 2,
+  tags: ["hujjatlashtirish", "huquqiy_qaror", "vaziyat_tahlili"],
+  estimatedMinutes: 12,
+  laws: ["jpkRegister", "lawPolice", "lawPrevention"],
+  version: "1.0",
+  minWords: 80,
+  facts: [
+    { uz: "Sana/vaqt: bugun, 13:05 da qo'shni (Rahimova N., 21-uy) 102 ga qo'ng'iroq qildi." },
+    { uz: "Joy: Bog'imaydon MFY, 7-uy hovlisi." },
+    { uz: "Shaxs: Anvar Karimov, 1989-yil, shu manzilda yashaydi, ishsiz." },
+    { uz: "Holat: hovlida qo'lida oshxona pichog'i (uzunligi ~20 sm) bilan baqirgan, hech kimga hujum qilmagan, o'ziga zarar yetkazish haqida gapirgan." },
+    { uz: "Sabab (uning so'zi bilan): sud qarori bilan bolalar onasiga berilgan, 2 hafta oldin." },
+    { uz: "Xodimlar: profilaktika inspektori (siz) va sherigingiz kichik leytenant Toshpo'latov B. 13:12 da yetib keldi." },
+    { uz: "Harakat: masofa saqlab muloqot, 13:25 da pichoqni o'zi yerga qo'ydi, kuch va qurol ishlatilmadi." },
+    { uz: "Tez tibbiy yordam 13:30 da keldi, Anvar Karimov ko'rikka rozi bo'ldi, 1-shahar klinik shifoxonasiga olib ketildi." },
+    { uz: "Pichoq olib qo'yildi (ashyo), uyda onasi Karimova M. (1961-yil) bo'lgan, jarohat yo'q." },
+    { uz: "Guvohlar: Rahimova N. (qo'shni), Karimova M. (onasi)." },
+  ],
+  forbidden: [
+    "Anvar Karimovni jinoyatchi/aybdor deb xulosa qilish",
+    "Mast yoki giyohvand holatda edi deb yozish (fakt yo'q)",
+    "Xotiniga hujum qilgan/tahdid qilgan deb yozish (fakt yo'q)",
+    "Jinoyat kodeksi moddasini o'ylab topish (bu hodisa JK bo'yicha kvalifikatsiya qilinmagan)",
+    "Vaqtlarni o'zgartirish",
+  ],
+  rubric: [
+    { id: "who", label: { uz: "Kimga / kimdan (adresat, xodim, unvon)" } },
+    { id: "when", label: { uz: "Sana va aniq vaqtlar (qo'ng'iroq, yetib kelish, yakun)" } },
+    { id: "where", label: { uz: "Joy (MFY, uy)" } },
+    { id: "person", label: { uz: "Shaxs ma'lumotlari (F.I.Sh., tug'ilgan yil, manzil)" } },
+    { id: "what", label: { uz: "Hodisa tavsifi faktlar bo'yicha (pichoq, baqirish, hujum yo'q, o'ziga zarar gapi)" } },
+    { id: "actions", label: { uz: "Xodimlar harakati (muloqot, kuch ishlatilmadi, pichoq qo'yildi)" } },
+    { id: "medical", label: { uz: "Tibbiy yordam va olib ketilgan joy" } },
+    { id: "evidence", label: { uz: "Ashyo (pichoq) va uning olinishi" } },
+    { id: "witnesses", label: { uz: "Guvohlar" } },
+    { id: "legal", label: { uz: "Huquqiy asos: xabar ro'yxatga olinishi (JPK 329), IIO to'g'risidagi qonun; profilaktik hisob masalasi" }, hint: "Moddani o'ylab topmaslik" },
+    { id: "next", label: { uz: "Keyingi chora / taklif (profilaktik hisob, psixolog, oila bilan ishlash)" } },
+    { id: "neutral", label: { uz: "Neytral, aybsiz ohang; taxmin yo'q" } },
+  ],
+};
+
+export const oilaviyBayonnoma: DocumentScenario = {
+  id: "document-oilaviy-bayonnoma",
+  kind: "document",
+  code: "H-02",
+  documentKind: "bayonnoma",
+  title: { uz: "Bayonnoma: oilaviy zo'ravonlik chaqiruvi", ru: "Протокол: вызов по семейному насилию", en: "Protocol: domestic violence call" },
+  brief: {
+    uz: "Kechki chaqiruv bo'yicha bayonnoma. Jabrlanuvchi arizadan bosh tortgan — himoya orderi asoslarini to'g'ri qayd eting. Jarohatlar, bolalar, guvoh.",
+    ru: "Протокол по вечернему вызову. Пострадавшая отказалась от заявления — правильно зафиксируйте основания охранного ордера.",
+    en: "Protocol for an evening call. Victim declined to file — record protection-order grounds correctly.",
+  },
+  difficulty: 3,
+  tags: ["hujjatlashtirish", "huquqiy_qaror", "profiling"],
+  estimatedMinutes: 15,
+  laws: ["lawDv", "regProtectionOrder", "jpkRegister", "familyCode"],
+  version: "1.0",
+  minWords: 100,
+  facts: [
+    { uz: "Chaqiruv: 22:04, qo'shni (Yusupov K., 3-qavat) 102 ga — «janjal, idish sinish ovozi»." },
+    { uz: "Joy: Mirzo Ulug'bek tumani, ... ko'chasi, 14-uy, 12-xonadon." },
+    { uz: "Ishtirokchilar: Bobur Nazarov (1991), Madina Nazarova (1994), farzand — 6 yosh." },
+    { uz: "Madina Nazarova: yuzning chap tomonida qizarish va shish, o'ng bilagida sarg'aygan eski ko'karish (o'z so'zi bilan — 2 hafta oldingi)." },
+    { uz: "Madina: «uchinchi marta», ariza yozishdan bosh tortdi (qaynonadan qo'rqadi)." },
+    { uz: "Bobur: hushyor, «hech narsa bo'lmadi» deydi, qarshilik ko'rsatmadi." },
+    { uz: "Bola: qo'rqqan, jarohat yo'q, ota-ona bilan qoldi (Madina iltimosi bilan)." },
+    { uz: "Xodimlar: siz va serjant Aliyev D., 22:15 da yetib keldingiz, tomonlarni ajratdingiz." },
+    { uz: "Madinaga tibbiy ko'rik yo'llanmasi va ishonch telefoni berildi; ko'rikka rozi." },
+    { uz: "Himoya orderi masalasi ko'rib chiqish uchun rahbariyatga taqdim etilmoqda." },
+  ],
+  forbidden: [
+    "Boburni aybdor deb xulosa qilish (bu sud vakolati)",
+    "Madina 'o'zi sabab bo'lgan' kabi baholovchi so'zlar",
+    "Ariza yo'qligi sababli 'chora ko'rilmadi' deb yozish (himoya orderi arizasiz ham beriladi)",
+    "Bobur mast edi deb yozish (fakt: hushyor)",
+    "Bola jarohatlangan deb yozish",
+  ],
+  rubric: [
+    { id: "when", label: { uz: "Sana, chaqiruv va yetib kelish vaqti" } },
+    { id: "where", label: { uz: "Aniq manzil" } },
+    { id: "persons", label: { uz: "Tomonlar va bola ma'lumotlari" } },
+    { id: "injuries", label: { uz: "Jarohatlarning aniq tavsifi (joyi, ko'rinishi, eski/yangi)" } },
+    { id: "statements", label: { uz: "Tomonlar so'zlari — iqtibos sifatida, baholamasdan" } },
+    { id: "repeat", label: { uz: "Takroriylik («uchinchi marta») qayd etilgan" } },
+    { id: "refusal", label: { uz: "Arizadan bosh tortish sababi bilan qayd etilgan" } },
+    { id: "child", label: { uz: "Bola holati va qayerda qolgani" } },
+    { id: "actions", label: { uz: "Xodim harakatlari (ajratish, yo'llanma, ishonch telefoni)" } },
+    { id: "order", label: { uz: "Himoya orderi asosi: O'RQ-561, arizasiz berilishi mumkinligi" }, hint: "Aniq: jabrlanuvchi arizasi shart emas" },
+    { id: "witness", label: { uz: "Guvoh (qo'shni Yusupov K.)" } },
+    { id: "register", label: { uz: "Xabar ro'yxatga olinganligi (JPK 329)" } },
+    { id: "neutral", label: { uz: "Neytral ohang, aybdorlik xulosasi yo'q" } },
+  ],
+};
+
+export const DOCUMENT_SCENARIOS: DocumentScenario[] = [pichoqHodisaBayonnoma, oilaviyBayonnoma];

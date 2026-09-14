@@ -266,7 +266,11 @@
       },
       "mentorTitle": "AI-Mentor tavsiyasi",
       "mentorEmpty": "Birinchi mashg'ulotni yakunlang — AI-Mentor keyingi qadamni belgilaydi.",
-      "graphProblems": "Ssenariy grafida xatolik"
+      "graphProblems": "Ssenariy grafida xatolik",
+      "document": {
+        "title": "Hujjatlashtirish",
+        "desc": "AI hujjat tekshiruvi: qonun va fakt. Berilgan faktlardan bayonnoma/ma'lumotnoma yozing."
+      }
     },
     "scenario": {
       "pick": "Ssenariyni tanlang",
@@ -462,7 +466,79 @@
       "stageDone": "Bajarildi",
       "stageNext": "Navbatdagi",
       "allDone": "Barcha bosqichlar yakunlandi. Yakuniy debrifni ko'ring.",
-      "passed": "O'TDI degani — «kursni tugatdi» emas, «REAL KUNNI MUSTAQIL BOSHQARDI» degani."
+      "passed": "O'TDI degani — «kursni tugatdi» emas, «REAL KUNNI MUSTAQIL BOSHQARDI» degani.",
+      "finalStage": "Debrifing va baho",
+      "finalStageDesc": "3 savol tahlili, HIMOYA-ID yangilanadi"
+    },
+    "document": {
+      "title": "Hujjatlashtirish",
+      "placeholder": "Hujjat matnini yozing: kimga, kimdan, sana/vaqt, joy, shaxs, hodisa tavsifi, harakatlar, huquqiy asos, guvohlar, taklif...",
+      "hint": "Faqat berilgan faktlar. Aybdorlik xulosasi yo'q. Moddani o'ylab topmang.",
+      "submit": "AI tekshiruviga yuborish",
+      "checking": "AI qonun va faktni tekshirmoqda...",
+      "result": "Tekshiruv natijasi",
+      "facts": "Berilgan faktlar",
+      "rubric": "Hujjatda bo'lishi shart",
+      "forbidden": "Taqiqlangan xatolar",
+      "laws": "Huquqiy asos",
+      "words": "so'z",
+      "factErrors": "Fakt xatolari",
+      "legalErrors": "Huquqiy xatolar",
+      "strengths": "Kuchli tomonlar",
+      "kinds": {
+        "bayonnoma": "Bayonnoma",
+        "malumotnoma": "Ma'lumotnoma",
+        "tushuntirish": "Tushuntirish xati",
+        "hisobot": "Hisobot"
+      }
+    },
+    "kpi": {
+      "title": "Amaliy xizmat — 30–90 kunlik natija",
+      "subtitle": "O'qitish natijasi xizmatda aks etadi, xizmat natijasi keyingi o'qitishni belgilaydi.",
+      "cases30": "30 kun: ishlar",
+      "cases90": "90 kun: ishlar",
+      "done90": "90 kun: yakunlangan",
+      "steps90": "90 kun: bajarilgan bosqichlar",
+      "autoKpi": "Avto-KPI (yakunlanish %)",
+      "enter": "Xizmat KPI bali (0–100)",
+      "save": "HIMOYA-ID ga yozish",
+      "saved": "KPI HIMOYA-ID natijadorlik yo'nalishiga qo'shildi",
+      "note": "Manba: «Mening Inspektorim» modulidagi ishlar (shu qurilma). Instruktor rasmiy KPI ni kiritadi."
+    },
+    "model": {
+      "cycleTitle": "Har bir mashg'ulot sikli",
+      "cycle": {
+        "vaziyat": "Vaziyat",
+        "tahlil": "Tahlil",
+        "muloqot": "Muloqot",
+        "qaror": "Qaror",
+        "harakat": "Harakat",
+        "natija": "Natija"
+      },
+      "slogan": "«Xodimni o'qitmaymiz — uni real xizmatga tayyorlaymiz»",
+      "shift": {
+        "auditoriya": {
+          "from": "Auditoriya",
+          "to": "Xizmat poligoni"
+        },
+        "oqituvchi": {
+          "from": "O'qituvchi",
+          "to": "Trener"
+        },
+        "tinglovchi": {
+          "from": "Tinglovchi",
+          "to": "Vaziyatni boshqaruvchi"
+        },
+        "test": {
+          "from": "Test",
+          "to": "Real case"
+        },
+        "sertifikat": {
+          "from": "Sertifikat",
+          "to": "Kompetensiya (HIMOYA-ID)"
+        }
+      },
+      "traektoriya": "100 xodim — 100 xil o'quv traektoriyasi. AI qaror bermaydi — har bir xulosani instruktor tasdiqlaydi."
     }
   }
 }

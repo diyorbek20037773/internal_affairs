@@ -14,6 +14,7 @@ import {
   DEBRIEF_RESPONSE_SCHEMA,
   decisionEvidence,
   dialogEvidence,
+  documentEvidence,
   lawsFor,
   mahallaEvidence,
 } from "@/prompts/debrief.uz";
@@ -49,6 +50,8 @@ export async function POST(req: NextRequest) {
     evidence = decisionEvidence(scenario, body.payload);
   } else if (scenario.kind === "mahalla" && body.payload.kind === "mahalla") {
     evidence = mahallaEvidence(scenario, body.payload);
+  } else if (scenario.kind === "document" && body.payload.kind === "document") {
+    evidence = documentEvidence(scenario, body.payload);
   } else {
     return Response.json({ error: "invalid_request" }, { status: 400 });
   }

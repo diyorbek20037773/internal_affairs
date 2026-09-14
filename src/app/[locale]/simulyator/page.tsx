@@ -4,6 +4,7 @@ import { TrainersGrid } from "@/components/training/TrainersGrid";
 import { MentorCard } from "@/components/training/profile/MentorCard";
 import { ProfileGate } from "@/components/training/profile/ProfileGate";
 import { validateScenarioGraph } from "@/data/scenarios";
+import { ModelBanner } from "@/components/training/ModelBanner";
 
 export default async function SimulyatorPage({ params }: { params: { locale: string } }) {
   setRequestLocale(params.locale);
@@ -25,6 +26,9 @@ export default async function SimulyatorPage({ params }: { params: { locale: str
       <TrainersGrid />
       <div className="mt-8">
         <MentorCard />
+      </div>
+      <div className="mt-8">
+        <ModelBanner />
       </div>
     </div>
   );

@@ -15,7 +15,7 @@ import { COMPETENCIES } from "@/data/scenarios/competencies";
 import { ProfileGate } from "../profile/ProfileGate";
 import { cn } from "@/lib/utils";
 
-const KIND_PATH = { dialog: "muloqot", decision: "qaror", mahalla: "mahalla" } as const;
+const KIND_PATH = { dialog: "muloqot", decision: "qaror", mahalla: "mahalla", document: "hujjat" } as const;
 
 /**
  * "Bir kunlik xizmat" — pptx slide 9. Stages run in order; each stage is a
@@ -114,6 +114,19 @@ export function ExamClient({ exam }: { exam: ExamScenario }) {
             </li>
           );
         })}
+        <li className="relative">
+          <span className={cn("absolute -left-[31px] top-4 flex h-6 w-6 items-center justify-center rounded-full border-2 bg-background", allDone ? "border-success text-success" : "border-border text-muted-foreground")}>
+            {allDone ? <CheckCircle2 className="h-4 w-4" /> : <Lock className="h-3 w-3" />}
+          </span>
+          <Card className={cn("flex flex-col gap-3 p-4 sm:flex-row sm:items-center", !allDone && "opacity-60")}>
+            <div className="w-14 shrink-0 font-mono text-lg font-bold text-primary">16:30</div>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">{t("finalStage")}</p>
+              <p className="text-xs text-muted-foreground">{t("finalStageDesc")}</p>
+            </div>
+            {aggregate != null && <Badge variant={allDone ? "success" : "outline"}>{aggregate}%</Badge>}
+          </Card>
+        </li>
       </ol>
 
       {allDone && (

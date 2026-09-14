@@ -20,6 +20,7 @@ const KIND_ICON: Record<Scenario["kind"], string> = {
   dialog: "MessageSquareWarning",
   decision: "Gauge",
   mahalla: "MapPinned",
+  document: "FileText",
   exam: "GraduationCap",
 };
 

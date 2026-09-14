@@ -81,6 +81,18 @@ export const MahallaGradeSchema = z.object({
   scores: PartialScoresSchema,
 });
 
+/* ---------- document ---------- */
+
+export const DocumentGradeSchema = z.object({
+  score: z.number().min(0).max(100),
+  elements: z.record(z.string(), z.object({ present: z.boolean(), note: z.string() })),
+  factErrors: z.array(z.string()),
+  legalErrors: z.array(z.string()),
+  strengths: z.array(z.string()),
+  feedback: z.string(),
+  scores: PartialScoresSchema,
+});
+
 /* ---------- debrief ---------- */
 
 export const DebriefStatusSchema = z.enum(["pending", "confirmed"]);
@@ -131,12 +143,17 @@ export const SessionPayloadSchema = z.discriminatedUnion("kind", [
     plans: z.record(z.string(), z.string()),
     grade: MahallaGradeSchema.optional(),
   }),
+  z.object({
+    kind: z.literal("document"),
+    text: z.string(),
+    grade: DocumentGradeSchema.optional(),
+  }),
 ]);
 
 export const TrainingSessionSchema = z.object({
   id: z.string(),
   traineeId: z.string(),
-  kind: z.enum(["dialog", "decision", "mahalla"]),
+  kind: z.enum(["dialog", "decision", "mahalla", "document"]),
   scenarioId: z.string(),
   scenarioVersion: z.string(),
   startedAt: z.string(),
@@ -197,6 +214,7 @@ export type SessionPayload = z.infer<typeof SessionPayloadSchema>;
 export type DialogPayload = Extract<SessionPayload, { kind: "dialog" }>;
 export type DecisionPayload = Extract<SessionPayload, { kind: "decision" }>;
 export type MahallaPayload = Extract<SessionPayload, { kind: "mahalla" }>;
+export type DocumentPayload = Extract<SessionPayload, { kind: "document" }>;
 export type DebriefResult = z.infer<typeof DebriefResultSchema>;
 export type DebriefLlm = z.infer<typeof DebriefLlmSchema>;
 export type TraineeProfile = z.infer<typeof TraineeProfileSchema>;

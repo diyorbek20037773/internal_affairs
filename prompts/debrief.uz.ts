@@ -2,11 +2,13 @@ import { COMPETENCIES, COMPETENCY_DEFINITIONS_UZ } from "@/data/scenarios/compet
 import type {
   DecisionScenario,
   DialogScenario,
+  DocumentScenario,
   MahallaScenario,
 } from "@/data/scenarios/types";
 import type {
   DecisionPayload,
   DialogPayload,
+  DocumentPayload,
   MahallaPayload,
 } from "@/lib/storage/trainingSchema";
 import { LAWS } from "@/data/sops/laws";
@@ -148,6 +150,26 @@ ${grade}
 
 # XODIM REJALARI
 ${plans || "(reja yozilmagan)"}`;
+}
+
+export function documentEvidence(s: DocumentScenario, p: DocumentPayload): string {
+  const g = p.grade;
+  const el = g
+    ? s.rubric.map((r) => `- ${r.id} (${r.label.uz}): ${g.elements[r.id]?.present ? "BOR" : "YO'Q"}${g.elements[r.id]?.note ? ` — ${g.elements[r.id].note}` : ""}`).join("\n")
+    : "-";
+  return `# SSENARIY: ${s.code} — ${s.title.uz} (${s.documentKind})
+Berilgan faktlar:
+${s.facts.map((f) => `- ${f.uz}`).join("\n")}
+
+# TIZIM TEKSHIRUVI
+Ball: ${g?.score ?? "-"}/100
+Elementlar:
+${el}
+Fakt xatolari: ${g?.factErrors.join("; ") || "-"}
+Huquqiy xatolar: ${g?.legalErrors.join("; ") || "-"}
+
+# XODIM HUJJATI
+${p.text.trim() || "(bo'sh)"}`;
 }
 
 export function lawsFor(keys: (keyof typeof LAWS)[]): LawRef[] {

@@ -10,20 +10,21 @@ import { useTrainingSessions } from "@/hooks/useTrainingSessions";
 import { localTrainingRepo } from "@/lib/storage/training";
 import { SessionsFileSchema, type HimoyaId } from "@/lib/storage/trainingSchema";
 import { HimoyaIdCard } from "./profile/HimoyaIdCard";
+import { AmaliyXizmatCard } from "./profile/AmaliyXizmatCard";
 import { SessionList } from "./SessionList";
 import { ProfileGate } from "./profile/ProfileGate";
 
 export function SessionsClient() {
   const t = useTranslations("sim.sessions");
-  const { profile } = useTraineeProfile();
+  const { profile, isInstructor } = useTraineeProfile();
   const { sessions, loaded, removeSession, refresh } = useTrainingSessions(profile?.id);
   const [himoyaId, setHimoyaId] = useState<HimoyaId | undefined>();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!profile) return;
-    void localTrainingRepo.getHimoyaId(profile.id).then(setHimoyaId);
-  }, [profile, sessions]);
+  const loadHimoyaId = () => {
+    if (profile) void localTrainingRepo.getHimoyaId(profile.id).then(setHimoyaId);
+  };
+  useEffect(loadHimoyaId, [profile, sessions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const exportJson = () => {
     const blob = new Blob([JSON.stringify({ version: 1, items: sessions }, null, 2)], {
@@ -53,6 +54,7 @@ export function SessionsClient() {
     <div className="space-y-6">
       <ProfileGate />
       {profile && <HimoyaIdCard profile={profile} himoyaId={himoyaId} />}
+      {profile && <AmaliyXizmatCard profile={profile} isInstructor={isInstructor} onUpdated={loadHimoyaId} />}
 
       <div className="flex flex-wrap items-center justify-end gap-2">
         <Button variant="outline" size="sm" onClick={exportJson} disabled={sessions.length === 0}>

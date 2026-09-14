@@ -266,7 +266,11 @@
       },
       "mentorTitle": "AI-Mentor recommendation",
       "mentorEmpty": "Finish your first session — AI-Mentor will set the next step.",
-      "graphProblems": "Scenario graph error"
+      "graphProblems": "Scenario graph error",
+      "document": {
+        "title": "Documentation",
+        "desc": "AI document check: law and facts. Write a protocol/report from the given facts."
+      }
     },
     "scenario": {
       "pick": "Choose a scenario",
@@ -462,7 +466,79 @@
       "stageDone": "Done",
       "stageNext": "Next",
       "allDone": "All stages completed. See the final debrief.",
-      "passed": "PASSED means not «finished the course» but «RAN A REAL DAY INDEPENDENTLY»."
+      "passed": "PASSED means not «finished the course» but «RAN A REAL DAY INDEPENDENTLY».",
+      "finalStage": "Debrief and grade",
+      "finalStageDesc": "3-question analysis, HIMOYA-ID update"
+    },
+    "document": {
+      "title": "Documentation",
+      "placeholder": "Document text: to, from, date/time, place, person, description, actions, legal basis, witnesses, proposal...",
+      "hint": "Only the given facts. No guilt conclusions. Don't invent articles.",
+      "submit": "Send for AI check",
+      "checking": "AI is checking law and facts...",
+      "result": "Check result",
+      "facts": "Given facts",
+      "rubric": "Must be in the document",
+      "forbidden": "Forbidden errors",
+      "laws": "Legal basis",
+      "words": "words",
+      "factErrors": "Fact errors",
+      "legalErrors": "Legal errors",
+      "strengths": "Strengths",
+      "kinds": {
+        "bayonnoma": "Protocol",
+        "malumotnoma": "Report",
+        "tushuntirish": "Explanatory note",
+        "hisobot": "Summary"
+      }
+    },
+    "kpi": {
+      "title": "Practical service — 30–90 day result",
+      "subtitle": "Training results show in service; service results set the next training.",
+      "cases30": "30 days: cases",
+      "cases90": "90 days: cases",
+      "done90": "90 days: completed",
+      "steps90": "90 days: completed steps",
+      "autoKpi": "Auto-KPI (completion %)",
+      "enter": "Service KPI score (0–100)",
+      "save": "Write to HIMOYA-ID",
+      "saved": "KPI added to the HIMOYA-ID effectiveness axis",
+      "note": "Source: cases from the «My Inspector» module (this device). The instructor enters the official KPI."
+    },
+    "model": {
+      "cycleTitle": "Every session's cycle",
+      "cycle": {
+        "vaziyat": "Situation",
+        "tahlil": "Analysis",
+        "muloqot": "Communication",
+        "qaror": "Decision",
+        "harakat": "Action",
+        "natija": "Result"
+      },
+      "slogan": "«We don't teach the officer — we prepare them for real service»",
+      "shift": {
+        "auditoriya": {
+          "from": "Classroom",
+          "to": "Service range"
+        },
+        "oqituvchi": {
+          "from": "Teacher",
+          "to": "Coach"
+        },
+        "tinglovchi": {
+          "from": "Listener",
+          "to": "Situation manager"
+        },
+        "test": {
+          "from": "Test",
+          "to": "Real case"
+        },
+        "sertifikat": {
+          "from": "Certificate",
+          "to": "Competency (HIMOYA-ID)"
+        }
+      },
+      "traektoriya": "100 officers — 100 different learning paths. AI does not decide — every conclusion is confirmed by an instructor."
     }
   }
 }

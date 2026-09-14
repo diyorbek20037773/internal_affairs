@@ -14,6 +14,7 @@ export function TranscriptView({ session }: { session: TrainingSession }) {
   const td = useTranslations("sim.dialog");
   const tq = useTranslations("sim.decision");
   const tm = useTranslations("sim.mahalla");
+  const tdoc = useTranslations("sim.document");
   const locale = useLocale();
   const scenario = getScenario(session.scenarioId);
   const p = session.payload;
@@ -130,6 +131,30 @@ export function TranscriptView({ session }: { session: TrainingSession }) {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {p.kind === "document" && scenario?.kind === "document" && (
+        <div className="space-y-3 text-sm">
+          <pre className="whitespace-pre-wrap rounded-lg border bg-muted/30 p-3 font-mono text-xs leading-relaxed">{p.text || "—"}</pre>
+          {p.grade && (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">{tdoc("result")}:</span>
+                <Badge variant={p.grade.score >= 70 ? "success" : p.grade.score >= 45 ? "secondary" : "destructive"}>{p.grade.score}/100</Badge>
+              </div>
+              <ul className="grid gap-1 sm:grid-cols-2">
+                {scenario.rubric.map((r) => (
+                  <li key={r.id} className={cn("text-xs", p.grade!.elements[r.id]?.present ? "text-success" : "text-destructive")}>
+                    {p.grade!.elements[r.id]?.present ? "✓" : "✗"} {localized(r.label, locale)}
+                  </li>
+                ))}
+              </ul>
+              {p.grade.factErrors.length > 0 && <p className="text-xs"><b>{tdoc("factErrors")}:</b> {p.grade.factErrors.join("; ")}</p>}
+              {p.grade.legalErrors.length > 0 && <p className="text-xs"><b>{tdoc("legalErrors")}:</b> {p.grade.legalErrors.join("; ")}</p>}
+              <p className="border-l-2 border-accent pl-2 text-xs italic text-muted-foreground">{p.grade.feedback}</p>
+            </>
+          )}
         </div>
       )}
     </Card>

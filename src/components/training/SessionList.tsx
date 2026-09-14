@@ -16,6 +16,7 @@ const KIND_ICON: Record<TrainingSession["kind"], string> = {
   dialog: "MessageSquareWarning",
   decision: "Gauge",
   mahalla: "MapPinned",
+  document: "FileText",
 };
 
 export function sessionHref(s: TrainingSession): string {
@@ -27,6 +28,8 @@ export function sessionHref(s: TrainingSession): string {
       return `/simulyator/qaror/${s.scenarioId}?session=${s.id}`;
     case "mahalla":
       return `/simulyator/mahalla/${s.scenarioId}?session=${s.id}`;
+    case "document":
+      return `/simulyator/hujjat/${s.scenarioId}?session=${s.id}`;
   }
 }
 

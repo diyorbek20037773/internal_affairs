@@ -8,7 +8,7 @@ export type { LocalizedText };
 /* Common                                                                   */
 /* ------------------------------------------------------------------------ */
 
-export type ScenarioKind = "dialog" | "decision" | "mahalla" | "exam";
+export type ScenarioKind = "dialog" | "decision" | "mahalla" | "document" | "exam";
 export type Difficulty = 1 | 2 | 3;
 
 export interface ScenarioBase {
@@ -242,7 +242,35 @@ export interface MahallaGrade {
 }
 
 /* ------------------------------------------------------------------------ */
-/* 4. Exam — "Bir kunlik xizmat"                                            */
+/* 4. Hujjatlashtirish — AI hujjat tekshiruvi (qonun va fakt)                */
+/* ------------------------------------------------------------------------ */
+
+export type DocumentKindH360 = "bayonnoma" | "malumotnoma" | "tushuntirish" | "hisobot";
+
+export interface DocumentScenario extends ScenarioBase {
+  kind: "document";
+  documentKind: DocumentKindH360;
+  /** Case facts the trainee must document — shown to trainee. */
+  facts: LocalizedText[];
+  /** Deliberate traps: facts that must NOT appear (assumptions, guilt, invented articles). */
+  forbidden: string[];
+  /** Must-have elements (uz) — the AI checks each. */
+  rubric: { id: string; label: LocalizedText; hint?: string }[];
+  minWords: number;
+}
+
+export interface DocumentGrade {
+  score: number; // 0-100
+  elements: Record<string, { present: boolean; note: string }>;
+  factErrors: string[]; // wrong / invented facts
+  legalErrors: string[]; // wrong articles, conclusions beyond authority
+  strengths: string[];
+  feedback: string;
+  scores: Partial<CompetencyScores>;
+}
+
+/* ------------------------------------------------------------------------ */
+/* 5. Exam — "Bir kunlik xizmat"                                            */
 /* ------------------------------------------------------------------------ */
 
 export interface ExamStage {
@@ -257,4 +285,4 @@ export interface ExamScenario extends ScenarioBase {
   stages: ExamStage[];
 }
 
-export type Scenario = DialogScenario | DecisionScenario | MahallaScenario | ExamScenario;
+export type Scenario = DialogScenario | DecisionScenario | MahallaScenario | DocumentScenario | ExamScenario;
