@@ -8,13 +8,13 @@ export const dynamic = "force-dynamic";
 const TTS_MODEL = process.env.GEMINI_TTS_MODEL || "gemini-2.5-flash-preview-tts";
 const VOICE = process.env.GEMINI_TTS_VOICE || "Kore";
 
-// Explicit language codes for well-supported languages; uz is left to
-// auto-detection (avoids an unsupported-languageCode error) — the model is
-// multilingual and reads Uzbek text best-effort.
-const LANG_CODE: Record<string, string | undefined> = {
-  ru: "ru-RU",
-  en: "en-US",
-  uz: undefined,
+// The Gemini TTS model auto-detects the text language; passing `languageCode`
+// made ru/en requests fail (INVALID_ARGUMENT) while uz — sent without it —
+// worked. So we never send it and steer pronunciation via a short prefix.
+const LANG_HINT: Record<string, string> = {
+  ru: "Прочитай по-русски: ",
+  en: "Read in English: ",
+  uz: "O'zbek tilida o'qi: ",
 };
 
 const BodySchema = z.object({
@@ -57,18 +57,16 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "invalid_request" }, { status: 400 });
   }
 
-  const languageCode = LANG_CODE[body.locale];
-
   const speechConfig: Record<string, unknown> = {
     voiceConfig: { prebuiltVoiceConfig: { voiceName: VOICE } },
   };
-  if (languageCode) speechConfig.languageCode = languageCode;
+  const text = (LANG_HINT[body.locale] ?? "") + body.text;
 
   try {
     const { data, mime } = await withKeyFailover(async (ai) => {
       const res = await ai.models.generateContent({
         model: TTS_MODEL,
-        contents: [{ role: "user", parts: [{ text: body.text }] }],
+        contents: [{ role: "user", parts: [{ text }] }],
         config: {
           responseModalities: ["AUDIO"],
           speechConfig,
@@ -90,7 +88,8 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err) {
-    console.error("[/api/tts] error", err);
-    return Response.json({ error: "tts_failed" }, { status: 502 });
+    const detail = err instanceof Error ? err.message.slice(0, 300) : String(err).slice(0, 300);
+    console.error("[/api/tts] error", detail);
+    return Response.json({ error: "tts_failed", detail }, { status: 502 });
   }
 }
