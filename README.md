@@ -1,4 +1,36 @@
-# 🚔 Mening Inspektorim — AI Digital Inspector
+# 🛡 HIMOYA-360 — milliy smart-ta'lim modeli
+
+**HIMOYA-360** — O'zbekiston Respublikasi IIV xodimlarini real xizmat vaziyatlariga tayyorlovchi **ssenariyli simulyatsion o'qitish platformasi** (Kasbiy rivojlanish markazi modeli). Ichida **«Mening Inspektorim»** — xizmat jarayonidagi AI yordamchi moduli.
+
+> **Shior:** «Xodimni o'qitmaymiz — uni real xizmatga tayyorlaymiz». Sikl: VAZIYAT → TAHLIL → MULOQOT → QAROR → HARAKAT → NATIJA.
+
+## Trenajyorlar (HIMOYA-360)
+
+| Xona | Route | Nima qiladi |
+|---|---|---|
+| **AI-Muloqot simulyatori** | `/simulyator/muloqot` | Gemini rol o'ynaydigan virtual fuqaro (jahldor / qo'rqqan / nizoli / jabrlanuvchi / norozi). Yashirin holat (taranglik, ishonch, hamkorlik) serverda hisoblanadi; xodim faqat trend + ohang + bosqichni ko'radi. Matn + ovoz (STT/TTS). |
+| **Qaror simulyatori** | `/simulyator/qaror` | Tarmoqlanuvchi (branching) ssenariy, tugun taymeri, 3–5 variant. Har variantda **qonuniylik** va **mutanosiblik** (0–3). Tezlik baholanmaydi; «to'g'ri otmaslik» = a'lo. |
+| **Smart Mahalla** | `/simulyator/mahalla` | Virtual uchastka (SVG xarita, yashil/sariq/qizil), murojaatlar oqimi, TOP-3 muammo + harakat rejasi. Ustuvorlik deterministik, reja — AI rubrika bo'yicha. |
+| **Smart Debrifing** | `/simulyator/debrif/[id]` | 3 savol (to'g'ri / xato qayerda `turn:N`, `node:ID` / keyingi safar), 8 kompetensiya. `final = 0.6·tizim + 0.4·AI`. **Instruktor tasdiqlaydi** — shundan keyin HIMOYA-ID yangilanadi. |
+| **HIMOYA-ID + AI-Mentor** | `/mashgulotlarim`, `/simulyator` | 8 yo'nalishli kompetensiya radar (rolling mean). Mentor eng zaif yo'nalish bo'yicha keyingi ssenariyni tavsiya qiladi (rule-based). |
+| **Bir kunlik xizmat** | `/simulyator/imtihon` | Yakuniy imtihon — 09:00→15:00 bosqichlar bitta zanjirda. |
+| **Instruktor kabineti** | `/instruktor` | Tasdiq kutayotgan debriflar, o'quvchilar jadvali (profil roli = instruktor). |
+
+Ssenariylar — `data/scenarios/` da qo'lda yozilgan TS data (runtime'da LLM yaratmaydi → deterministik baho, instruktor tekshira oladi). Huquqiy asos faqat `data/sops/laws.ts` dagi tasdiqlangan moddalardan.
+
+**Xalqaro asos:** Stockton PD ssenariyli mashq (rol o'ynovchi + darhol debrif), PERF ICAT (Critical Decision-Making Model), VirTra/Axon (branching), UK Hydra (immersiv debrif), Niderlandiya Politieacademie VR, Singapur HTA. Biz **AI + veb** bilan boshlaymiz — planshet brauzerida ishlaydi, jihoz kerak emas; VR — keyingi bosqich.
+
+### Muhim texnik qarorlar
+- `src/lib/gemini/client.ts` → `generateJson()` — Gemini JSON mode (`responseSchema` + zod + 1 repair retry).
+- `src/lib/storage/training.ts` → `TrainingRepo` (async, localStorage) — Postgres'ga almashtirish nuqtasi. Kalitlar: `h360:profile:v1`, `h360:sessions:v1`, `h360:himoyaId:v1`.
+- `src/lib/training/` → `dialogState` (holat matematikasi), `decisionEngine`, `competency` (baholash), `mentor`, `debrief`.
+- `/api/sim/{dialog,debrief,mahalla-grade}` — barchasi `no_keys_configured` (500) / `ai_unavailable` (503) / `bad_ai_output` (502) kontraktida.
+- Auth yo'q (MVP): lokal profil `role: trainee|instructor`. Har yozuvda `traineeId` bor.
+
+---
+
+## «Mening Inspektorim» moduli
+
 
 AI raqamli yordamchi — O'zbekiston Respublikasi Ichki ishlar organlari **profilaktika inspektori** uchun. Bu oddiy chatbot emas, **AI Workflow Engine**: hodisa yuz berganda inspektorni bosqichma-bosqich (SOP) yo'naltiradi — nima qilish, qaysi hujjat, qaysi qonun moddasi, qaysi organga xabar berish.
 
@@ -64,4 +96,4 @@ messages/{uz,ru,en}.json      # tarjimalar
 
 ---
 
-O'zbekiston Respublikasi Ichki ishlar vazirligi — MVP 1.0
+O'zbekiston Respublikasi Ichki ishlar vazirligi — HIMOYA-360 v2.0 (MVP)

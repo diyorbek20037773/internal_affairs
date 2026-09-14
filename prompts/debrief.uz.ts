@@ -1,0 +1,155 @@
+import { COMPETENCIES, COMPETENCY_DEFINITIONS_UZ } from "@/data/scenarios/competencies";
+import type {
+  DecisionScenario,
+  DialogScenario,
+  MahallaScenario,
+} from "@/data/scenarios/types";
+import type {
+  DecisionPayload,
+  DialogPayload,
+  MahallaPayload,
+} from "@/lib/storage/trainingSchema";
+import { LAWS } from "@/data/sops/laws";
+import type { LawRef } from "@/data/sops/types";
+
+/**
+ * Smart Debrifing grader (pptx slide 7): 3 questions + 8 competency scores.
+ * The model explains and scores; it never invents legal article numbers —
+ * only the scenario's own `laws[]` may be cited.
+ */
+export function buildDebriefSystemInstruction(laws: LawRef[]): string {
+  const defs = COMPETENCIES.map((c) => `- ${c}: ${COMPETENCY_DEFINITIONS_UZ[c]}`).join("\n");
+  const lawList = laws.length
+    ? laws
+        .map((l) => `- ${l.code}${l.article ? `, ${l.article}` : ""}${l.title ? ` — ${l.title}` : ""}${l.verified ? "" : " (tasdiqlanishi kerak)"}`)
+        .join("\n")
+    : "- (yo'q)";
+
+  return `Sen HIMOYA-360 platformasining instruktor-yordamchisisan (Smart Debrifing). Ichki ishlar organi xodimining o'quv mashg'ulotini tahlil qilasan.
+
+# TAMOYILLAR
+- Xato JAZOLANMAYDI — u keyingi to'g'ri qaror uchun TAJRIBAGA aylantiriladi. Ohang: hurmatli, aniq, konstruktiv, o'zbek tilida.
+- Har bir xato uchun ANIQ JOYNI ko'rsat: "turn:N" (dialogda xodimning N-navbati), "node:ID/option:ID" (qaror simulyatorida), "problem:ID" (mahallada).
+- Baholanadigan narsa TEZLIK EMAS — qarorning QONUNIYLIGI va MUTANOSIBLIGI, muloqot sifati, natija.
+- Qurol/kuch ishlatmaslik, agar shart bo'lmagan bo'lsa — A'LO baho.
+- Huquqiy asos sifatida FAQAT quyidagi ro'yxatdagi hujjatlarni tilga ol. Yangi modda raqami O'YLAB TOPMA. Ishonch bo'lmasa "rasmiy manbadan (lex.uz) tasdiqlash kerak" deb yoz.
+
+# RUXSAT ETILGAN HUQUQIY ASOSLAR
+${lawList}
+
+# 8 KOMPETENSIYA (0–100)
+${defs}
+Faqat mashg'ulotda haqiqatan ko'ringan kompetensiyalarni asosli bahola. Ko'rinmagan kompetensiyaga neytral 50 qo'y.
+
+# CHIQISH — FAQAT JSON
+{
+ "whatWentRight": string[] (2–4 band, aniq, mashg'ulotdan misol bilan),
+ "mistakes": [{"ref": string, "text": string}] (1–4 band; ref formatlari yuqorida),
+ "doDifferently": string[] (2–4 aniq harakat — "keyingi safar ..."),
+ "scores": {${COMPETENCIES.map((c) => `"${c}": int`).join(", ")}},
+ "summary": string (2–3 gap: xodim qaysi vaziyatni MUSTAQIL boshqara oladi, qayerda instruktor nazorati kerak)
+}`;
+}
+
+export const DEBRIEF_RESPONSE_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    whatWentRight: { type: "ARRAY", items: { type: "STRING" } },
+    mistakes: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: { ref: { type: "STRING" }, text: { type: "STRING" } },
+        required: ["ref", "text"],
+      },
+    },
+    doDifferently: { type: "ARRAY", items: { type: "STRING" } },
+    scores: {
+      type: "OBJECT",
+      properties: Object.fromEntries(COMPETENCIES.map((c) => [c, { type: "INTEGER" }])),
+      required: [...COMPETENCIES],
+    },
+    summary: { type: "STRING" },
+  },
+  required: ["whatWentRight", "mistakes", "doDifferently", "scores", "summary"],
+} as const;
+
+/* ---------------- user-turn builders (compact evidence) ---------------- */
+
+export function dialogEvidence(s: DialogScenario, p: DialogPayload): string {
+  let officerN = 0;
+  const lines = p.transcript.map((t) => {
+    if (t.role === "officer") {
+      officerN++;
+      const a = t.assessment;
+      const meta = a
+        ? ` [ohang=${a.tone}; bosqich=${a.phaseDetected}; Δtaranglik=${a.delta.tension}; flags=${a.flags.join(",") || "-"}${a.coachNote ? `; murabbiy: ${a.coachNote}` : ""}]`
+        : "";
+      return `turn:${officerN} XODIM: ${t.text}${meta}`;
+    }
+    return `FUQARO: ${t.text}`;
+  });
+  const hints = Object.entries(s.rubricHints)
+    .map(([k, v]) => `- ${k}: ${v}`)
+    .join("\n");
+  return `# SSENARIY: ${s.code} — ${s.title.uz}
+Fuqaro: ${s.persona.name}, ${s.persona.age}, turi=${s.persona.type}. Joy: ${s.setting.uz}
+Fuqaro nima istagan edi: ${s.persona.grievance}
+Sir faktlar (ochilishi kerak edi): ${s.persona.secretFacts.join(" | ")}
+Ochilganlari: ${p.state.revealed.length ? p.state.revealed.join(" | ") : "hech biri"}
+Yakun: ${p.endReason ?? "noma'lum"}; oxirgi holat: taranglik=${p.state.tension}, ishonch=${p.state.trust}, hamkorlik=${p.state.cooperation}, bosqich=${p.state.phase}
+
+# BAHOLASH UCHUN YO'RIQ (instruktor rubrikasi)
+${hints || "-"}
+
+# YOZUV
+${lines.join("\n")}`;
+}
+
+export function decisionEvidence(s: DecisionScenario, p: DecisionPayload): string {
+  const steps = p.path.map((st, i) => {
+    const node = s.nodes[st.nodeId];
+    if (!node) return `${i + 1}. node:${st.nodeId} (?)`;
+    const opt = st.optionId ? node.options.find((o) => o.id === st.optionId) : undefined;
+    const alt = node.options
+      .map((o) => `   · option:${o.id} [qonuniylik=${o.legality}/3, mutanosiblik=${o.proportionality}/3]${o.id === st.optionId ? " ← TANLANDI" : ""}: ${o.text.uz}`)
+      .join("\n");
+    return `${i + 1}. node:${node.id}${node.chainPrompt ? ` (${node.chainPrompt})` : ""}: ${node.situation.uz}
+${alt}
+   Oqibat: ${st.timedOut ? "VAQT TUGADI (vaziyat baholanmadi)" : opt?.consequence.uz ?? "-"}`;
+  });
+  return `# SSENARIY: ${s.code} — ${s.title.uz}
+${s.brief.uz}
+Yakun: ${p.outcome ?? "tugallanmagan"}
+Optimal yo'l (option id lar): ${s.optimalPath?.join(" → ") ?? "-"}
+
+# XODIM YO'LI
+${steps.join("\n")}`;
+}
+
+export function mahallaEvidence(s: MahallaScenario, p: MahallaPayload): string {
+  const title = (id: string) => s.problems.find((x) => x.id === id)?.title.uz ?? id;
+  const plans = Object.entries(p.plans)
+    .map(([id, text]) => `problem:${id} (${title(id)}):\n${text || "(bo'sh)"}`)
+    .join("\n\n");
+  const grade = p.grade
+    ? `Ustuvorlik bali (tizim): ${p.grade.prioritizationScore}/100\n` +
+      Object.entries(p.grade.planScores)
+        .map(([id, g]) => `problem:${id}: reja ${g.score}/100; yetishmaydi: ${g.missing.join("; ") || "-"}`)
+        .join("\n")
+    : "-";
+  return `# SSENARIY: ${s.code} — ${s.title.uz}
+Xodim tanlagan TOP-3 (tartib bilan): ${p.picked.map((id, i) => `${i + 1}) problem:${id} ${title(id)}`).join("; ")}
+To'g'ri TOP-3: ${s.answerKey.top3.map((id, i) => `${i + 1}) problem:${id} ${title(id)}`).join("; ")}
+Asos: ${s.answerKey.rationale.uz}
+
+# TIZIM BAHOSI
+${grade}
+
+# XODIM REJALARI
+${plans || "(reja yozilmagan)"}`;
+}
+
+export function lawsFor(keys: (keyof typeof LAWS)[]): LawRef[] {
+  return keys.map((k) => LAWS[k] as LawRef);
+}

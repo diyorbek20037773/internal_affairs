@@ -24,9 +24,11 @@ import { cn } from "@/lib/utils";
 export function DialogSimClient({
   scenario,
   sessionId,
+  exam,
 }: {
   scenario: DialogScenario;
   sessionId?: string;
+  exam?: { examId: string; examStageIndex: number };
 }) {
   const create = useCallback(
     (traineeId: string, exam?: { examId: string; examStageIndex: number }) =>
@@ -37,6 +39,7 @@ export function DialogSimClient({
     scenarioId: scenario.id,
     sessionId,
     create,
+    exam,
   });
 
   if (needsProfile) return <ProfileGate />;

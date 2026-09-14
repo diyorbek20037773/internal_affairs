@@ -1,18 +1,18 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { KeysBanner } from "@/components/chat/KeysBanner";
-import { DialogSimClient } from "@/components/training/dialog/DialogSimClient";
-import { DIALOG_SCENARIOS } from "@/data/scenarios/dialog";
-import { getDialogScenario } from "@/data/scenarios";
+import { MahallaClient } from "@/components/training/mahalla/MahallaClient";
+import { MAHALLA_SCENARIOS } from "@/data/scenarios/mahalla";
+import { getMahallaScenario } from "@/data/scenarios";
 import { routing } from "@/i18n/routing";
 
 export function generateStaticParams() {
   return routing.locales.flatMap((locale) =>
-    DIALOG_SCENARIOS.map((s) => ({ locale, scenarioId: s.id }))
+    MAHALLA_SCENARIOS.map((s) => ({ locale, scenarioId: s.id }))
   );
 }
 
-export default function MuloqotScenarioPage({
+export default function MahallaScenarioPage({
   params,
   searchParams,
 }: {
@@ -20,21 +20,19 @@ export default function MuloqotScenarioPage({
   searchParams: { session?: string; exam?: string; stage?: string };
 }) {
   setRequestLocale(params.locale);
-  const scenario = getDialogScenario(params.scenarioId);
+  const scenario = getMahallaScenario(params.scenarioId);
   if (!scenario) notFound();
 
   return (
-    <div className="flex h-full flex-col p-3 md:p-4">
+    <div className="mx-auto max-w-6xl p-4 md:p-8">
       <KeysBanner />
-      <div className="min-h-0 flex-1">
-        <DialogSimClient scenario={scenario} sessionId={searchParams.session}
+      <MahallaClient scenario={scenario} sessionId={searchParams.session}
           exam={
             searchParams.exam && searchParams.stage !== undefined
               ? { examId: searchParams.exam, examStageIndex: Number(searchParams.stage) }
               : undefined
           }
         />
-      </div>
     </div>
   );
 }
