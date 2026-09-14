@@ -8,6 +8,38 @@ interface UseSpeechOptions {
   locale: string;
 }
 
+
+/** Decode any recorded blob and re-encode as 16 kHz mono 16-bit PCM WAV (what the STT model expects). */
+async function blobToWav16k(blob: Blob): Promise<ArrayBuffer> {
+  const AC = (window as any).AudioContext || (window as any).webkitAudioContext;
+  const ctx: AudioContext = new AC();
+  const decoded = await ctx.decodeAudioData(await blob.arrayBuffer());
+  const target = 16000;
+  const length = Math.ceil(decoded.duration * target);
+  const OAC = (window as any).OfflineAudioContext || (window as any).webkitOfflineAudioContext;
+  const off: OfflineAudioContext = new OAC(1, length, target);
+  const src = off.createBufferSource();
+  src.buffer = decoded;
+  src.connect(off.destination);
+  src.start(0);
+  const rendered = await off.startRendering();
+  const pcm = rendered.getChannelData(0);
+  const out = new ArrayBuffer(44 + pcm.length * 2);
+  const v = new DataView(out);
+  const w = (o: number, t: string) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+  w(0, "RIFF"); v.setUint32(4, 36 + pcm.length * 2, true); w(8, "WAVE"); w(12, "fmt ");
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, target, true); v.setUint32(28, target * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  w(36, "data"); v.setUint32(40, pcm.length * 2, true);
+  let o = 44;
+  for (let i = 0; i < pcm.length; i++, o += 2) {
+    const x = Math.max(-1, Math.min(1, pcm[i]));
+    v.setInt16(o, x < 0 ? x * 0x8000 : x * 0x7fff, true);
+  }
+  try { await ctx.close(); } catch {}
+  return out;
+}
+
 const STT_LANG: Record<string, string[]> = {
   uz: ["uz-UZ", "ru-RU"],
   ru: ["ru-RU"],
@@ -72,14 +104,15 @@ export function useSpeech({ locale }: UseSpeechOptions) {
         setProcessing(true);
         setInterim("…");
         try {
-          const buf = await blob.arrayBuffer();
+          // Gemini accepts wav/mp3/ogg/aac but not Chrome's webm — transcode to 16 kHz mono WAV in the browser.
+          const wav = await blobToWav16k(blob);
           let bin = "";
-          const bytes = new Uint8Array(buf);
+          const bytes = new Uint8Array(wav);
           for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + 0x8000)));
           const res = await fetch("/api/stt", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ audio: btoa(bin), mimeType: (rec.mimeType || mime || "audio/webm").split(";")[0], locale }),
+            body: JSON.stringify({ audio: btoa(bin), mimeType: "audio/wav", locale }),
           });
           if (!res.ok) throw new Error(String(res.status));
           const j = (await res.json()) as { text?: string };
