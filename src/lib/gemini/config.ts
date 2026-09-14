@@ -7,6 +7,18 @@ export const GENERATION_CONFIG = {
 };
 
 /**
+ * Structured (JSON-mode) generation profiles used by the HIMOYA-360 trainers.
+ * `citizen` — virtual citizen role-play: warmer, more varied.
+ * `grader`  — debrief / rubric grading: cold and deterministic.
+ */
+export const JSON_GENERATION_CONFIG = {
+  citizen: { temperature: 0.7, topP: 0.95, maxOutputTokens: 1024 },
+  grader: { temperature: 0.2, topP: 0.9, maxOutputTokens: 4096 },
+} as const;
+
+export type JsonProfile = keyof typeof JSON_GENERATION_CONFIG;
+
+/**
  * Safety settings — relaxed for a law-enforcement professional tool that must
  * discuss crimes/incidents factually. We still rely on the system prompt guards.
  */

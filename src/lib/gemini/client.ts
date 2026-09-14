@@ -1,6 +1,12 @@
-import type { Content } from "@google/genai";
+import type { Content, Schema } from "@google/genai";
 import { withKeyFailover } from "./keyPool";
-import { GEMINI_MODEL, GENERATION_CONFIG, SAFETY_SETTINGS } from "./config";
+import {
+  GEMINI_MODEL,
+  GENERATION_CONFIG,
+  JSON_GENERATION_CONFIG,
+  SAFETY_SETTINGS,
+  type JsonProfile,
+} from "./config";
 
 export interface StreamChatArgs {
   contents: Content[];
@@ -63,4 +69,103 @@ export async function generateText({
     });
     return response.text ?? "";
   });
+}
+
+/* ------------------------------------------------------------------------ */
+/* Structured JSON generation (HIMOYA-360 trainers)                          */
+/* ------------------------------------------------------------------------ */
+
+export class JsonOutputError extends Error {
+  constructor(message = "Gemini returned malformed JSON", public raw?: string) {
+    super(message);
+    this.name = "JsonOutputError";
+  }
+}
+
+export interface GenerateJsonArgs<T> {
+  contents: Content[];
+  systemInstruction: string;
+  /** Gemini response schema (`Type.OBJECT` …) — enforces shape + enums. */
+  responseSchema: Schema;
+  /** Strict parser (zod safeParse wrapper). MUST throw on invalid input. */
+  parse: (raw: unknown) => T;
+  profile?: JsonProfile;
+  /** Repair retries after the first malformed answer. Default 1. */
+  retries?: number;
+}
+
+function stripFences(text: string): string {
+  const trimmed = text.trim();
+  const m = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  return m ? m[1] : trimmed;
+}
+
+/**
+ * Generate a JSON document that satisfies `responseSchema` and `parse`.
+ * Key failover happens inside each attempt; a malformed answer triggers one
+ * repair attempt with an explicit "JSON only" reminder appended to the turn.
+ */
+export async function generateJson<T>({
+  contents,
+  systemInstruction,
+  responseSchema,
+  parse,
+  profile = "grader",
+  retries = 1,
+}: GenerateJsonArgs<T>): Promise<T> {
+  const gen = JSON_GENERATION_CONFIG[profile];
+  let lastRaw = "";
+  let lastErr: unknown;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const turn: Content[] =
+      attempt === 0
+        ? contents
+        : [
+            ...contents,
+            {
+              role: "user",
+              parts: [
+                {
+                  text:
+                    "Oldingi javob sxemaga mos kelmadi. FAQAT to'g'ri JSON qaytar, izohsiz, kod bloksiz.",
+                },
+              ],
+            },
+          ];
+
+    const raw = await withKeyFailover(async (ai) => {
+      const response = await ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: turn,
+        config: {
+          systemInstruction,
+          temperature: gen.temperature,
+          topP: gen.topP,
+          maxOutputTokens: gen.maxOutputTokens,
+          responseMimeType: "application/json",
+          responseSchema,
+          safetySettings: SAFETY_SETTINGS as unknown as never,
+        },
+      });
+      return response.text ?? "";
+    });
+
+    lastRaw = raw;
+    try {
+      const json = JSON.parse(stripFences(raw));
+      return parse(json);
+    } catch (err) {
+      lastErr = err;
+      console.warn(
+        `[gemini] JSON parse failed (attempt ${attempt + 1}/${retries + 1})`,
+        err instanceof Error ? err.message : err
+      );
+    }
+  }
+
+  throw new JsonOutputError(
+    lastErr instanceof Error ? lastErr.message : undefined,
+    lastRaw.slice(0, 500)
+  );
 }

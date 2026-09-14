@@ -1,7 +1,7 @@
 {
   "common": {
-    "appName": "Mening Inspektorim",
-    "appSubtitle": "AI raqamli inspektor yordamchisi",
+    "appName": "HIMOYA-360",
+    "appSubtitle": "Milliy smart-ta'lim modeli",
     "ministry": "O'zbekiston Respublikasi Ichki ishlar vazirligi",
     "cancel": "Bekor qilish",
     "save": "Saqlash",
@@ -23,7 +23,18 @@
     "noKeys": "Gemini API kalitlari sozlanmagan. Administrator bilan bog'laning.",
     "errorGeneric": "Xatolik yuz berdi. Qayta urinib ko'ring.",
     "comingSoon": "Tez orada",
-    "keysSetupHint": "GEMINI_API_KEYS sozlanmagan — AI hozircha javob bermaydi. Railway → Variables bo'limiga kalit(lar) qo'shing."
+    "keysSetupHint": "GEMINI_API_KEYS sozlanmagan — AI hozircha javob bermaydi. Railway → Variables bo'limiga kalit(lar) qo'shing.",
+    "legacyModule": "Mening Inspektorim",
+    "badOutput": "AI javobi noto'g'ri formatda keldi. Qayta urinib ko'ring.",
+    "start": "Boshlash",
+    "next": "Keyingi",
+    "finish": "Yakunlash",
+    "minutes": "daq",
+    "difficulty": "Daraja",
+    "yes": "Ha",
+    "no": "Yo'q",
+    "confirm": "Tasdiqlash",
+    "edit": "Tahrirlash"
   },
   "modules": {
     "title": "Modullar",
@@ -48,12 +59,20 @@
     "voice": "Ovozli yordamchi",
     "qonunchilik": "Qonunchilik",
     "ishlarim": "Mening ishlarim",
-    "guide": "Tezkor qo'llanma"
+    "guide": "Tezkor qo'llanma",
+    "simulyator": "Simulyator",
+    "mashgulotlarim": "Mashg'ulotlarim",
+    "instruktor": "Instruktor kabineti",
+    "profil": "Profil",
+    "groups": {
+      "himoya": "HIMOYA-360 trenajyorlar",
+      "inspektor": "Mening Inspektorim"
+    }
   },
   "dashboard": {
-    "title": "Bosh sahifa",
-    "welcome": "Xush kelibsiz, inspektor",
-    "subtitle": "Har bir qaror — qonunchilik va tasdiqlangan tartiblar asosida.",
+    "title": "HIMOYA-360 — xodimni o'qitmaymiz, uni real xizmatga tayyorlaymiz",
+    "welcome": "Xush kelibsiz",
+    "subtitle": "Vaziyat → Tahlil → Muloqot → Qaror → Harakat → Natija. Har bir mashg'ulot — real xizmat holati, har bir xato — tajriba.",
     "stats": {
       "todayIncidents": "Bugungi hodisalar",
       "completed": "Bajarilgan jarayonlar",
@@ -85,7 +104,13 @@
         "title": "Tezkor qo'llanma",
         "desc": "Platformadan foydalanish bo'yicha qisqa yo'riqnoma"
       }
-    }
+    },
+    "trainersTitle": "Trenajyorlar",
+    "trainersSubtitle": "Kasbiy rivojlanish markazining 4 xonasi — bitta platformada.",
+    "inspectorTitle": "Mening Inspektorim",
+    "inspectorSubtitle": "Xizmat jarayonidagi AI yordamchi — hodisa, SOP, qonunchilik.",
+    "setupProfile": "Boshlash uchun profilni to'ldiring",
+    "setupProfileDesc": "Ism, xizmat ID (masalan SH-0473), unvon va hudud — HIMOYA-ID shu profilga bog'lanadi."
   },
   "chat": {
     "title": "AI Inspektor",
@@ -218,5 +243,226 @@
     "uz": "O'zbekcha",
     "ru": "Ruscha",
     "en": "Inglizcha"
+  },
+  "sim": {
+    "hub": {
+      "title": "Simulyator",
+      "subtitle": "Ssenariyli o'qitish: virtual fuqaro, qaror zanjiri, virtual mahalla, smart debrifing.",
+      "dialog": {
+        "title": "AI-Muloqot simulyatori",
+        "desc": "Virtual fuqaro bilan jonli muloqot: tinglash, deeskalatsiya, kelishuv."
+      },
+      "decision": {
+        "title": "Qaror simulyatori",
+        "desc": "Ssenariyli vaziyat: xavfni baholang, mutanosib chora tanlang. Tezlik emas — qonuniylik."
+      },
+      "mahalla": {
+        "title": "Smart Mahalla",
+        "desc": "Virtual uchastka: bugungi 3 muammo va harakat rejasi."
+      },
+      "exam": {
+        "title": "Bir kunlik xizmat",
+        "desc": "Yakuniy imtihon — to'liq ish kuni bitta ssenariyda."
+      },
+      "mentorTitle": "AI-Mentor tavsiyasi",
+      "mentorEmpty": "Birinchi mashg'ulotni yakunlang — AI-Mentor keyingi qadamni belgilaydi.",
+      "graphProblems": "Ssenariy grafida xatolik"
+    },
+    "scenario": {
+      "pick": "Ssenariyni tanlang",
+      "start": "Mashg'ulotni boshlash",
+      "resume": "Davom ettirish",
+      "setting": "Vaziyat",
+      "laws": "Huquqiy asos",
+      "trains": "Rivojlantiradi",
+      "inProgress": "Boshlangan"
+    },
+    "dialog": {
+      "title": "AI-Muloqot simulyatori",
+      "placeholder": "Fuqaroga nima deysiz?",
+      "you": "Xodim",
+      "citizen": "Fuqaro",
+      "stateTitle": "Jonli holat",
+      "tension": "Taranglik",
+      "trend": "Vaziyat",
+      "tone": "Sizning ohangingiz",
+      "phase": "Bosqich",
+      "turns": "Navbat",
+      "speakReplies": "Javobni ovozda o'qish",
+      "thinking": "Fuqaro javob bermoqda...",
+      "endedKelishuv": "Kelishuvga erishildi. Vaziyat qonuniy va tinch yakunlandi.",
+      "endedEskalatsiya": "Vaziyat nazoratdan chiqdi — eskalatsiya. Debrifda tahlil qilamiz.",
+      "endedLimit": "Navbatlar tugadi. Kelishuvga erishilmadi — debrifda tahlil qilamiz.",
+      "goDebrief": "Debrifingga o'tish",
+      "abandon": "Mashg'ulotni to'xtatish",
+      "trend_yumshayapti": "yumshayapti ▼",
+      "trend_keskinlashyapti": "keskinlashyapti ▲",
+      "trend_ozgarishsiz": "o'zgarishsiz",
+      "phases": {
+        "tinglash": "Tinglash",
+        "savol": "Savol",
+        "profiling": "Profiling",
+        "deeskalatsiya": "Deeskalatsiya",
+        "tushuntirish": "Tushuntirish",
+        "kelishuv": "Kelishuv"
+      },
+      "tones": {
+        "xotirjam": "xotirjam",
+        "rasmiy": "rasmiy",
+        "qattiq": "qattiq",
+        "bepisand": "bepisand",
+        "tahdidli": "tahdidli",
+        "hamdard": "hamdard"
+      }
+    },
+    "decision": {
+      "title": "Qaror simulyatori",
+      "timer": "Qaror uchun vaqt",
+      "chooseOption": "Chorani tanlang",
+      "consequence": "Oqibat",
+      "continue": "Davom etish",
+      "timeout": "Vaqt tugadi",
+      "chain": {
+        "xavf": "Xavf bormi?",
+        "muloqot": "Muloqot kerakmi?",
+        "kutish": "Kutish kerakmi?",
+        "yordam": "Yordam chaqirishmi?",
+        "chora": "Qanday chora mutanosib?"
+      },
+      "legality": "Qonuniylik",
+      "proportionality": "Mutanosiblik",
+      "outcome": {
+        "success": "Qonuniy va mutanosib yakun",
+        "partial": "Qisman to'g'ri",
+        "fail": "Muvaffaqiyatsiz yakun"
+      },
+      "hint": "Baholanadigan narsa tezlik emas — qarorning qonuniyligi va mutanosibligi. «To'g'ri otmaslik» ham a'lo baho."
+    },
+    "mahalla": {
+      "title": "Smart Mahalla",
+      "map": "Uchastka xaritasi",
+      "feed": "Bugungi oqim",
+      "problems": "Muammolar ro'yxati",
+      "pickTop3": "Bugungi eng muhim 3 muammoni tartib bilan tanlang",
+      "picked": "Tanlangan",
+      "plan": "Harakat rejasi",
+      "planPlaceholder": "Men nima qilaman? Aniq qadamlar, kim bilan, qachon...",
+      "submit": "Rejani topshirish",
+      "grading": "AI reja tahlil qilmoqda...",
+      "prioritization": "Ustuvorlik",
+      "rationale": "Instruktor izohi",
+      "missing": "Rejada yetishmaydi",
+      "legend": {
+        "green": "Xotirjam",
+        "yellow": "E'tibor",
+        "red": "Xavf"
+      },
+      "feedTypes": {
+        "murojaat": "Murojaat",
+        "takroriy_hodisa": "Takroriy hodisa",
+        "xavf_indikatori": "Xavf indikatori",
+        "hisob": "Profilaktik hisob"
+      },
+      "question": "«Bugun mening hududimdagi eng muhim 3 muammo nima va men nima qilaman?»"
+    },
+    "debrief": {
+      "title": "Smart Debrifing",
+      "subtitle": "Xato jazolanmaydi — u keyingi to'g'ri qaror uchun tajribaga aylantiriladi.",
+      "generating": "AI va instruktor tahlili tayyorlanmoqda...",
+      "q1": "Nima TO'G'RI bo'ldi?",
+      "q2": "Qayerda XATO qilindi?",
+      "q3": "Keyingi safar nima BOSHQACHA qilinadi?",
+      "scores": "Kompetensiya ballari",
+      "summary": "Umumiy xulosa",
+      "pending": "Instruktor tasdig'ini kutmoqda",
+      "confirmed": "Instruktor tasdiqladi",
+      "confirm": "Tasdiqlash va HIMOYA-ID ga yozish",
+      "instructorNote": "Instruktor izohi (ixtiyoriy)",
+      "aiNote": "AI qaror bermaydi — har bir xulosani instruktor tasdiqlaydi.",
+      "transcript": "Mashg'ulot yozuvi",
+      "coach": "Murabbiy izohi",
+      "regenerate": "Qayta tahlil",
+      "cycle": "XATO → TAHLIL → TAJRIBA → MAHORAT",
+      "deterministic": "Tizim bahosi",
+      "llm": "AI bahosi",
+      "final": "Yakuniy"
+    },
+    "sessions": {
+      "title": "Mashg'ulotlarim",
+      "subtitle": "Barcha mashg'ulotlar tarixi va HIMOYA-ID kompetensiya profili.",
+      "empty": "Hali mashg'ulot yo'q.",
+      "emptyHint": "Simulyator bo'limidan birinchi ssenariyni boshlang.",
+      "status": {
+        "in_progress": "Davom etmoqda",
+        "completed": "Yakunlangan",
+        "abandoned": "To'xtatilgan"
+      },
+      "open": "Ochish",
+      "deleteConfirm": "Ushbu mashg'ulotni o'chirmoqchimisiz?",
+      "export": "JSON eksport",
+      "import": "JSON import"
+    },
+    "himoyaId": {
+      "title": "HIMOYA-ID",
+      "subtitle": "Sertifikat emas — kompetensiya profili. 8 yo'nalishda doimiy baholash.",
+      "empty": "Profil hali shakllanmagan — birinchi tasdiqlangan debrifdan keyin paydo bo'ladi.",
+      "strengths": "Kuchli tomonlar",
+      "develop": "Rivojlantirish kerak",
+      "samples": "mashg'ulot",
+      "question": "«Ushbu xodim qaysi vaziyatni MUSTAQIL boshqara oladi?»"
+    },
+    "mentor": {
+      "title": "AI-Mentor",
+      "recommend": "Keyingi mashg'ulot",
+      "reasonWeak": "Eng zaif yo'nalish: {competency} ({score}%). Shu ko'nikmani rivojlantiruvchi ssenariy.",
+      "reasonNew": "Hali sinalmagan yo'nalish: {competency}.",
+      "go": "Boshlash"
+    },
+    "instructor": {
+      "title": "Instruktor kabineti",
+      "subtitle": "O'quvchilar, mashg'ulotlar va tasdiqlanishi kerak bo'lgan debriflar.",
+      "pending": "Tasdiq kutayotgan debriflar",
+      "trainees": "O'quvchilar",
+      "allSessions": "Barcha mashg'ulotlar",
+      "noPending": "Tasdiq kutayotgan debrif yo'q.",
+      "deviceNote": "MVP: faqat shu qurilmadagi ma'lumotlar ko'rinadi. Server bilan ulanganda barcha o'quvchilar bo'ladi.",
+      "trainee": "O'quvchi",
+      "scenario": "Ssenariy",
+      "date": "Sana",
+      "score": "Ball"
+    },
+    "profile": {
+      "title": "Profil",
+      "subtitle": "HIMOYA-ID shu profilga bog'lanadi. Ma'lumotlar faqat shu qurilmada saqlanadi.",
+      "name": "F.I.Sh.",
+      "badgeId": "Xizmat ID",
+      "rank": "Unvon",
+      "district": "Hudud / MFY",
+      "role": "Rol",
+      "roleTrainee": "O'quvchi (xodim)",
+      "roleInstructor": "Instruktor",
+      "saved": "Profil saqlandi",
+      "required": "Ism va xizmat ID majburiy"
+    },
+    "competencies": {
+      "huquqiy_qaror": "Huquqiy qaror",
+      "vaziyat_tahlili": "Vaziyat tahlili",
+      "muloqot": "Muloqot",
+      "deeskalatsiya": "Deeskalatsiya",
+      "profiling": "Profiling",
+      "raqamli": "Raqamli ko'nikma",
+      "hujjatlashtirish": "Hujjatlashtirish",
+      "natijadorlik": "Natijadorlik (KPI)"
+    },
+    "exam": {
+      "title": "Bir kunlik xizmat",
+      "subtitle": "Test emas — to'liq ish kunini mustaqil boshqarasiz.",
+      "stage": "Bosqich",
+      "startExam": "Imtihonni boshlash",
+      "stageDone": "Bajarildi",
+      "stageNext": "Navbatdagi",
+      "allDone": "Barcha bosqichlar yakunlandi. Yakuniy debrifni ko'ring.",
+      "passed": "O'TDI degani — «kursni tugatdi» emas, «REAL KUNNI MUSTAQIL BOSHQARDI» degani."
+    }
   }
 }

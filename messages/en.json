@@ -1,7 +1,7 @@
 {
   "common": {
-    "appName": "My Inspector",
-    "appSubtitle": "AI digital inspector assistant",
+    "appName": "HIMOYA-360",
+    "appSubtitle": "National smart training model",
     "ministry": "Ministry of Internal Affairs of the Republic of Uzbekistan",
     "cancel": "Cancel",
     "save": "Save",
@@ -23,7 +23,18 @@
     "noKeys": "Gemini API keys are not configured. Contact the administrator.",
     "errorGeneric": "An error occurred. Please try again.",
     "comingSoon": "Coming soon",
-    "keysSetupHint": "GEMINI_API_KEYS not configured — the AI won't respond yet. Add key(s) in Railway → Variables."
+    "keysSetupHint": "GEMINI_API_KEYS not configured — the AI won't respond yet. Add key(s) in Railway → Variables.",
+    "legacyModule": "My Inspector",
+    "badOutput": "AI returned a malformed answer. Please try again.",
+    "start": "Start",
+    "next": "Next",
+    "finish": "Finish",
+    "minutes": "min",
+    "difficulty": "Level",
+    "yes": "Yes",
+    "no": "No",
+    "confirm": "Confirm",
+    "edit": "Edit"
   },
   "modules": {
     "title": "Modules",
@@ -48,12 +59,20 @@
     "voice": "Voice assistant",
     "qonunchilik": "Legislation",
     "ishlarim": "My work",
-    "guide": "Quick guide"
+    "guide": "Quick guide",
+    "simulyator": "Simulator",
+    "mashgulotlarim": "My sessions",
+    "instruktor": "Instructor cabinet",
+    "profil": "Profile",
+    "groups": {
+      "himoya": "HIMOYA-360 trainers",
+      "inspektor": "My Inspector"
+    }
   },
   "dashboard": {
-    "title": "Dashboard",
-    "welcome": "Welcome, inspector",
-    "subtitle": "Every decision — grounded in legislation and approved procedures.",
+    "title": "HIMOYA-360 — we don't teach the officer, we prepare them for real service",
+    "welcome": "Welcome",
+    "subtitle": "Situation → Analysis → Communication → Decision → Action → Result.",
     "stats": {
       "todayIncidents": "Today's incidents",
       "completed": "Completed processes",
@@ -85,7 +104,13 @@
         "title": "Quick guide",
         "desc": "A short guide on using the platform"
       }
-    }
+    },
+    "trainersTitle": "Trainers",
+    "trainersSubtitle": "The 4 rooms of the professional development center — on one platform.",
+    "inspectorTitle": "My Inspector",
+    "inspectorSubtitle": "AI assistant on duty — incident, SOP, legislation.",
+    "setupProfile": "Fill in your profile to start",
+    "setupProfileDesc": "Name, service ID (e.g. SH-0473), rank and district — HIMOYA-ID is bound to this profile."
   },
   "chat": {
     "title": "AI Inspector",
@@ -218,5 +243,226 @@
     "uz": "Uzbek",
     "ru": "Russian",
     "en": "English"
+  },
+  "sim": {
+    "hub": {
+      "title": "Simulator",
+      "subtitle": "Scenario-based training: virtual citizen, decision chain, virtual district, smart debriefing.",
+      "dialog": {
+        "title": "AI Dialogue simulator",
+        "desc": "Live conversation with a virtual citizen: listening, de-escalation, agreement."
+      },
+      "decision": {
+        "title": "Decision simulator",
+        "desc": "Scenario situation: assess threat, choose a proportionate response. Not speed — legality."
+      },
+      "mahalla": {
+        "title": "Smart Mahalla",
+        "desc": "Virtual district: today's top-3 problems and an action plan."
+      },
+      "exam": {
+        "title": "One day of service",
+        "desc": "Final exam — a full working day in one scenario."
+      },
+      "mentorTitle": "AI-Mentor recommendation",
+      "mentorEmpty": "Finish your first session — AI-Mentor will set the next step.",
+      "graphProblems": "Scenario graph error"
+    },
+    "scenario": {
+      "pick": "Choose a scenario",
+      "start": "Start session",
+      "resume": "Resume",
+      "setting": "Setting",
+      "laws": "Legal basis",
+      "trains": "Trains",
+      "inProgress": "Started"
+    },
+    "dialog": {
+      "title": "AI Dialogue simulator",
+      "placeholder": "What do you say to the citizen?",
+      "you": "Officer",
+      "citizen": "Citizen",
+      "stateTitle": "Live state",
+      "tension": "Tension",
+      "trend": "Situation",
+      "tone": "Your tone",
+      "phase": "Phase",
+      "turns": "Turn",
+      "speakReplies": "Read replies aloud",
+      "thinking": "Citizen is replying...",
+      "endedKelishuv": "Agreement reached. Situation resolved lawfully and peacefully.",
+      "endedEskalatsiya": "Situation got out of control — escalation. We'll analyze it in the debrief.",
+      "endedLimit": "Out of turns. No agreement — we'll analyze it in the debrief.",
+      "goDebrief": "Go to debrief",
+      "abandon": "Abort session",
+      "trend_yumshayapti": "calming ▼",
+      "trend_keskinlashyapti": "escalating ▲",
+      "trend_ozgarishsiz": "unchanged",
+      "phases": {
+        "tinglash": "Listening",
+        "savol": "Questioning",
+        "profiling": "Profiling",
+        "deeskalatsiya": "De-escalation",
+        "tushuntirish": "Explanation",
+        "kelishuv": "Agreement"
+      },
+      "tones": {
+        "xotirjam": "calm",
+        "rasmiy": "formal",
+        "qattiq": "harsh",
+        "bepisand": "dismissive",
+        "tahdidli": "threatening",
+        "hamdard": "empathetic"
+      }
+    },
+    "decision": {
+      "title": "Decision simulator",
+      "timer": "Time to decide",
+      "chooseOption": "Choose a response",
+      "consequence": "Consequence",
+      "continue": "Continue",
+      "timeout": "Time is up",
+      "chain": {
+        "xavf": "Is there a threat?",
+        "muloqot": "Is communication needed?",
+        "kutish": "Should you wait?",
+        "yordam": "Call for backup?",
+        "chora": "Which response is proportionate?"
+      },
+      "legality": "Legality",
+      "proportionality": "Proportionality",
+      "outcome": {
+        "success": "Lawful and proportionate outcome",
+        "partial": "Partially correct",
+        "fail": "Failed outcome"
+      },
+      "hint": "Speed is not graded — legality and proportionality are. «Correctly not shooting» is also top marks."
+    },
+    "mahalla": {
+      "title": "Smart Mahalla",
+      "map": "District map",
+      "feed": "Today's feed",
+      "problems": "Problem list",
+      "pickTop3": "Pick today's top-3 problems in order",
+      "picked": "Picked",
+      "plan": "Action plan",
+      "planPlaceholder": "What will I do? Concrete steps, with whom, when...",
+      "submit": "Submit plan",
+      "grading": "AI is grading the plan...",
+      "prioritization": "Prioritization",
+      "rationale": "Instructor note",
+      "missing": "Missing from plan",
+      "legend": {
+        "green": "Calm",
+        "yellow": "Attention",
+        "red": "Risk"
+      },
+      "feedTypes": {
+        "murojaat": "Appeal",
+        "takroriy_hodisa": "Repeat incident",
+        "xavf_indikatori": "Risk indicator",
+        "hisob": "Preventive register"
+      },
+      "question": "«What are today's 3 most important problems in my district and what will I do?»"
+    },
+    "debrief": {
+      "title": "Smart Debriefing",
+      "subtitle": "Mistakes are not punished — they become experience for the next right decision.",
+      "generating": "Preparing AI and instructor analysis...",
+      "q1": "What went RIGHT?",
+      "q2": "Where was the MISTAKE?",
+      "q3": "What to do DIFFERENTLY next time?",
+      "scores": "Competency scores",
+      "summary": "Summary",
+      "pending": "Awaiting instructor confirmation",
+      "confirmed": "Confirmed by instructor",
+      "confirm": "Confirm and write to HIMOYA-ID",
+      "instructorNote": "Instructor note (optional)",
+      "aiNote": "AI does not decide — every conclusion is confirmed by an instructor.",
+      "transcript": "Session record",
+      "coach": "Coach note",
+      "regenerate": "Re-analyze",
+      "cycle": "MISTAKE → ANALYSIS → EXPERIENCE → MASTERY",
+      "deterministic": "System score",
+      "llm": "AI score",
+      "final": "Final"
+    },
+    "sessions": {
+      "title": "My sessions",
+      "subtitle": "History of all sessions and the HIMOYA-ID competency profile.",
+      "empty": "No sessions yet.",
+      "emptyHint": "Start your first scenario in the Simulator.",
+      "status": {
+        "in_progress": "In progress",
+        "completed": "Completed",
+        "abandoned": "Aborted"
+      },
+      "open": "Open",
+      "deleteConfirm": "Delete this session?",
+      "export": "Export JSON",
+      "import": "Import JSON"
+    },
+    "himoyaId": {
+      "title": "HIMOYA-ID",
+      "subtitle": "Not a certificate — a competency profile. Continuous assessment across 8 areas.",
+      "empty": "Profile not formed yet — appears after the first confirmed debrief.",
+      "strengths": "Strengths",
+      "develop": "Needs development",
+      "samples": "sessions",
+      "question": "«Which situation can this officer handle INDEPENDENTLY?»"
+    },
+    "mentor": {
+      "title": "AI-Mentor",
+      "recommend": "Next session",
+      "reasonWeak": "Weakest area: {competency} ({score}%). A scenario that trains this skill.",
+      "reasonNew": "Untested area: {competency}.",
+      "go": "Start"
+    },
+    "instructor": {
+      "title": "Instructor cabinet",
+      "subtitle": "Trainees, sessions and debriefs awaiting confirmation.",
+      "pending": "Debriefs awaiting confirmation",
+      "trainees": "Trainees",
+      "allSessions": "All sessions",
+      "noPending": "No debriefs awaiting confirmation.",
+      "deviceNote": "MVP: only this device's data is visible. With a server, all trainees will appear.",
+      "trainee": "Trainee",
+      "scenario": "Scenario",
+      "date": "Date",
+      "score": "Score"
+    },
+    "profile": {
+      "title": "Profile",
+      "subtitle": "HIMOYA-ID is bound to this profile. Data is stored only on this device.",
+      "name": "Full name",
+      "badgeId": "Service ID",
+      "rank": "Rank",
+      "district": "District / MFY",
+      "role": "Role",
+      "roleTrainee": "Trainee (officer)",
+      "roleInstructor": "Instructor",
+      "saved": "Profile saved",
+      "required": "Name and service ID are required"
+    },
+    "competencies": {
+      "huquqiy_qaror": "Legal decision",
+      "vaziyat_tahlili": "Situation analysis",
+      "muloqot": "Communication",
+      "deeskalatsiya": "De-escalation",
+      "profiling": "Profiling",
+      "raqamli": "Digital skills",
+      "hujjatlashtirish": "Documentation",
+      "natijadorlik": "Effectiveness (KPI)"
+    },
+    "exam": {
+      "title": "One day of service",
+      "subtitle": "Not a test — you run a full working day on your own.",
+      "stage": "Stage",
+      "startExam": "Start exam",
+      "stageDone": "Done",
+      "stageNext": "Next",
+      "allDone": "All stages completed. See the final debrief.",
+      "passed": "PASSED means not «finished the course» but «RAN A REAL DAY INDEPENDENTLY»."
+    }
   }
 }

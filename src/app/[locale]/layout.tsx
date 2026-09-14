@@ -15,10 +15,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Mening Inspektorim — AI Digital Inspector",
+  title: "HIMOYA-360 — Milliy smart-ta'lim modeli",
   description:
-    "O'zbekiston Respublikasi IIV profilaktika inspektori uchun AI raqamli yordamchi.",
-  icons: { icon: "/my_inspector_logo.jpg" },
+    "O'zbekiston Respublikasi IIV xodimlari uchun ssenariyli simulyatsion o'qitish platformasi. Ichida — «Mening Inspektorim» AI yordamchisi.",
+  icons: { icon: "/iiv_logo.svg" },
 };
 
 export function generateStaticParams() {

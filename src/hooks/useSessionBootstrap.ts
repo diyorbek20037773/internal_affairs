@@ -1,0 +1,54 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { localTrainingRepo } from "@/lib/storage/training";
+import type { TraineeProfile, TrainingSession } from "@/lib/storage/trainingSchema";
+import { useTraineeProfile } from "./useTraineeProfile";
+
+/**
+ * Resolve the session a trainer page should run: resume `?session=` when it
+ * exists and belongs to this scenario, otherwise create a fresh one. Requires
+ * a local profile (returns `needsProfile` until one exists).
+ */
+export function useSessionBootstrap({
+  scenarioId,
+  sessionId,
+  create,
+  exam,
+}: {
+  scenarioId: string;
+  sessionId?: string;
+  create: (traineeId: string, exam?: { examId: string; examStageIndex: number }) => TrainingSession;
+  exam?: { examId: string; examStageIndex: number };
+}) {
+  const { profile, loaded: profileLoaded } = useTraineeProfile();
+  const [session, setSession] = useState<TrainingSession | null>(null);
+  const [ready, setReady] = useState(false);
+  const started = useRef(false);
+
+  useEffect(() => {
+    if (!profileLoaded || !profile || started.current) return;
+    started.current = true;
+    (async () => {
+      if (sessionId) {
+        const existing = await localTrainingRepo.getSession(sessionId);
+        if (existing && existing.scenarioId === scenarioId) {
+          setSession(existing);
+          setReady(true);
+          return;
+        }
+      }
+      const fresh = create(profile.id, exam);
+      await localTrainingRepo.saveSession(fresh);
+      setSession(fresh);
+      setReady(true);
+    })();
+  }, [profileLoaded, profile, sessionId, scenarioId, create, exam]);
+
+  return {
+    profile: profile as TraineeProfile | null,
+    session,
+    ready,
+    needsProfile: profileLoaded && !profile,
+  };
+}

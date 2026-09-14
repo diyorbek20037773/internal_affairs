@@ -1,6 +1,6 @@
 {
-  "name": "mening-inspektorim",
-  "version": "1.0.0",
+  "name": "himoya-360",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
