@@ -100,10 +100,23 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
     channel.current?.postMessage({ type: "state", state, scenarioId: scenario.id, started });
   }, [state, started, scenario.id]);
 
-  // Engine loop.
+  // Engine loop — wall-clock driven so slow renderers (tablets, CPU GL) don't
+  // slow the scenario down: catch up in fixed 100 ms sub-steps, capped at 1 s.
   useEffect(() => {
     if (!started || state.outcome) return;
-    const id = window.setInterval(() => setState(tick(stateRef.current, scenario, TICK_MS / 1000)), TICK_MS);
+    let last = performance.now();
+    const id = window.setInterval(() => {
+      const now = performance.now();
+      let elapsed = Math.min(1000, now - last);
+      last = now;
+      let s = stateRef.current;
+      while (elapsed >= TICK_MS && !s.outcome) {
+        s = tick(s, scenario, TICK_MS / 1000);
+        elapsed -= TICK_MS;
+      }
+      last -= elapsed; // carry the remainder
+      setState(s);
+    }, TICK_MS);
     return () => window.clearInterval(id);
   }, [started, state.outcome, scenario]);
 
