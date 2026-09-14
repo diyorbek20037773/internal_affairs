@@ -14,11 +14,27 @@ const inter = Inter({
   display: "swap",
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://internalaffairs-production.up.railway.app";
+const TITLE = "HIMOYA-360 — Milliy smart-ta'lim modeli";
+const DESCRIPTION =
+  "IIV xodimlarini real xizmatga tayyorlovchi ssenariyli simulyatsion o'qitish platformasi: AI-Muloqot, Qaror simulyatori, Smart Mahalla, Hujjatlashtirish, Smart Debrifing, HIMOYA-ID. Ichida — «Mening Inspektorim» AI yordamchisi.";
+
 export const metadata: Metadata = {
-  title: "HIMOYA-360 — Milliy smart-ta'lim modeli",
-  description:
-    "O'zbekiston Respublikasi IIV xodimlari uchun ssenariyli simulyatsion o'qitish platformasi. Ichida — «Mening Inspektorim» AI yordamchisi.",
+  metadataBase: new URL(SITE_URL),
+  title: { default: TITLE, template: "%s · HIMOYA-360" },
+  description: DESCRIPTION,
+  applicationName: "HIMOYA-360",
   icons: { icon: "/iiv_logo.svg" },
+  openGraph: {
+    type: "website",
+    siteName: "HIMOYA-360",
+    title: TITLE,
+    description: DESCRIPTION,
+    url: SITE_URL,
+    images: [{ url: "/iiv_logo.jpg", width: 512, height: 512, alt: "HIMOYA-360" }],
+    locale: "uz_UZ",
+  },
+  twitter: { card: "summary", title: TITLE, description: DESCRIPTION, images: ["/iiv_logo.jpg"] },
 };
 
 export function generateStaticParams() {
