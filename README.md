@@ -4,6 +4,8 @@
 
 > **Shior:** «Xodimni o'qitmaymiz — uni real xizmatga tayyorlaymiz». Sikl: VAZIYAT → TAHLIL → MULOQOT → QAROR → HARAKAT → NATIJA.
 
+📱 **PWA:** planshetda «Bosh ekranga qo'shish» — HIMOYA-360 ilova sifatida ochiladi (manifest + service worker, statik assetlar keshlanadi).
+
 🌐 **Jonli:** https://internalaffairs-production.up.railway.app · 🗣 uz / ru / en · 📱 planshet brauzerida ishlaydi (Android, 4G) · ✅ E2E QA (Playwright, real Gemini): 21/21
 
 ## Trenajyorlar (HIMOYA-360)
@@ -16,8 +18,8 @@
 | **Smart Mahalla** | `/simulyator/mahalla` | Virtual uchastka (SVG xarita, yashil/sariq/qizil), murojaatlar oqimi, TOP-3 muammo + harakat rejasi. Ustuvorlik deterministik, reja — AI rubrika bo'yicha. |
 | **Hujjatlashtirish** | `/simulyator/hujjat` | AI hujjat tekshiruvi (qonun va fakt): berilgan faktlardan bayonnoma/ma'lumotnoma, rubrika bo'yicha to'liqlik, o'ylab topilgan fakt/modda, aybdorlik xulosasi — xato. |
 | **Smart Debrifing** | `/simulyator/debrif/[id]` | 3 savol (to'g'ri / xato qayerda `turn:N`, `node:ID` / keyingi safar), 8 kompetensiya. `final = 0.6·tizim + 0.4·AI`. **Instruktor tasdiqlaydi** — shundan keyin HIMOYA-ID yangilanadi. |
-| **HIMOYA-ID + AI-Mentor** | `/mashgulotlarim`, `/simulyator` | 8 yo'nalishli kompetensiya radar (rolling mean). Mentor eng zaif yo'nalish bo'yicha keyingi ssenariyni tavsiya qiladi (rule-based). |
-| **Bir kunlik xizmat** | `/simulyator/imtihon` | Yakuniy imtihon — 09:00 hudud → 10:30 nizoli fuqaro → 13:00 xavfli vaziyat → 15:00 hujjatlashtirish → 16:30 debrifing/baho. |
+| **HIMOYA-ID + AI-Mentor** | `/mashgulotlarim`, `/simulyator` | 8 yo'nalishli kompetensiya radar (rolling mean). Har mashg'ulotdan keyin **avtomatik (dastlabki)** yangilanadi, instruktor tasdig'i yakunlaydi. Mentor: qoida bilan ssenariy tanlaydi + **Gemini shaxsiy tavsiya** (matn, e'tibor nuqtalari, mikro-mashq). |
+| **Bir kunlik xizmat** | `/simulyator/imtihon` | Yakuniy imtihon — 09:00 hudud → 10:30 nizoli fuqaro → 13:00 xavfli vaziyat (TIR) → 15:00 hujjatlashtirish → **16:30 butun kun bo'yicha AI yakuniy xulosa** (O'TDI / SHARTLI / O'TMADI, mustaqil/nazorat ostida vaziyatlar, keyingi hafta rejasi). |
 | **Amaliy xizmat (KPI)** | `/mashgulotlarim` | 30–90 kunlik xizmat natijasi («Mening Inspektorim» ishlari) + instruktor KPI → HIMOYA-ID natijadorlik. |
 | **Instruktor kabineti** | `/instruktor` | Tasdiq kutayotgan debriflar, o'quvchilar jadvali (profil roli = instruktor). |
 
@@ -32,7 +34,7 @@ Ssenariylar — `data/scenarios/` da qo'lda yozilgan TS data (runtime'da LLM yar
 - `src/components/training/tir/` → Three.js sahna: `TirScene` (ACES tone mapping, soft shadows, SMAA/Bloom/Vignette post-effektlar, HQ/LQ), `RealHuman` (**real avatarlar**: Ready Player Me tana/yuz meshi M+F, motion-capture kliplar — idle/talking/gestures/walk/run/crouch; holatga qarab suyaklar boshqariladi: qurol qaratish, qo'l ko'tarish, garov, tiz cho'kish, yotish; politsiya — kepka + jilet), `Environments` (**foto-panoramalar**: Poly Haven HDRI hovli/ko'cha/maydon/ombor yerga proyeksiya qilinadi = real fon + real yoritish; PBR teksturali asfalt/beton/o't/g'isht), `TirVideoLayer` (real aktyor videosi qatlami), `Actor` (protsedural fallback, mashina, plastina).
 - **Assetlar** (`npm run assets`, `prebuild`da avtomatik): RPM avatarlar+animatsiyalar (litsenziya: RPM avatarlari bilan foydalanish mumkin, tarqatish yo'q → repoga qo'shilmaydi, Railway build'da yuklanadi), Poly Haven HDRI/teksturalar (CC0). `.glb` butunligi tekshiriladi, 3 urinish. Asset bo'lmasa — protsedural figura / tekis osmon fallback.
 - **Video-pak** (VirTra'ning asl usuli — real aktyorlar): `docs/tir-video-pack.md` — fayl tuzilmasi, suratga olish qo'llanmasi; ssenariyga `video.clips` qo'shilsa dvigatel holatga mos klipni ko'rsatadi.
-- `/api/sim/{dialog,debrief,mahalla-grade,document-check}` — barchasi `no_keys_configured` (500) / `ai_unavailable` (503) / `bad_ai_output` (502) kontraktida.
+- `/api/sim/{dialog,debrief,mahalla-grade,document-check,mentor,exam-summary}`, `/api/stt` (Gemini audio STT — o'zbekcha mikrofon), `/api/tts` — barchasi `no_keys_configured` (500) / `ai_unavailable` (503) / `bad_ai_output` (502) kontraktida.
 - Auth yo'q (MVP): lokal profil `role: trainee|instructor`. Har yozuvda `traineeId` bor.
 
 ---

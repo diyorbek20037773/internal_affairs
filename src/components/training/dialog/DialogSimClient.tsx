@@ -208,9 +208,9 @@ function DialogRunner({ scenario, initial }: { scenario: DialogScenario; initial
 
         {!sim.ended ? (
           <>
-            {(speech.listening || speech.interim) && (
-              <p className="px-4 pt-2 text-xs text-muted-foreground">
-                🎤 {speech.interim || "…"}
+            {(speech.listening || speech.processing || speech.interim) && (
+              <p className={cn("px-4 pt-2 text-xs", speech.listening ? "text-destructive" : "text-muted-foreground")}>
+                🎤 {speech.processing ? t("sttProcessing") : speech.listening && speech.sttMode === "server" ? t("sttRecording") : speech.interim || "…"}
               </p>
             )}
             <ChatComposer

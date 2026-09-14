@@ -10,8 +10,8 @@ import { applySessionToHimoyaId, assessedCompetencies, newHimoyaId } from "@/lib
 export type DebriefError = "ai_unavailable" | "no_keys_configured" | "bad_ai_output" | "generic";
 
 /**
- * Loads a session, generates the AI debrief once (if missing), and lets an
- * instructor confirm it — which is the ONLY path that updates HIMOYA-ID.
+ * Loads a session, generates the AI debrief once (if missing) and applies a
+ * PROVISIONAL HIMOYA-ID update; the instructor's confirmation finalises it.
  */
 export function useDebrief(sessionId: string, locale: string) {
   const [session, setSession] = useState<TrainingSession | null>(null);
@@ -55,6 +55,10 @@ export function useDebrief(sessionId: string, locale: string) {
         const llm = (await res.json()) as Omit<DebriefResult, "status">;
         const next = attachDebrief(cur, llm);
         await localTrainingRepo.saveSession(next);
+        // Provisional HIMOYA-ID update — instructor confirmation finalises it.
+        const scenario = getScenario(next.scenarioId);
+        const current = (await localTrainingRepo.getHimoyaId(next.traineeId)) ?? newHimoyaId(next.traineeId);
+        await localTrainingRepo.saveHimoyaId(applySessionToHimoyaId(current, next, assessedCompetencies(next, scenario?.tags ?? []), true));
         setSession(next);
       } catch {
         setError("generic");

@@ -187,14 +187,30 @@ export function newHimoyaId(traineeId: string): HimoyaId {
   };
 }
 
-/** Rolling mean per assessed competency. Untouched competencies keep their value. */
+/**
+ * Rolling mean per assessed competency. Untouched competencies keep their value.
+ * Applied provisionally right after the session (pptx: "profil har bir
+ * mashg'ulotdan keyin avtomatik yangilanadi"); the instructor's confirmation
+ * only flips the flag — scores are not counted twice.
+ */
 export function applySessionToHimoyaId(
   current: HimoyaId,
   session: TrainingSession,
-  assessed: Competency[]
+  assessed: Competency[],
+  provisional = false
 ): HimoyaId {
   if (!session.finalScores) return current;
-  if (current.history.some((h) => h.sessionId === session.id)) return current;
+  const existing = current.history.find((h) => h.sessionId === session.id);
+  if (existing) {
+    if (existing.provisional && !provisional) {
+      return {
+        ...current,
+        updatedAt: new Date().toISOString(),
+        history: current.history.map((h) => (h.sessionId === session.id ? { ...h, provisional: false } : h)),
+      };
+    }
+    return current;
+  }
   const scores = { ...current.scores };
   const samples = { ...current.samples };
   for (const c of assessed) {
@@ -210,7 +226,7 @@ export function applySessionToHimoyaId(
     updatedAt: new Date().toISOString(),
     history: [
       ...current.history,
-      { sessionId: session.id, at: new Date().toISOString(), scores: session.finalScores },
+      { sessionId: session.id, at: new Date().toISOString(), scores: session.finalScores, provisional },
     ],
   };
 }

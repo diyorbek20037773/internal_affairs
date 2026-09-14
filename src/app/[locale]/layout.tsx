@@ -6,6 +6,7 @@ import { getMessages, setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { Providers } from "@/components/providers";
 import { AppShell } from "@/components/layout/AppShell";
+import { PwaRegister } from "@/components/layout/PwaRegister";
 import "../globals.css";
 
 const inter = Inter({
@@ -24,7 +25,9 @@ export const metadata: Metadata = {
   title: { default: TITLE, template: "%s · HIMOYA-360" },
   description: DESCRIPTION,
   applicationName: "HIMOYA-360",
-  icons: { icon: "/iiv_logo.svg" },
+  manifest: "/manifest.webmanifest",
+  icons: { icon: "/iiv_logo.svg", apple: "/icon-192.png" },
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "HIMOYA-360" },
   openGraph: {
     type: "website",
     siteName: "HIMOYA-360",
@@ -35,6 +38,13 @@ export const metadata: Metadata = {
     locale: "uz_UZ",
   },
   twitter: { card: "summary", title: TITLE, description: DESCRIPTION, images: ["/iiv_logo.jpg"] },
+};
+
+export const viewport = {
+  themeColor: "#0f172a",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover" as const,
 };
 
 export function generateStaticParams() {
@@ -61,6 +71,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider messages={messages}>
           <Providers>
             <AppShell>{children}</AppShell>
+            <PwaRegister />
           </Providers>
         </NextIntlClientProvider>
       </body>

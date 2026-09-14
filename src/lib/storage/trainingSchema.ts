@@ -233,6 +233,8 @@ export const HimoyaIdSchema = z.object({
       sessionId: z.string(),
       at: z.string(),
       scores: CompetencyScoresSchema,
+      /** Auto-applied after the session; cleared when the instructor confirms. */
+      provisional: z.boolean().optional(),
     })
   ),
 });

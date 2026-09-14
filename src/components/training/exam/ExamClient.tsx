@@ -13,6 +13,7 @@ import type { ExamScenario } from "@/data/scenarios/types";
 import { localized } from "@/data/sops/types";
 import { COMPETENCIES } from "@/data/scenarios/competencies";
 import { ProfileGate } from "../profile/ProfileGate";
+import { ExamSummary } from "./ExamSummary";
 import { cn } from "@/lib/utils";
 
 const KIND_PATH = { dialog: "muloqot", decision: "qaror", mahalla: "mahalla", document: "hujjat", tir: "tir" } as const;
@@ -128,6 +129,10 @@ export function ExamClient({ exam }: { exam: ExamScenario }) {
           </Card>
         </li>
       </ol>
+
+      {allDone && profile && (
+        <ExamSummary exam={exam} sessions={exam.stages.map((_, i) => stageSession(i))} traineeId={profile.id} />
+      )}
 
       {allDone && (
         <Card className="border-success/40 bg-success/5 p-6 text-center">

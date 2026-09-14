@@ -56,6 +56,11 @@ export function HimoyaIdCard({
           </div>
         )}
 
+        {himoyaId && himoyaId.history.some((h) => h.provisional) && (
+          <p className="mt-3 rounded-md bg-accent/10 px-3 py-1.5 text-center text-xs text-accent-foreground">
+            {t("provisional", { n: himoyaId.history.filter((h) => h.provisional).length })}
+          </p>
+        )}
         <p className="mt-5 text-center text-xs italic text-muted-foreground">{t("question")}</p>
       </div>
     </Card>

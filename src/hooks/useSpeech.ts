@@ -30,16 +30,88 @@ export function useSpeech({ locale }: UseSpeechOptions) {
   const [sttError, setSttError] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [sttMode, setSttMode] = useState<"server" | "browser">("browser");
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     const SR =
       (window as any).SpeechRecognition ||
       (window as any).webkitSpeechRecognition;
-    setSttSupported(!!SR);
+    const canRecord =
+      typeof window !== "undefined" &&
+      typeof MediaRecorder !== "undefined" &&
+      !!navigator.mediaDevices?.getUserMedia;
+    // Server STT (Gemini audio) handles Uzbek far better than Web Speech; use it whenever we can record.
+    setSttMode(canRecord ? "server" : "browser");
+    setSttSupported(canRecord || !!SR);
     setTtsSupported(typeof window !== "undefined" && "speechSynthesis" in window);
   }, []);
 
+  const pickMime = () => {
+    const c = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4", "audio/aac"];
+    return c.find((m) => typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(m)) ?? "";
+  };
+
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+      streamRef.current = stream;
+      const mime = pickMime();
+      const rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+      chunksRef.current = [];
+      rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      rec.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+        setListening(false);
+        const blob = new Blob(chunksRef.current, { type: rec.mimeType || mime || "audio/webm" });
+        if (blob.size < 2000) { setInterim(""); return; }
+        setProcessing(true);
+        setInterim("…");
+        try {
+          const buf = await blob.arrayBuffer();
+          let bin = "";
+          const bytes = new Uint8Array(buf);
+          for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + 0x8000)));
+          const res = await fetch("/api/stt", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ audio: btoa(bin), mimeType: (rec.mimeType || mime || "audio/webm").split(";")[0], locale }),
+          });
+          if (!res.ok) throw new Error(String(res.status));
+          const j = (await res.json()) as { text?: string };
+          const text = (j.text ?? "").trim();
+          if (text) setTranscript(text);
+          else setSttError("no-speech");
+        } catch {
+          setSttError("network");
+        } finally {
+          setProcessing(false);
+          setInterim("");
+        }
+      };
+      recorderRef.current = rec;
+      setTranscript("");
+      setSttError(null);
+      setInterim("");
+      rec.start();
+      setListening(true);
+      // hard cap — a talk turn is short
+      window.setTimeout(() => { if (recorderRef.current === rec && rec.state === "recording") rec.stop(); }, 15000);
+    } catch (err: any) {
+      setListening(false);
+      setSttError(err?.name === "NotAllowedError" ? "not-allowed" : "start_failed");
+    }
+  }, [locale]);
+
   const startListening = useCallback(() => {
+    if (sttMode === "server") {
+      void startRecording();
+      return;
+    }
     const SR =
       (window as any).SpeechRecognition ||
       (window as any).webkitSpeechRecognition;
@@ -89,11 +161,15 @@ export function useSpeech({ locale }: UseSpeechOptions) {
       setListening(false);
       setSttError(err?.name === "InvalidStateError" ? "busy" : "start_failed");
     }
-  }, [locale]);
+  }, [locale, sttMode, startRecording]);
 
   const clearSttError = useCallback(() => setSttError(null), []);
 
   const stopListening = useCallback(() => {
+    if (recorderRef.current && recorderRef.current.state === "recording") {
+      recorderRef.current.stop();
+      return;
+    }
     recognitionRef.current?.stop();
     setListening(false);
   }, []);
@@ -171,6 +247,8 @@ export function useSpeech({ locale }: UseSpeechOptions) {
 
   return {
     sttSupported,
+    sttMode,
+    processing,
     ttsSupported,
     listening,
     speaking,

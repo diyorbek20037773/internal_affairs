@@ -53,6 +53,7 @@ export function TirClient({
 
 function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: TrainingSession }) {
   const t = useTranslations("sim.tir");
+  const tdlg = useTranslations("sim.dialog");
   const tc = useTranslations("common");
   const locale = useLocale();
   const router = useRouter();
@@ -383,7 +384,7 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
             {speech.sttSupported && (
               <Button variant={speech.listening ? "accent" : "outline"} size="icon" disabled={!started || !!state.outcome || marks} onClick={() => (speech.listening ? speech.stopListening() : speech.startListening())} title={t("mic")}><Mic className="h-4 w-4" /></Button>
             )}
-            <Input value={speech.listening ? speech.interim || talkText : talkText} onChange={(e) => setTalkText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") doTalk(talkText); }} placeholder={t("talkPlaceholder")} disabled={!started || !!state.outcome || marks} />
+            <Input value={speech.listening || speech.processing ? (speech.processing ? tdlg("sttProcessing") : speech.sttMode === "server" ? tdlg("sttRecording") : speech.interim || talkText) : talkText} onChange={(e) => setTalkText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") doTalk(talkText); }} placeholder={t("talkPlaceholder")} disabled={!started || !!state.outcome || marks} className={cn(speech.listening && "text-destructive")} />
             <Button disabled={!started || !!state.outcome || !talkText.trim() || marks} onClick={() => doTalk(talkText)}><MessageCircle className="h-4 w-4" /></Button>
           </div>
         </Card>

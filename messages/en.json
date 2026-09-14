@@ -321,7 +321,9 @@
         "bepisand": "dismissive",
         "tahdidli": "threatening",
         "hamdard": "empathetic"
-      }
+      },
+      "sttRecording": "Recording... (tap the mic to stop)",
+      "sttProcessing": "Recognizing speech (Gemini)..."
     },
     "decision": {
       "title": "Decision simulator",
@@ -417,14 +419,17 @@
       "strengths": "Strengths",
       "develop": "Needs development",
       "samples": "sessions",
-      "question": "«Which situation can this officer handle INDEPENDENTLY?»"
+      "question": "«Which situation can this officer handle INDEPENDENTLY?»",
+      "provisional": "{n} session result(s) provisional (awaiting instructor confirmation)"
     },
     "mentor": {
       "title": "AI-Mentor",
       "recommend": "Next session",
       "reasonWeak": "Weakest area: {competency} ({score}%). A scenario that trains this skill.",
       "reasonNew": "Untested area: {competency}.",
-      "go": "Start"
+      "go": "Start",
+      "drill": "Micro-drill",
+      "aiLoading": "AI-Mentor is writing a personal note..."
     },
     "instructor": {
       "title": "Instructor cabinet",
@@ -472,7 +477,19 @@
       "allDone": "All stages completed. See the final debrief.",
       "passed": "PASSED means not «finished the course» but «RAN A REAL DAY INDEPENDENTLY».",
       "finalStage": "Debrief and grade",
-      "finalStageDesc": "3-question analysis, HIMOYA-ID update"
+      "finalStageDesc": "3-question analysis, HIMOYA-ID update",
+      "summaryLoading": "Preparing the whole-day verdict...",
+      "verdict": {
+        "passed": "PASSED — ran a real day independently",
+        "conditional": "CONDITIONAL — under instructor supervision",
+        "failed": "FAILED — retake"
+      },
+      "independent": "Can handle independently",
+      "supervised": "Needs instructor supervision",
+      "strengths": "Strengths",
+      "risks": "Risks",
+      "nextWeek": "Next week plan",
+      "regenerate": "Re-analyze"
     },
     "document": {
       "title": "Documentation",

@@ -321,7 +321,9 @@
         "bepisand": "bepisand",
         "tahdidli": "tahdidli",
         "hamdard": "hamdard"
-      }
+      },
+      "sttRecording": "Yozilmoqda... (to'xtatish uchun mikrofonni bosing)",
+      "sttProcessing": "Nutq tanilmoqda (Gemini)..."
     },
     "decision": {
       "title": "Qaror simulyatori",
@@ -417,14 +419,17 @@
       "strengths": "Kuchli tomonlar",
       "develop": "Rivojlantirish kerak",
       "samples": "mashg'ulot",
-      "question": "«Ushbu xodim qaysi vaziyatni MUSTAQIL boshqara oladi?»"
+      "question": "«Ushbu xodim qaysi vaziyatni MUSTAQIL boshqara oladi?»",
+      "provisional": "{n} ta mashg'ulot natijasi dastlabki (instruktor tasdig'ini kutmoqda)"
     },
     "mentor": {
       "title": "AI-Mentor",
       "recommend": "Keyingi mashg'ulot",
       "reasonWeak": "Eng zaif yo'nalish: {competency} ({score}%). Shu ko'nikmani rivojlantiruvchi ssenariy.",
       "reasonNew": "Hali sinalmagan yo'nalish: {competency}.",
-      "go": "Boshlash"
+      "go": "Boshlash",
+      "drill": "Mikro-mashq",
+      "aiLoading": "AI-Mentor shaxsiy tavsiya yozmoqda..."
     },
     "instructor": {
       "title": "Instruktor kabineti",
@@ -472,7 +477,19 @@
       "allDone": "Barcha bosqichlar yakunlandi. Yakuniy debrifni ko'ring.",
       "passed": "O'TDI degani — «kursni tugatdi» emas, «REAL KUNNI MUSTAQIL BOSHQARDI» degani.",
       "finalStage": "Debrifing va baho",
-      "finalStageDesc": "3 savol tahlili, HIMOYA-ID yangilanadi"
+      "finalStageDesc": "3 savol tahlili, HIMOYA-ID yangilanadi",
+      "summaryLoading": "Butun kun bo'yicha yakuniy tahlil tayyorlanmoqda...",
+      "verdict": {
+        "passed": "O'TDI — real kunni mustaqil boshqardi",
+        "conditional": "SHARTLI — instruktor nazorati bilan",
+        "failed": "O'TMADI — qayta mashg'ulot"
+      },
+      "independent": "Mustaqil boshqara oladi",
+      "supervised": "Instruktor nazorati kerak",
+      "strengths": "Kuchli tomonlar",
+      "risks": "Xavflar",
+      "nextWeek": "Keyingi hafta rejasi",
+      "regenerate": "Qayta tahlil"
     },
     "document": {
       "title": "Hujjatlashtirish",
