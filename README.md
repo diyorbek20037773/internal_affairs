@@ -29,7 +29,8 @@ Ssenariylar — `data/scenarios/` da qo'lda yozilgan TS data (runtime'da LLM yar
 - `src/lib/gemini/client.ts` → `generateJson()` — Gemini JSON mode (`responseSchema` + zod + 1 repair retry).
 - `src/lib/storage/training.ts` → `TrainingRepo` (async, localStorage) — Postgres'ga almashtirish nuqtasi. Kalitlar: `h360:profile:v1`, `h360:sessions:v1`, `h360:himoyaId:v1`.
 - `src/lib/training/` → `dialogState` (holat matematikasi), `decisionEngine`, `tirEngine` (ko'p aktyorli 3D poligon holat mashinasi: odam/mashina/plastina, qonuniylik jurnali, instruktor buyruqlari), `competency` (baholash), `mentor`, `debrief`.
-- `src/components/training/tir/` → Three.js sahna (`TirScene`, `Actor` — protsedural personaj, `Environments`); glTF/Mixamo personajlar va lazer qurol (HID) uchun kontrakt tayyor.
+- `src/components/training/tir/` → Three.js sahna: `TirScene`, `RealHuman` (**rigged glTF personaj**, Mixamo skeleti: Idle/Walk/Run animatsiya + holatga qarab suyaklarni boshqarish — qurolni qaratish, qo'l ko'tarish, tiz cho'kish, yotish; rol bo'yicha tint), `Actor` (protsedural fallback + mashina + plastina), `Environments`.
+- Personaj modeli: `public/models/soldier.glb` — three.js examples (`Soldier.glb`, Mixamo rig). **Almashtirish:** istalgan Mixamo-mos glTF/GLB (masalan, Mixamo → Blender → glb, Idle/Walk/Run kliplari bilan) shu yo'lga qo'yilsa yetarli — kod `mixamorig*` suyak nomlarini o'zi topadi. Lazer qurol (HID) uchun `onShoot(actorId, zone)` kontrakti tayyor.
 - `/api/sim/{dialog,debrief,mahalla-grade,document-check}` — barchasi `no_keys_configured` (500) / `ai_unavailable` (503) / `bad_ai_output` (502) kontraktida.
 - Auth yo'q (MVP): lokal profil `role: trainee|instructor`. Har yozuvda `traineeId` bor.
 

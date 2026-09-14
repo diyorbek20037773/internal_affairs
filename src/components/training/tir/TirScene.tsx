@@ -5,7 +5,8 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import type { TirHitZone, TirScenario } from "@/data/scenarios/types";
 import type { TirActor, TirState } from "@/lib/training/tirEngine";
-import { Human, Plate, Vehicle } from "./Actor";
+import { Plate, Vehicle } from "./Actor";
+import { SmartHuman as Human } from "./RealHuman";
 import { Environment } from "./Environments";
 
 /**
@@ -63,8 +64,8 @@ export function TirScene({
         )
       )}
 
-      {scenario.partner && <Human x={-1.7} z={-1.4} state="idle" role="police" weapon="gun" />}
-      {state.backupArrived && <Human x={-2.8} z={-2.2} state="idle" role="police" weapon="gun" />}
+      {scenario.partner && <Human x={-2.6} z={-2.6} state="idle" role="police" weapon="gun" />}
+      {state.backupArrived && <Human x={-3.6} z={-3.4} state="idle" role="police" weapon="gun" />}
 
       {/* miss backdrop */}
       <mesh position={[0, 10, -40]} onPointerDown={() => armed && onShoot(null, "miss")}>
