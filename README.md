@@ -4,6 +4,8 @@
 
 > **Shior:** «Xodimni o'qitmaymiz — uni real xizmatga tayyorlaymiz». Sikl: VAZIYAT → TAHLIL → MULOQOT → QAROR → HARAKAT → NATIJA.
 
+🌐 **Jonli:** https://internalaffairs-production.up.railway.app · 🗣 uz / ru / en · 📱 planshet brauzerida ishlaydi (Android, 4G) · ✅ E2E QA (Playwright, real Gemini): 21/21
+
 ## Trenajyorlar (HIMOYA-360)
 
 | Xona | Route | Nima qiladi |
@@ -66,23 +68,33 @@ npm run dev                 # http://localhost:3000
 | `GEMINI_API_KEYS` | Bir yoki bir nechta Gemini kaliti (vergul yoki yangi qatordan). Random tanlanadi, 429/quota'da boshqasiga o'tadi. |
 | `GEMINI_MODEL` | Ixtiyoriy. Default: `gemini-2.5-flash`. |
 | `NEXT_PUBLIC_DEFAULT_LOCALE` | Ixtiyoriy. Default: `uz`. |
+| `NEXT_PUBLIC_SITE_URL` | Ixtiyoriy. Sayt URL — OpenGraph/Telegram preview uchun. |
 
 > ⚠️ Haqiqiy kalitlar hech qachon gitga qo'shilmaydi (`.env` gitignore'da). Faqat `.env.example` repoda.
 
 ## Railway'ga deploy
 
 1. GitHub reponi Railway'ga ulang (deploy-on-push).
-2. Railway → **Variables**: `GEMINI_API_KEYS` (bir nechta kalit), ixtiyoriy `GEMINI_MODEL`.
+2. Railway → **Variables**: `GEMINI_API_KEYS` (bir nechta kalit; yaroqsiz kalit avtomatik o'tkazib yuboriladi), ixtiyoriy `GEMINI_MODEL`, `NEXT_PUBLIC_SITE_URL` (OpenGraph/link preview uchun).
 3. Build: `npm run build` · Start: `npm run start` (Railway `$PORT` ni avtomatik bog'laydi). Nixpacks avtomatik aniqlaydi.
 
 ## Arxitektura
 
 ```
 prompts/system-prompt.uz.ts   # PROMPT.txt → Gemini system instruction (6-bo'limli format)
+prompts/virtual-citizen.uz.ts # HIMOYA-360: virtual fuqaro (yashirin holat + JSON baho)
+prompts/debrief.uz.ts         # HIMOYA-360: Smart Debrifing grader (3 savol + 8 kompetensiya)
+prompts/mahalla-grader.uz.ts  # HIMOYA-360: harakat rejasi rubrikasi
+prompts/document-checker.uz.ts# HIMOYA-360: hujjat tekshiruvi (qonun va fakt)
+data/scenarios/               # HIMOYA-360 ssenariylari: dialog/ decision/ mahalla/ document/ exam/ (+ competencies)
 data/sops/                    # SOP ma'lumot modeli (hodisa turlari, bosqichlar, checklist, qonunlar)
 src/lib/gemini/keyPool.ts     # random key rotatsiya + failover
 src/lib/gemini/client.ts      # streamChat() — Gemini streaming
 src/app/api/chat|legal        # streaming route handler (nodejs runtime)
+src/app/api/sim/*             # HIMOYA-360: dialog, debrief, mahalla-grade, document-check (JSON mode)
+src/lib/training/             # HIMOYA-360: dialogState, decisionEngine, competency, mentor, debrief
+src/lib/storage/training.ts   # TrainingRepo (profil, sessiyalar, HIMOYA-ID) — localStorage
+src/components/training/      # trenajyor UI: dialog/ decision/ mahalla/ document/ debrief/ exam/ profile/ instructor/
 src/lib/workflow/             # deterministik bosqich + checklist engine
 src/hooks/useChatStream.ts    # stream o'qish + 6-bo'lim jonli parsing
 src/components/                # UI (layout, chat, dashboard, incident, voice, legal)
