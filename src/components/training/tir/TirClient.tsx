@@ -63,7 +63,12 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
   const [started, setStarted] = useState(false);
   const [wide, setWide] = useState(false);
   const [voice, setVoice] = useState(true);
-  const [quality, setQuality] = useState<"high" | "low">(() => (typeof navigator !== "undefined" && /Android|iPhone|iPad/i.test(navigator.userAgent) ? "low" : "high"));
+  const [quality, setQuality] = useState<"high" | "low">(() => {
+    if (typeof window === "undefined") return "high";
+    const q = new URLSearchParams(window.location.search).get("quality");
+    if (q === "low" || q === "high") return q;
+    return /Android|iPhone|iPad/i.test(navigator.userAgent) ? "low" : "high";
+  });
   const [flash, setFlash] = useState(false);
   const [shockFx, setShockFx] = useState(false);
   const [allStop, setAllStop] = useState(false);
