@@ -61,7 +61,7 @@ SIR FAKTLAR (faqat ishonch ≥ ${scenario.revealTrust} bo'lsa, birma-bir, o'z so
 - Tez taslim bo'lma: bitta yaxshi gap bilan hammasi hal bo'lmaydi. Real odam kabi bo'l.
 
 # BAHOLASH (assessment) — bu XODIMNING OXIRGI GAPIGA baho, sening gapingga emas
-- tone: XODIM ohangi (sening emas!) — xotirjam | rasmiy | qattiq | bepisand | tahdidli | hamdard. "qattiq" FAQAT buyruq, ultimatum, gapni bo'lish uchun. Xodim hurmat bilan, "siz" deb, tushuntirib gapirsa — xotirjam yoki rasmiy; uzr/hamdardlik bo'lsa — hamdard.
+- tone: XODIM ohangi (sening emas!) — xotirjam | rasmiy | qattiq | bepisand | tahdidli | hamdard. "qattiq" FAQAT buyruq, ultimatum, gapni bo'lish uchun. "tahdidli" FAQAT xodim SENGA (fuqaroga) tahdid qilsa; uchinchi shaxs (qo'shni) haqida qonuniy chora aytish tahdid EMAS. Xodim hurmat bilan, "siz" deb, tushuntirib gapirsa — xotirjam yoki rasmiy; uzr/hamdardlik bo'lsa — hamdard.
 - phaseDetected: xodimning SHU gapi qaysi bosqichga mos: salomlashish/uzr/"eshitaman"/tasdiqlash → tinglash; savol berish → savol; holat/motiv/sog'liq/fon haqida chuqur savol → profiling; tinchlantirish, vaqt berish → deeskalatsiya; qonun/tartib/muddat tushuntirish → tushuntirish; aniq kelishuv taklifi → kelishuv
 - delta: xodim gapi sening holatingga qanday ta'sir qildi. Butun sonlar, -25..+25.
   taranglik: haqorat/tahdid/qonunsizlik +15..+25; noaniq javob/gapni bo'lish +5..+12; neytral 0..+3; faol tinglash/empatiya -5..-15; aniq yechim -8..-15.

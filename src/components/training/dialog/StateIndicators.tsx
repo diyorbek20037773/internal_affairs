@@ -12,6 +12,31 @@ import { cn } from "@/lib/utils";
  * Shows tension bar, trend, officer tone and the 6-step phase stepper.
  * Trust/cooperation numbers are intentionally hidden until the debrief.
  */
+/** One-line version shown above the chat on tablets/phones (< lg). */
+export function StateStrip({ state, last }: { state: DialogHiddenState; last?: DialogTurnAssessment }) {
+  const t = useTranslations("sim.dialog");
+  const tensionColor =
+    state.tension >= 70 ? "bg-destructive" : state.tension >= 40 ? "bg-accent" : "bg-success";
+  const trendVariant =
+    last?.trendLabel === "yumshayapti" ? "success" : last?.trendLabel === "keskinlashyapti" ? "destructive" : "secondary";
+  const toneGood = last && (last.tone === "xotirjam" || last.tone === "hamdard" || last.tone === "rasmiy");
+  return (
+    <div className="flex items-center gap-3 border-b border-border/70 bg-muted/30 px-4 py-2 lg:hidden">
+      <div className="min-w-0 flex-1">
+        <div className="mb-1 flex justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <span>{t("tension")}</span>
+          <span>{t(`phases.${state.phase}`)}</span>
+        </div>
+        <Progress value={state.tension} indicatorClassName={cn("transition-all duration-700", tensionColor)} className="h-2" />
+      </div>
+      <Badge variant={trendVariant} className="shrink-0 text-[10px]">{last ? t(`trend_${last.trendLabel}`) : "—"}</Badge>
+      <Badge variant={last ? (toneGood ? "success" : "destructive") : "secondary"} className="hidden shrink-0 text-[10px] sm:inline-flex">
+        {last ? t(`tones.${last.tone}`) : "—"}
+      </Badge>
+    </div>
+  );
+}
+
 export function StateIndicators({
   state,
   last,

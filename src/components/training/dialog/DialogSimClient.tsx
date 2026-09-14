@@ -18,7 +18,7 @@ import { localized } from "@/data/sops/types";
 import type { DialogScenario } from "@/data/scenarios/types";
 import type { TrainingSession } from "@/lib/storage/trainingSchema";
 import { ProfileGate } from "../profile/ProfileGate";
-import { StateIndicators } from "./StateIndicators";
+import { StateIndicators, StateStrip } from "./StateIndicators";
 import { cn } from "@/lib/utils";
 
 export function DialogSimClient({
@@ -138,6 +138,8 @@ function DialogRunner({ scenario, initial }: { scenario: DialogScenario; initial
           </Button>
         </div>
 
+        <StateStrip state={sim.state} last={sim.lastAssessment} />
+
         <ScrollArea className="min-h-0 flex-1">
           <div className="space-y-3 p-4">
             {sim.transcript.map((turn) => (
@@ -236,7 +238,7 @@ function DialogRunner({ scenario, initial }: { scenario: DialogScenario; initial
         ) : null}
       </Card>
 
-      <div className="space-y-4">
+      <div className="hidden space-y-4 lg:block">
         <StateIndicators
           state={sim.state}
           last={sim.lastAssessment}

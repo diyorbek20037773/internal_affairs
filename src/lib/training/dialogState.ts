@@ -69,8 +69,12 @@ export function applyDelta(
       phase = DIALOG_PHASES[nextIdx];
     }
   }
-  // Thresholds met and the officer is proposing agreement → allow the jump.
-  if (!hostile && a.phaseDetected === "kelishuv" && meetsSuccess) phase = "kelishuv";
+  // Thresholds met and the officer is already explaining / proposing terms →
+  // the citizen is ready to agree; allow the jump to kelishuv.
+  const tushIdx = DIALOG_PHASES.indexOf("tushuntirish");
+  if (!hostile && meetsSuccess && (detIdx >= tushIdx || DIALOG_PHASES.indexOf(phase) >= tushIdx)) {
+    phase = "kelishuv";
+  }
 
   return { tension, trust, cooperation, phase, revealed: state.revealed };
 }

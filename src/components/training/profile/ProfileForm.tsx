@@ -66,12 +66,14 @@ export function ProfileForm() {
         <Field label={t("district")}>
           <Input value={district} onChange={(e) => setDistrict(e.target.value)} placeholder="Bog'imaydon MFY, Mirzo Ulug'bek tumani" />
         </Field>
-        <Field label={t("role")}>
-          <div className="grid grid-cols-2 gap-2">
+        <Field label={t("role")} asDiv>
+          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t("role")}>
             {ROLES.map((r) => (
               <button
                 key={r}
                 type="button"
+                role="radio"
+                aria-checked={role === r}
                 onClick={() => setRole(r)}
                 className={cn(
                   "rounded-lg border px-3 py-2.5 text-sm font-medium transition-all",
@@ -95,11 +97,12 @@ export function ProfileForm() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children, asDiv }: { label: string; children: React.ReactNode; asDiv?: boolean }) {
+  const Tag = asDiv ? "div" : "label";
   return (
-    <label className="block space-y-1.5">
+    <Tag className="block space-y-1.5">
       <span className="text-sm font-medium">{label}</span>
       {children}
-    </label>
+    </Tag>
   );
 }
