@@ -36,24 +36,27 @@ export function applyDelta(
   }
   if (unlawful) trust = clamp(trust - 10, 0, 100);
 
-  // Phase machine: may advance or hold; hostility resets to de-escalation work.
+  // Phase machine: advances at most ONE step per turn, never skips; hostility
+  // drops the officer back to de-escalation work. Kelishuv is gated by the
+  // scenario's success thresholds so the citizen can't be "talked into" it early.
   const curIdx = DIALOG_PHASES.indexOf(state.phase);
   const detIdx = DIALOG_PHASES.indexOf(a.phaseDetected);
+  const kelishuvIdx = DIALOG_PHASES.indexOf("kelishuv");
+  const meetsSuccess =
+    trust >= scenario.successCondition.minTrust && tension <= scenario.successCondition.maxTension;
   let phase = state.phase;
   if (hostile) {
-    phase = "deeskalatsiya";
+    phase = curIdx > DIALOG_PHASES.indexOf("deeskalatsiya") ? "deeskalatsiya" : state.phase;
   } else if (detIdx > curIdx) {
-    // Kelishuv is gated by the scenario's success thresholds.
-    if (a.phaseDetected === "kelishuv") {
-      if (trust >= scenario.successCondition.minTrust && tension <= scenario.successCondition.maxTension) {
-        phase = "kelishuv";
-      } else {
-        phase = DIALOG_PHASES[Math.min(detIdx, curIdx + 1)] === "kelishuv" ? state.phase : DIALOG_PHASES[curIdx + 1];
-      }
+    const nextIdx = Math.min(detIdx, curIdx + 1);
+    if (nextIdx === kelishuvIdx && !meetsSuccess) {
+      phase = state.phase; // hold until thresholds are met
     } else {
-      phase = a.phaseDetected;
+      phase = DIALOG_PHASES[nextIdx];
     }
   }
+  // Thresholds met and the officer is proposing agreement → allow the jump.
+  if (!hostile && a.phaseDetected === "kelishuv" && meetsSuccess) phase = "kelishuv";
 
   return { tension, trust, cooperation, phase, revealed: state.revealed };
 }
