@@ -21,6 +21,7 @@ const RULES = {
 
 const bystander = (id: string, name: string, x: number, z: number, state: TirActorDef["state"] = "idle", shirt?: string): TirActorDef => ({
   id, role: "bystander", kind: "human", name, weapon: "none", x, z, state, shirt,
+  gender: /ayol|xodima|qiz|ona/i.test(name) ? "f" : "m",
 });
 
 /* ------------------------------------------------------------------------ */
@@ -90,7 +91,7 @@ export const tirOlomon: TirScenario = {
   actors: [
     { id: "s1", role: "suspect", kind: "human", name: "Erkak (pichoq)", weapon: "knife", x: 0.6, z: -7, state: "shouting", agitation: 78, compliance: 12, speed: 0.4, holds: "h1", shirt: "#3a3a3a",
       lines: { shouting: ["Yaqinlashma! Uni kesaman!", "Hamma orqaga! Menga mashina kerak!"], approaching: ["Kelmang! Oxirgi marta aytaman!"], weapon_raised: ["Sanayman! Bir!.. Ikki!.."], lunging: ["AAA!"], dropping: ["...mayli. Mayli, oling."], kneeling: ["Hech kimga tegmoqchi emasdim..."], calm: ["Gaplashamiz... faqat baqirmang."] } },
-    { id: "h1", role: "hostage", kind: "human", name: "Garovdagi ayol", weapon: "none", x: 0.1, z: -6.3, state: "held", shirt: "#d9c27a" },
+    { id: "h1", role: "hostage", kind: "human", name: "Garovdagi ayol", weapon: "none", x: 0.1, z: -6.3, state: "held", shirt: "#d9c27a", gender: "f" },
     bystander("b1", "Sotuvchi", -4, -8, "cowering", "#6b8a5a"),
     bystander("b2", "Yigit", 3.5, -9, "hands_up", "#5a6b8a"),
     bystander("b3", "Keksa erkak", -2.5, -11, "idle", "#8a7a5a"),
@@ -136,7 +137,7 @@ export const tirBino: TirScenario = {
     bystander("v2", "Xodima (stol)", 3.2, -8.5, "cowering", "#c9a26a"),
     bystander("v3", "Yigit (burchak)", -3.6, -9, "cowering", "#5a6b8a"),
     bystander("v4", "Ayol (burchak)", -4.2, -8.2, "cowering", "#b06a9a"),
-    { id: "g1", role: "suspect", kind: "human", name: "Otuvchi", weapon: "gun", x: 1.5, z: -11, state: "weapon_raised", agitation: 95, compliance: 0, aimSec: 2.5, hidden: true, keepsFiring: true, shirt: "#222",
+    { id: "g1", role: "suspect", kind: "human", name: "Otuvchi", weapon: "gun", x: 2.6, z: -10.5, state: "weapon_raised", agitation: 95, compliance: 0, aimSec: 2.5, hidden: true, keepsFiring: true, shirt: "#222",
       lines: { weapon_raised: ["Hamma yerga!"], aiming: ["Sen ham!"], dropping: [], kneeling: [] } },
     { id: "cop", role: "police", kind: "human", name: "Hamkasb (formada)", weapon: "gun", x: -5, z: -7, state: "walking", hidden: true, speed: 3, shirt: "#1c2a4a" },
     { id: "g2", role: "suspect", kind: "human", name: "Ikkinchi shaxs (eshik)", weapon: "gun", x: 2.5, z: -9.5, state: "hands_up", agitation: 60, compliance: 85, hidden: true, shirt: "#5a3a2a",

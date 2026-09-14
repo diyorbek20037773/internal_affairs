@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { Bloom, EffectComposer, SMAA, Vignette } from "@react-three/postprocessing";
 import type { TirHitZone, TirScenario } from "@/data/scenarios/types";
 import type { TirActor, TirState } from "@/lib/training/tirEngine";
 import { Plate, Vehicle } from "./Actor";
@@ -20,11 +21,13 @@ export function TirScene({
   state,
   wide,
   onShoot,
+  quality = "high",
 }: {
   scenario: TirScenario;
   state: TirState;
   wide: boolean;
   onShoot: (actorId: string | null, zone: TirHitZone) => void;
+  quality?: "high" | "low";
 }) {
   const armed = state.weaponDrawn && !state.outcome && !state.paused;
   const primary = nearestHostile(state.actors);
@@ -33,15 +36,14 @@ export function TirScene({
 
   return (
     <Canvas
-      shadows
-      dpr={[1, 1.5]}
-      camera={{ position: [0, 1.65, 0], fov: wide ? 98 : 64, near: 0.1, far: 120 }}
+      shadows={quality === "high" ? { type: THREE.PCFSoftShadowMap } : true}
+      dpr={quality === "high" ? [1, 1.75] : [1, 1]}
+      gl={{ antialias: quality !== "high", toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.9, powerPreference: "high-performance" }}
+      camera={{ position: [0, 1.65, 0], fov: wide ? 98 : 64, near: 0.1, far: 200 }}
       style={{ cursor: armed ? "crosshair" : "default" }}
       onCreated={({ camera }) => camera.lookAt(0, 1.2, -8)}
     >
       <CameraRig inCover={state.inCover} lookX={lookX} lookZ={lookZ} intense={!!primary && (primary.state === "lunging" || primary.state === "charging" || primary.state === "aiming")} shockSeq={state.shockSeq} />
-      <ambientLight intensity={scenario.environment === "street" ? 0.55 : 0.8} />
-      <directionalLight position={[6, 10, 4]} intensity={scenario.environment === "street" ? 0.5 : 1.4} castShadow />
       <Environment kind={scenario.environment} />
 
       {state.actors.filter((a) => !a.hidden).map((a) =>
@@ -59,13 +61,23 @@ export function TirScene({
             weapon={a.weapon}
             agitation={a.agitation}
             shirt={a.shirt}
+            gender={a.gender}
+            seed={a.id.split("").reduce((h, c) => h * 31 + c.charCodeAt(0), 7)}
             onShot={(z) => armed && onShoot(a.id, z)}
           />
         )
       )}
 
-      {scenario.partner && <Human x={-2.6} z={-2.6} state="idle" role="police" weapon="gun" />}
-      {state.backupArrived && <Human x={-3.6} z={-3.4} state="idle" role="police" weapon="gun" />}
+      {scenario.partner && <Human x={-3.4} z={-4.4} state="idle" role="police" weapon="gun" seed={11} />}
+      {state.backupArrived && <Human x={-4.6} z={-5.2} state="idle" role="police" weapon="gun" seed={17} />}
+
+      {quality === "high" && (
+        <EffectComposer multisampling={0}>
+          <SMAA />
+          <Bloom intensity={0.35} luminanceThreshold={0.85} luminanceSmoothing={0.2} mipmapBlur />
+          <Vignette eskil={false} offset={0.25} darkness={0.55} />
+        </EffectComposer>
+      )}
 
       {/* miss backdrop */}
       <mesh position={[0, 10, -40]} onPointerDown={() => armed && onShoot(null, "miss")}>

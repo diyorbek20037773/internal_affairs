@@ -266,14 +266,14 @@ export function Vehicle({
   return (
     <group ref={root} position={[x, 0, z]}>
       {/* body */}
-      <mesh position={[0, 0.65, 0]} onPointerDown={hit("body")}>
+      <mesh position={[0, 0.65, 0]} onPointerDown={hit("body")} castShadow>
         <boxGeometry args={[1.8, 0.6, 4.3]} />
-        <meshStandardMaterial color={color} metalness={0.4} roughness={0.5} />
+        <meshPhysicalMaterial color={color} metalness={0.6} roughness={0.25} clearcoat={1} clearcoatRoughness={0.08} />
       </mesh>
       {/* cabin */}
-      <mesh position={[0, 1.2, -0.2]} onPointerDown={hit("body")}>
+      <mesh position={[0, 1.2, -0.2]} onPointerDown={hit("body")} castShadow>
         <boxGeometry args={[1.6, 0.55, 2.2]} />
-        <meshStandardMaterial color={color} metalness={0.4} roughness={0.5} />
+        <meshPhysicalMaterial color={color} metalness={0.6} roughness={0.25} clearcoat={1} clearcoatRoughness={0.08} />
       </mesh>
       {/* windshield (facing officer, +Z) */}
       <mesh position={[0, 1.2, 0.92]} onPointerDown={hit("driver")}>

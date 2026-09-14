@@ -335,6 +335,8 @@ export interface TirActorDef {
   holds?: string;
   lines?: Partial<Record<TirActorState, string[]>>;
   shirt?: string;
+  /** Avatar body. Default "m". */
+  gender?: "m" | "f";
   /** Spawn later via script (hidden until then). */
   hidden?: boolean;
   /** Fires at the officer periodically while `aiming` (active shooter). */
@@ -372,6 +374,12 @@ export interface TirScenario extends ScenarioBase {
   };
   briefing: LocalizedText;
   rubricHints: Partial<Record<Competency, string>>;
+  /**
+   * Optional filmed-video pack (VirTra-style). When a clip exists for the
+   * primary actor's current state it is shown full-bleed over the 3D scene.
+   * Paths are relative to /public, e.g. "/video/tir-01/shouting.mp4".
+   */
+  video?: { poster?: string; clips: Partial<Record<TirActorState, string>> };
 }
 
 export interface TirEvent {

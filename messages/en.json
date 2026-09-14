@@ -605,7 +605,8 @@
         "agitation": "Agitation",
         "compliance": "Compliance",
         "hint": "The instructor drives the scenario live: escalate, spawn actors, pause, ALL STOP. Second window/tablet — same browser profile."
-      }
+      },
+      "quality": "Graphics quality (HQ/LQ)"
     }
   }
 }

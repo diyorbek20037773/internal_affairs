@@ -1,312 +1,202 @@
 "use client";
 
+import { Suspense } from "react";
+import { ContactShadows, Environment as DreiEnvironment, useTexture } from "@react-three/drei";
+import * as THREE from "three";
 import type { TirEnvironment } from "@/data/scenarios/types";
 
-/** Procedural environments — yard / street / hallway. Officer at origin, actor on -Z. */
-export function Environment({ kind }: { kind: TirEnvironment }) {
-  if (kind === "street") return <Street />;
-  if (kind === "hallway") return <Hallway />;
-  if (kind === "plaza") return <Plaza />;
-  if (kind === "lobby") return <Lobby />;
-  if (kind === "range") return <Range />;
-  return <Yard />;
+/**
+ * Photographic environments: a real HDRI panorama (Poly Haven, CC0) is
+ * projected onto a ground disc + dome, lights the scene (IBL) and IS the
+ * backdrop — the officer stands in a real courtyard / street / square. PBR
+ * textured props (cover wall, floor patch) sit on top. If an HDRI is missing
+ * (assets not fetched) we fall back to a flat gradient sky.
+ */
+
+interface EnvDef {
+  hdri: string;
+  groundHeight: number; // camera height in the HDRI shot
+  radius: number;
+  floor?: { tex: string; size: number; repeat: number };
+  cover: string; // texture set for the cover wall
+  ambient: number;
+  /** IBL / backdrop intensity — tames blown-out midday HDRIs. */
+  envIntensity?: number;
+  bgIntensity?: number;
+  sun?: { pos: [number, number, number]; intensity: number; color?: string };
 }
 
-function Sky({ top, bottom }: { top: string; bottom: string }) {
-  // Gradient dome — reliable across GPUs (scene.background is skipped on some).
+const ENVS: Record<TirEnvironment, EnvDef> = {
+  yard: { hdri: "/hdri/overcast_industrial_courtyard_1k.hdr", groundHeight: 1.6, radius: 40, floor: { tex: "aerial_grass_rock", size: 30, repeat: 8 }, cover: "rough_plaster_brick", ambient: 0.25, envIntensity: 0.9, bgIntensity: 0.9, sun: { pos: [8, 12, 6], intensity: 0.9 } },
+  street: { hdri: "/hdri/urban_street_04_1k.hdr", groundHeight: 1.7, radius: 50, floor: { tex: "asphalt_02", size: 40, repeat: 10 }, cover: "concrete_floor_worn_001", ambient: 0.15, sun: { pos: [-6, 10, 4], intensity: 1.2, color: "#ffd9a0" } },
+  plaza: { hdri: "/hdri/palermo_square_1k.hdr", groundHeight: 1.7, radius: 50, floor: { tex: "floor_tiles_06", size: 40, repeat: 16 }, cover: "rough_plaster_brick", ambient: 0.2, envIntensity: 0.7, bgIntensity: 0.75, sun: { pos: [10, 14, -4], intensity: 1.8 } },
+  lobby: { hdri: "/hdri/empty_warehouse_01_1k.hdr", groundHeight: 1.6, radius: 22, floor: { tex: "concrete_floor_worn_001", size: 24, repeat: 8 }, cover: "concrete_floor_worn_001", ambient: 0.3, envIntensity: 0.7, bgIntensity: 0.65 },
+  hallway: { hdri: "/hdri/empty_warehouse_01_1k.hdr", groundHeight: 1.6, radius: 16, floor: { tex: "concrete_floor_worn_001", size: 16, repeat: 6 }, cover: "rough_plaster_brick", ambient: 0.3, envIntensity: 0.7, bgIntensity: 0.65 },
+  range: { hdri: "/hdri/abandoned_parking_1k.hdr", groundHeight: 1.6, radius: 60, floor: { tex: "asphalt_02", size: 60, repeat: 14 }, cover: "concrete_floor_worn_001", ambient: 0.2, envIntensity: 0.8, bgIntensity: 0.85, sun: { pos: [6, 14, 8], intensity: 2.0 } },
+};
+
+export function Environment({ kind }: { kind: TirEnvironment }) {
+  const def = ENVS[kind];
   return (
     <group>
-      <mesh>
-        <sphereGeometry args={[70, 24, 16]} />
-        <meshBasicMaterial color={top} side={1} fog={false} />
-      </mesh>
-      <mesh position={[0, -20, 0]}>
-        <sphereGeometry args={[69, 24, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2]} />
-        <meshBasicMaterial color={bottom} side={1} fog={false} transparent opacity={0.9} />
-      </mesh>
-      <hemisphereLight args={[top, bottom, 0.6]} />
+      <ambientLight intensity={def.ambient} />
+      {def.sun && (
+        <directionalLight
+          position={def.sun.pos}
+          intensity={def.sun.intensity}
+          color={def.sun.color}
+          castShadow
+          shadow-mapSize={[2048, 2048]}
+          shadow-bias={-0.0004}
+          shadow-camera-left={-15}
+          shadow-camera-right={15}
+          shadow-camera-top={15}
+          shadow-camera-bottom={-15}
+        />
+      )}
+      <Suspense fallback={<FlatSky kind={kind} />}>
+        <DreiEnvironment files={def.hdri} background ground={{ height: def.groundHeight, radius: def.radius, scale: def.radius * 2 }} environmentIntensity={def.envIntensity ?? 1} backgroundIntensity={def.bgIntensity ?? 1} />
+      </Suspense>
+      {def.floor && (
+        <Suspense fallback={null}>
+          <TexturedFloor tex={def.floor.tex} size={def.floor.size} repeat={def.floor.repeat} />
+        </Suspense>
+      )}
+      <ContactShadows position={[0, 0.005, -8]} scale={30} blur={2.2} opacity={0.55} far={12} resolution={1024} frames={Infinity} />
+      <Suspense fallback={null}>
+        <CoverWall tex={def.cover} />
+      </Suspense>
+      <Props kind={kind} />
     </group>
   );
 }
 
-function Ground({ color, size = 60 }: { color: string; size?: number }) {
+function usePbr(name: string, repeat: number) {
+  const maps = useTexture({
+    map: `/tex/${name}_diff_1k.jpg`,
+    normalMap: `/tex/${name}_nor_gl_1k.jpg`,
+    roughnessMap: `/tex/${name}_rough_1k.jpg`,
+  });
+  Object.values(maps).forEach((t) => {
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(repeat, repeat);
+    t.anisotropy = 8;
+  });
+  maps.map.colorSpace = THREE.SRGBColorSpace;
+  return maps;
+}
+
+/** A textured patch under the action area — blends with the projected HDRI floor. */
+function TexturedFloor({ tex, size, repeat }: { tex: string; size: number; repeat: number }) {
+  const maps = usePbr(tex, repeat);
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -10]} receiveShadow>
-      <planeGeometry args={[size, size]} />
-      <meshStandardMaterial color={color} />
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002, -size / 3]} receiveShadow>
+      <circleGeometry args={[size / 2, 48]} />
+      <meshStandardMaterial {...maps} roughness={1} transparent opacity={0.92} />
     </mesh>
   );
 }
 
-function Yard() {
+function CoverWall({ tex }: { tex: string }) {
+  const maps = usePbr(tex, 1.5);
   return (
-    <group>
-      <Sky top="#7fb2e6" bottom="#dfe9f3" />
-      <fog attach="fog" args={["#bcd3ea", 22, 60]} />
-      <Ground color="#7a8a63" />
-      {/* paved path */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, -6]}>
-        <planeGeometry args={[3, 16]} />
-        <meshStandardMaterial color="#9a9a94" />
-      </mesh>
-      {/* house behind actor */}
-      <mesh position={[0, 1.8, -16]} castShadow>
-        <boxGeometry args={[10, 3.6, 6]} />
-        <meshStandardMaterial color="#d9cbb4" />
-      </mesh>
-      <mesh position={[0, 4.2, -16]}>
-        <coneGeometry args={[7.5, 2, 4]} />
-        <meshStandardMaterial color="#7a3b2e" />
-      </mesh>
-      {[-3.2, 3.2].map((x) => (
-        <mesh key={x} position={[x, 1.6, -13.01]}>
-          <boxGeometry args={[1.4, 1.2, 0.05]} />
-          <meshStandardMaterial color="#3a5a80" />
-        </mesh>
-      ))}
-      {/* fence left/right */}
-      {[-6, 6].map((x) => (
-        <group key={x}>
-          <mesh position={[x, 0.9, -8]}>
-            <boxGeometry args={[0.1, 1.8, 24]} />
-            <meshStandardMaterial color="#6b7a86" />
-          </mesh>
-          {Array.from({ length: 7 }).map((_, i) => (
-            <mesh key={i} position={[x, 0.9, -i * 4 + 4]}>
-              <boxGeometry args={[0.25, 2.1, 0.25]} />
-              <meshStandardMaterial color="#4b5560" />
-            </mesh>
-          ))}
-        </group>
-      ))}
-      {/* tree */}
-      <mesh position={[-4, 1.5, -9]}>
-        <cylinderGeometry args={[0.15, 0.22, 3, 8]} />
-        <meshStandardMaterial color="#5a4030" />
-      </mesh>
-      <mesh position={[-4, 3.6, -9]}>
-        <sphereGeometry args={[1.5, 12, 12]} />
-        <meshStandardMaterial color="#3f7a3a" />
-      </mesh>
-      <CoverWall />
-    </group>
+    <mesh position={[1.4, 0.5, -0.6]} castShadow receiveShadow>
+      <boxGeometry args={[0.6, 1.0, 1.6]} />
+      <meshStandardMaterial {...maps} roughness={1} />
+    </mesh>
   );
 }
 
-function Street() {
-  return (
-    <group>
-      <Sky top="#1b2233" bottom="#3a4560" />
-      <fog attach="fog" args={["#2b3547", 18, 55]} />
-      <Ground color="#3a3d43" />
-      {/* sidewalk */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -6]}>
-        <planeGeometry args={[8, 20]} />
-        <meshStandardMaterial color="#6a6d72" />
-      </mesh>
-      {/* bus shelter */}
+/** Minimal physical props per environment (things actors interact with). */
+function Props({ kind }: { kind: TirEnvironment }) {
+  if (kind === "street")
+    return (
       <group position={[-2.5, 0, -7]}>
-        <mesh position={[0, 2.45, 0]}>
+        <mesh position={[0, 2.45, 0]} castShadow>
           <boxGeometry args={[4, 0.1, 1.6]} />
-          <meshStandardMaterial color="#1e293b" />
+          <meshStandardMaterial color="#1e293b" metalness={0.4} roughness={0.5} />
         </mesh>
         {[-1.9, 1.9].map((x) => (
-          <mesh key={x} position={[x, 1.2, -0.7]}>
+          <mesh key={x} position={[x, 1.2, -0.7]} castShadow>
             <boxGeometry args={[0.08, 2.4, 0.08]} />
-            <meshStandardMaterial color="#334155" />
+            <meshStandardMaterial color="#334155" metalness={0.6} roughness={0.4} />
           </mesh>
         ))}
         <mesh position={[0, 1.3, -0.75]}>
           <boxGeometry args={[4, 2.2, 0.03]} />
-          <meshStandardMaterial color="#93c5fd" transparent opacity={0.35} />
+          <meshPhysicalMaterial color="#cfe6ff" transmission={0.85} thickness={0.05} roughness={0.05} />
         </mesh>
-        <mesh position={[0, 0.5, -0.4]}>
+        <mesh position={[0, 0.5, -0.4]} castShadow>
           <boxGeometry args={[3, 0.08, 0.4]} />
           <meshStandardMaterial color="#475569" />
         </mesh>
+        <pointLight position={[0, 2.3, 0]} intensity={40} color="#dbeafe" distance={9} decay={1.8} />
       </group>
-      {/* street lamp */}
-      <mesh position={[3, 2.5, -5]}>
-        <cylinderGeometry args={[0.06, 0.08, 5, 8]} />
-        <meshStandardMaterial color="#334155" />
-      </mesh>
-      <pointLight position={[3, 5, -5]} intensity={260} color="#ffd9a0" distance={26} decay={1.6} />
-      <pointLight position={[-2.5, 2.3, -7]} intensity={60} color="#cfe6ff" distance={10} decay={1.6} />
-      {/* buildings */}
-      {[-9, 9].map((x) => (
-        <mesh key={x} position={[x, 5, -14]}>
-          <boxGeometry args={[8, 10, 8]} />
-          <meshStandardMaterial color="#1f2937" />
+    );
+  if (kind === "lobby")
+    return (
+      <group>
+        <mesh position={[1.5, 2, -12]} castShadow>
+          <cylinderGeometry args={[0.5, 0.5, 4, 24]} />
+          <meshStandardMaterial color="#cfd3d8" roughness={0.6} />
         </mesh>
-      ))}
-      <CoverWall color="#2d3440" />
-    </group>
-  );
-}
-
-function Hallway() {
-  return (
-    <group>
-      <Sky top="#9a9a9e" bottom="#c8c4bc" />
-      <Ground color="#6b6b70" size={12} />
-      {/* walls */}
-      {[-1.8, 1.8].map((x) => (
-        <mesh key={x} position={[x, 1.4, -6]}>
-          <boxGeometry args={[0.2, 2.8, 20]} />
-          <meshStandardMaterial color="#c9c2b5" />
+        <mesh position={[3.5, 0.55, -8.5]} castShadow>
+          <boxGeometry args={[3, 1.1, 0.9]} />
+          <meshStandardMaterial color="#4b5b6c" roughness={0.7} />
         </mesh>
-      ))}
-      {/* ceiling */}
-      <mesh position={[0, 2.8, -6]}>
-        <boxGeometry args={[3.8, 0.1, 20]} />
-        <meshStandardMaterial color="#e5e1d8" />
-      </mesh>
-      {/* far end wall + door behind actor */}
-      <mesh position={[0, 1.4, -9]}>
-        <boxGeometry args={[3.8, 2.8, 0.2]} />
-        <meshStandardMaterial color="#bfb7a8" />
-      </mesh>
-      <mesh position={[0, 1.05, -8.85]}>
-        <boxGeometry args={[1.0, 2.1, 0.1]} />
-        <meshStandardMaterial color="#5a3a24" />
-      </mesh>
-      {/* ceiling lights */}
-      {[-2, -5, -8].map((z) => (
-        <pointLight key={z} position={[0, 2.6, z]} intensity={45} distance={9} decay={1.6} />
-      ))}
-      <CoverWall color="#a39a8a" />
-    </group>
-  );
-}
-
-function Plaza() {
-  return (
-    <group>
-      <Sky top="#8fc0ea" bottom="#e8eef5" />
-      <fog attach="fog" args={["#cfdcea", 25, 70]} />
-      <Ground color="#a39a8c" />
-      {Array.from({ length: 6 }).map((_, i) => (
-        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, -2 - i * 3]}>
-          <planeGeometry args={[30, 0.08]} />
-          <meshStandardMaterial color="#8a8175" />
+        <mesh position={[-3, 0.35, -6]} castShadow>
+          <boxGeometry args={[2.4, 0.7, 0.9]} />
+          <meshStandardMaterial color="#2f3640" roughness={0.9} />
         </mesh>
-      ))}
-      {[-6, 6].map((x) =>
-        [-5, -9, -13].map((z) => (
-          <group key={`${x}${z}`} position={[x, 0, z]}>
-            <mesh position={[0, 0.6, 0]}>
-              <boxGeometry args={[2.4, 1.2, 1.2]} />
-              <meshStandardMaterial color="#8b5e3c" />
-            </mesh>
-            <mesh position={[0, 2.1, 0]}>
-              <boxGeometry args={[2.8, 0.08, 1.8]} />
-              <meshStandardMaterial color={x < 0 ? "#c0392b" : "#2874a6"} />
-            </mesh>
-            {[-1.2, 1.2].map((px) => (
-              <mesh key={px} position={[px, 1.4, 0.8]}>
-                <cylinderGeometry args={[0.04, 0.04, 1.4, 8]} />
-                <meshStandardMaterial color="#555" />
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-2.2, 0.01, -6]}>
+          <circleGeometry args={[0.6, 20]} />
+          <meshStandardMaterial color="#4a0a0a" roughness={0.2} transparent opacity={0.8} />
+        </mesh>
+      </group>
+    );
+  if (kind === "plaza")
+    return (
+      <group>
+        {[-6, 6].map((x) =>
+          [-5, -9].map((z) => (
+            <group key={`${x}${z}`} position={[x, 0, z]}>
+              <mesh position={[0, 0.6, 0]} castShadow>
+                <boxGeometry args={[2.4, 1.2, 1.2]} />
+                <meshStandardMaterial color="#7a5233" roughness={0.9} />
               </mesh>
-            ))}
-          </group>
-        ))
-      )}
-      <mesh position={[0, 4, -22]}>
-        <boxGeometry args={[34, 8, 4]} />
-        <meshStandardMaterial color="#d8cbb6" />
-      </mesh>
-      <mesh position={[0, 8.5, -22]}>
-        <sphereGeometry args={[4, 20, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-        <meshStandardMaterial color="#3a8fbf" />
-      </mesh>
-      <CoverWall color="#7f8c8d" />
-    </group>
-  );
-}
-
-function Lobby() {
-  return (
-    <group>
-      <Sky top="#d9dde3" bottom="#eef0f3" />
-      <Ground color="#b8bcc4" size={30} />
-      {Array.from({ length: 8 }).map((_, i) => (
-        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, -i * 2]}>
-          <planeGeometry args={[16, 0.03]} />
-          <meshStandardMaterial color="#8f949c" />
-        </mesh>
-      ))}
-      {[-8, 8].map((x) => (
-        <mesh key={x} position={[x, 2, -8]}>
-          <boxGeometry args={[0.3, 4, 26]} />
-          <meshStandardMaterial color="#e6e3dc" />
-        </mesh>
-      ))}
-      <mesh position={[0, 2, -15]}>
-        <boxGeometry args={[16, 4, 0.3]} />
-        <meshStandardMaterial color="#dcd8d0" />
-      </mesh>
-      <mesh position={[2.5, 1.1, -14.8]}>
-        <boxGeometry args={[1.2, 2.2, 0.1]} />
-        <meshStandardMaterial color="#4a3a2a" />
-      </mesh>
-      <mesh position={[1.5, 2, -12]}>
-        <cylinderGeometry args={[0.5, 0.5, 4, 16]} />
-        <meshStandardMaterial color="#cfd3d8" />
-      </mesh>
-      <mesh position={[3.5, 0.55, -8.5]}>
-        <boxGeometry args={[3, 1.1, 0.9]} />
-        <meshStandardMaterial color="#5b6b7c" />
-      </mesh>
-      <mesh position={[-3, 0.35, -6]}>
-        <boxGeometry args={[2.4, 0.7, 0.9]} />
-        <meshStandardMaterial color="#374151" />
-      </mesh>
-      <mesh position={[0, 4, -8]}>
-        <boxGeometry args={[16, 0.1, 26]} />
-        <meshStandardMaterial color="#f3f4f6" />
-      </mesh>
-      {[-3, -7, -11].map((z) => (
-        <pointLight key={z} position={[0, 3.8, z]} intensity={70} distance={12} decay={1.6} />
-      ))}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-2.2, 0.01, -6]}>
-        <circleGeometry args={[0.6, 20]} />
-        <meshBasicMaterial color="#6b0f0f" transparent opacity={0.7} />
-      </mesh>
-      <CoverWall color="#6b7280" />
-    </group>
-  );
-}
-
-function Range() {
-  return (
-    <group>
-      <Sky top="#b9d5f0" bottom="#e9d9b8" />
-      <fog attach="fog" args={["#d9d3c0", 30, 90]} />
-      <Ground color="#b39b6e" size={120} />
-      <mesh position={[0, 1.5, -22]}>
-        <boxGeometry args={[40, 3, 6]} />
-        <meshStandardMaterial color="#8c7a55" />
-      </mesh>
-      {[-18, -6, 8, 20].map((x, i) => (
-        <mesh key={x} position={[x, 3, -60]}>
-          <coneGeometry args={[10 + i * 2, 12 + (i % 2) * 5, 5]} />
-          <meshStandardMaterial color="#7a8ea6" />
-        </mesh>
-      ))}
+              <mesh position={[0, 2.1, 0]} castShadow>
+                <boxGeometry args={[2.8, 0.06, 1.8]} />
+                <meshStandardMaterial color={x < 0 ? "#b0352a" : "#2b6f9e"} roughness={0.8} />
+              </mesh>
+            </group>
+          ))
+        )}
+      </group>
+    );
+  if (kind === "range")
+    return (
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, -1]}>
         <planeGeometry args={[8, 0.1]} />
         <meshBasicMaterial color="#dc2626" />
       </mesh>
-    </group>
-  );
+    );
+  return null;
 }
 
-/** Low wall / planter to the officer's right — the "cover" position. */
-function CoverWall({ color = "#8a8f7a" }: { color?: string }) {
+function FlatSky({ kind }: { kind: TirEnvironment }) {
+  const top = kind === "street" ? "#1b2233" : "#7fb2e6";
+  const bottom = kind === "street" ? "#3a4560" : "#dfe9f3";
   return (
-    <mesh position={[1.4, 0.5, -0.6]}>
-      <boxGeometry args={[0.6, 1.0, 1.6]} />
-      <meshStandardMaterial color={color} />
-    </mesh>
+    <group>
+      <mesh>
+        <sphereGeometry args={[70, 24, 16]} />
+        <meshBasicMaterial color={top} side={THREE.BackSide} fog={false} />
+      </mesh>
+      <hemisphereLight args={[top, bottom, 0.8]} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -10]} receiveShadow>
+        <planeGeometry args={[80, 80]} />
+        <meshStandardMaterial color={kind === "street" ? "#3a3d43" : "#7a8a63"} />
+      </mesh>
+    </group>
   );
 }

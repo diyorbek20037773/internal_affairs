@@ -35,3 +35,9 @@ yarn-error.log*
 .vscode/*
 !.vscode/extensions.json
 .idea
+
+# runtime 3D assets — fetched by scripts/fetch-assets.mjs (RPM licence: no redistribution; Poly Haven: size)
+/public/models/rpm_*.glb
+/public/models/anim/
+/public/hdri/
+/public/tex/

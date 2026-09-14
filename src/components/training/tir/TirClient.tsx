@@ -24,6 +24,7 @@ import { localized } from "@/data/sops/types";
 import type { TirAction, TirHitZone, TirScenario } from "@/data/scenarios/types";
 import type { TrainingSession } from "@/lib/storage/trainingSchema";
 import { ProfileGate } from "../profile/ProfileGate";
+import { TirVideoLayer } from "./TirVideoLayer";
 import { cn } from "@/lib/utils";
 
 const TirScene = dynamic(() => import("./TirScene").then((m) => m.TirScene), { ssr: false });
@@ -62,6 +63,7 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
   const [started, setStarted] = useState(false);
   const [wide, setWide] = useState(false);
   const [voice, setVoice] = useState(true);
+  const [quality, setQuality] = useState<"high" | "low">(() => (typeof navigator !== "undefined" && /Android|iPhone|iPad/i.test(navigator.userAgent) ? "low" : "high"));
   const [flash, setFlash] = useState(false);
   const [shockFx, setShockFx] = useState(false);
   const [allStop, setAllStop] = useState(false);
@@ -216,7 +218,8 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
         ref={wrapRef}
         className={cn("relative w-full overflow-hidden rounded-xl border bg-black shadow-elevated", wide ? "aspect-[48/9]" : "aspect-video")}
       >
-        <TirScene scenario={scenario} state={state} wide={wide} onShoot={onShoot} />
+        <TirScene scenario={scenario} state={state} wide={wide} onShoot={onShoot} quality={quality} />
+        <TirVideoLayer scenario={scenario} state={primarySuspect(state)?.state} muted={!voice} />
 
         {/* muzzle flash / shock vignette */}
         <div className={cn("pointer-events-none absolute inset-0 bg-white transition-opacity", flash ? "opacity-60" : "opacity-0")} />
@@ -301,6 +304,7 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
         )}
 
         <div className="absolute right-3 bottom-3 flex gap-1">
+          <Button size="sm" variant="secondary" className="h-8 bg-black/60 px-2 font-mono text-[10px] text-white hover:bg-black/80" onClick={() => setQuality((q) => (q === "high" ? "low" : "high"))} title={t("quality")}>{quality === "high" ? "HQ" : "LQ"}</Button>
           <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={() => setWide((v) => !v)} title={t("wide")}><MonitorPlay className="h-4 w-4" /></Button>
           <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={() => { if (!voice) speech.stopSpeaking(); setVoice((v) => !v); }} title={t("voice")}>{voice ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}</Button>
           <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={toggleFullscreen} title={t("fullscreen")}><Maximize2 className="h-4 w-4" /></Button>
