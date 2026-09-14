@@ -3,6 +3,7 @@ import type {
   DialogScenario,
   DocumentScenario,
   MahallaScenario,
+  TirScenario,
 } from "@/data/scenarios/types";
 import type { TrainingSession } from "@/lib/storage/trainingSchema";
 import { uid } from "@/lib/utils";
@@ -58,6 +59,13 @@ export function newDocumentSession(s: DocumentScenario, b: Base): TrainingSessio
   return {
     ...base("document", s.id, s.version, b),
     payload: { kind: "document", text: "" },
+  };
+}
+
+export function newTirSession(s: TirScenario, b: Base): TrainingSession {
+  return {
+    ...base("tir", s.id, s.version, b),
+    payload: { kind: "tir", events: [], elapsedSec: 0, shotsFired: 0, hits: 0 },
   };
 }
 

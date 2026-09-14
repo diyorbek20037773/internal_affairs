@@ -19,7 +19,7 @@ export const birKunlikXizmat: ExamScenario = {
   stages: [
     { time: "09:00", kind: "mahalla", scenarioId: "mahalla-sh12", title: { uz: "Hududni qabul qilish" } },
     { time: "10:30", kind: "dialog", scenarioId: "dialog-case04-agressiv", title: { uz: "Nizoli fuqaro" } },
-    { time: "13:00", kind: "decision", scenarioId: "decision-pichoqli-shaxs", title: { uz: "Xavfli vaziyat" } },
+    { time: "13:00", kind: "tir", scenarioId: "tir-pichoq-hovli", title: { uz: "Xavfli vaziyat — TIR" } },
     { time: "15:00", kind: "document", scenarioId: "document-pichoq-hodisa", title: { uz: "Hujjatlashtirish — AI hujjat tekshiruvi: qonun va fakt" } },
   ],
 };

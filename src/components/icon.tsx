@@ -48,6 +48,7 @@ import {
   Flame,
   Timer,
   ListChecks,
+  Crosshair,
   type LucideIcon,
 } from "lucide-react";
 
@@ -99,6 +100,7 @@ const MAP: Record<string, LucideIcon> = {
   Flame,
   Timer,
   ListChecks,
+  Crosshair,
 };
 
 export function Icon({

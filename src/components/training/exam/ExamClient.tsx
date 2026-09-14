@@ -15,7 +15,7 @@ import { COMPETENCIES } from "@/data/scenarios/competencies";
 import { ProfileGate } from "../profile/ProfileGate";
 import { cn } from "@/lib/utils";
 
-const KIND_PATH = { dialog: "muloqot", decision: "qaror", mahalla: "mahalla", document: "hujjat" } as const;
+const KIND_PATH = { dialog: "muloqot", decision: "qaror", mahalla: "mahalla", document: "hujjat", tir: "tir" } as const;
 
 /**
  * "Bir kunlik xizmat" — pptx slide 9. Stages run in order; each stage is a

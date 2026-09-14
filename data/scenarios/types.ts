@@ -8,7 +8,7 @@ export type { LocalizedText };
 /* Common                                                                   */
 /* ------------------------------------------------------------------------ */
 
-export type ScenarioKind = "dialog" | "decision" | "mahalla" | "document" | "exam";
+export type ScenarioKind = "dialog" | "decision" | "mahalla" | "document" | "tir" | "exam";
 export type Difficulty = 1 | 2 | 3;
 
 export interface ScenarioBase {
@@ -285,4 +285,92 @@ export interface ExamScenario extends ScenarioBase {
   stages: ExamStage[];
 }
 
-export type Scenario = DialogScenario | DecisionScenario | MahallaScenario | DocumentScenario | ExamScenario;
+export type Scenario = DialogScenario | DecisionScenario | MahallaScenario | DocumentScenario | TirScenario | ExamScenario;
+
+/* ------------------------------------------------------------------------ */
+/* 6. TIR — immersive 3D use-of-force / decision range (VirTra-style)         */
+/* ------------------------------------------------------------------------ */
+
+export const TIR_ACTIONS = [
+  "talk_calm",
+  "talk_command",
+  "talk_threat",
+  "draw",
+  "holster",
+  "taser",
+  "shoot",
+  "backup",
+  "retreat",
+  "cover",
+] as const;
+export type TirAction = (typeof TIR_ACTIONS)[number];
+
+export const TIR_ACTOR_STATES = [
+  "shouting",
+  "approaching",
+  "knife_raised",
+  "lunging",
+  "dropping",
+  "kneeling",
+  "fleeing",
+  "down",
+  "calm",
+] as const;
+export type TirActorState = (typeof TIR_ACTOR_STATES)[number];
+
+export type TirWeapon = "knife" | "bottle" | "bat" | "none";
+export type TirEnvironment = "yard" | "street" | "hallway";
+export type TirHitZone = "torso" | "limb" | "head" | "miss";
+
+export interface TirScenario extends ScenarioBase {
+  kind: "tir";
+  environment: TirEnvironment;
+  actor: {
+    name: string;
+    age: number;
+    weapon: TirWeapon;
+    /** Subtitles / TTS lines per state (uz). */
+    lines: Partial<Record<TirActorState, string[]>>;
+    /** What the actor wants — for the debrief grader. */
+    motive: string;
+  };
+  partner: boolean;
+  initial: { distance: number; agitation: number; compliance: number };
+  rules: {
+    durationSec: number;
+    approachSpeed: number; // m/s while approaching
+    minDistance: number; // stops approaching here (unless lunging)
+    /** Seconds without any officer talk before weapon is raised. */
+    raiseWeaponAfterSec: number;
+    lungeAgitation: number;
+    lungeDistance: number;
+    complyCompliance: number;
+    backupEtaSec: number;
+    /** Agitation drift per second while shouting and unaddressed. */
+    silenceDrift: number;
+  };
+  briefing: LocalizedText; // dispatcher text shown before start
+  rubricHints: Partial<Record<Competency, string>>;
+}
+
+export interface TirEvent {
+  t: number; // seconds since start
+  kind: "action" | "actor" | "system";
+  action?: TirAction;
+  actorState?: TirActorState;
+  text: string; // uz description / subtitle
+  legality?: Score03;
+  proportionality?: Score03;
+  distance: number;
+  agitation: number;
+  compliance: number;
+  hit?: TirHitZone;
+}
+
+export type TirOutcome =
+  | "resolved_verbal" // suspect complied without force
+  | "resolved_less_lethal" // taser, lawful
+  | "resolved_lethal_lawful" // shot as last resort
+  | "unlawful_force"
+  | "officer_injured"
+  | "timeout";

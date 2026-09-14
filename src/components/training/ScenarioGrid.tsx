@@ -21,6 +21,7 @@ const KIND_ICON: Record<Scenario["kind"], string> = {
   decision: "Gauge",
   mahalla: "MapPinned",
   document: "FileText",
+  tir: "Crosshair",
   exam: "GraduationCap",
 };
 

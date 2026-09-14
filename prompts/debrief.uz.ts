@@ -4,12 +4,14 @@ import type {
   DialogScenario,
   DocumentScenario,
   MahallaScenario,
+  TirScenario,
 } from "@/data/scenarios/types";
 import type {
   DecisionPayload,
   DialogPayload,
   DocumentPayload,
   MahallaPayload,
+  TirPayload,
 } from "@/lib/storage/trainingSchema";
 import { LAWS } from "@/data/sops/laws";
 import type { LawRef } from "@/data/sops/types";
@@ -24,6 +26,7 @@ const REF_RULE: Record<string, string> = {
   decision: '"node:ID" yoki "node:ID/option:ID" — yozuvdagi tugun/variant idlari. Boshqa ref turi ISHLATILMAYDI.',
   mahalla: '"problem:ID" — muammo idlari. Boshqa ref turi ISHLATILMAYDI.',
   document: '"element:ID" — rubrika element idlari, yoki "fakt", "huquq". Boshqa ref turi ISHLATILMAYDI.',
+  tir: '"t:SS" — jurnaldagi soniya (masalan t:24). Boshqa ref turi ISHLATILMAYDI.',
 };
 
 export function buildDebriefSystemInstruction(laws: LawRef[], kind: string = "dialog"): string {
@@ -177,6 +180,26 @@ Huquqiy xatolar: ${g?.legalErrors.join("; ") || "-"}
 
 # XODIM HUJJATI
 ${p.text.trim() || "(bo'sh)"}`;
+}
+
+export function tirEvidence(s: TirScenario, p: TirPayload): string {
+  const rows = p.events.map((e) => {
+    const who = e.kind === "action" ? "XODIM" : e.kind === "actor" ? "SHAXS" : "TIZIM";
+    const score = e.legality != null ? ` [qonuniylik=${e.legality}/3, mutanosiblik=${e.proportionality}/3]` : "";
+    return `t:${Math.round(e.t)} ${who}: ${e.text}${score} (masofa ${e.distance}m, taranglik ${e.agitation}, itoat ${e.compliance})`;
+  });
+  const hints = Object.entries(s.rubricHints).map(([k, v]) => `- ${k}: ${v}`).join("\n");
+  return `# SSENARIY: ${s.code} — ${s.title.uz} (TIR, real vaqt 3D)
+${s.briefing.uz}
+Shaxs: ${s.actor.name}, ${s.actor.age}, qurol: ${s.actor.weapon}. Motiv (yashirin): ${s.actor.motive}
+Yakun: ${p.outcome ?? "tugallanmagan"}; davomiylik ${Math.round(p.elapsedSec)}s; o'q ${p.shotsFired} (tegdi ${p.hits})
+Qoida: qurol — faqat tashlanish/bevosita xavfda oxirgi chora; qurolsiz yoki shisha bilan shaxsga qurol — 0 ball; "to'g'ri otmaslik" — a'lo.
+
+# BAHOLASH UCHUN YO'RIQ
+${hints || "-"}
+
+# JURNAL
+${rows.join("\n")}`;
 }
 
 export function lawsFor(keys: (keyof typeof LAWS)[]): LawRef[] {

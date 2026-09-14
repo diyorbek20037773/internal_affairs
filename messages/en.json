@@ -270,6 +270,10 @@
       "document": {
         "title": "Documentation",
         "desc": "AI document check: law and facts. Write a protocol/report from the given facts."
+      },
+      "tir": {
+        "title": "TIR — 3D decision range",
+        "desc": "Immersive 3D scene (3 screens): the subject acts in real time; you talk, command, draw/taser, aim. Graded on legality and proportionality."
       }
     },
     "scenario": {
@@ -539,6 +543,48 @@
         }
       },
       "traektoriya": "100 officers — 100 different learning paths. AI does not decide — every conclusion is confirmed by an instructor."
+    },
+    "tir": {
+      "briefing": "Dispatcher",
+      "start": "Start range",
+      "hint": "Talk first. Weapon last. Aim: once drawn, click the scene. Keys: 1–5 phrases, D draw, H holster, T taser, B backup, R retreat, C cover.",
+      "distance": "Distance",
+      "time": "Time",
+      "backup": "Backup",
+      "armed": "Weapon drawn",
+      "holstered": "Holstered",
+      "cover": "In cover",
+      "wide": "3 screens (48:9)",
+      "voice": "Subject voice",
+      "fullscreen": "Fullscreen",
+      "talk": "Talk (mic / phrase / text)",
+      "talkPlaceholder": "What do you say? Enter to send",
+      "mic": "Microphone",
+      "actionsTitle": "Actions",
+      "click": "click",
+      "shots": "Shots",
+      "actions": "Actions",
+      "shootHint": "Shoot: once drawn, click the scene (body hits count). Shooting without threat conditions = unlawful force; the session stops.",
+      "act": {
+        "draw": "Draw",
+        "holster": "Holster",
+        "taser": "Taser",
+        "backup": "Call backup",
+        "retreat": "Retreat (+2 m)",
+        "cover": "Cover",
+        "shoot": "Shoot"
+      },
+      "actor": {
+        "shouting": "Shouting",
+        "approaching": "Approaching",
+        "knife_raised": "Weapon raised",
+        "lunging": "LUNGING!",
+        "dropping": "Dropping weapon",
+        "kneeling": "Complied",
+        "fleeing": "Fleeing",
+        "down": "Down",
+        "calm": "Calm"
+      }
     }
   }
 }

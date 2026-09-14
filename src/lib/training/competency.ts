@@ -6,6 +6,7 @@ import {
   type CompetencyScores,
 } from "@/data/scenarios/competencies";
 import type { DecisionScenario, DialogScenario, DocumentGrade, MahallaGrade } from "@/data/scenarios/types";
+import type { TirPayload } from "@/lib/storage/trainingSchema";
 import type {
   DecisionPayload,
   DialogPayload,
@@ -115,6 +116,29 @@ export function documentDeterministic(grade: DocumentGrade): Partial<CompetencyS
     huquqiy_qaror: clampScore(100 - grade.legalErrors.length * 25),
     vaziyat_tahlili: clampScore(coverage - grade.factErrors.length * 15),
   };
+}
+
+export function tirDeterministic(p: TirPayload): Partial<CompetencyScores> {
+  const acts = p.events.filter((e) => e.kind === "action" && e.legality != null);
+  const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
+  const legal = acts.map((e) => e.legality ?? 3);
+  const prop = acts.map((e) => e.proportionality ?? 3);
+  // An unlawful shot dominates the legal score.
+  const unlawfulShot = acts.some((e) => e.action === "shoot" && (e.legality ?? 3) === 0);
+  const huquqiy_qaror = clampScore(unlawfulShot ? Math.min(20, (mean(legal) / 3) * 100) : (mean(legal) / 3) * 100);
+  const vaziyat_tahlili = clampScore((mean(prop) / 3) * 100);
+  const talks = acts.filter((e) => e.action?.startsWith("talk_")).length;
+  const threats = acts.filter((e) => e.action === "talk_threat").length;
+  const firstTalk = acts.find((e) => e.action?.startsWith("talk_"))?.t;
+  const earlyTalkBonus = firstTalk != null && firstTalk <= 10 ? 15 : 0;
+  const deeskalatsiya = clampScore(40 + Math.min(talks, 5) * 8 - threats * 12 + earlyTalkBonus - (unlawfulShot ? 40 : 0));
+  const natijadorlik =
+    p.outcome === "resolved_verbal" ? 100
+    : p.outcome === "resolved_less_lethal" ? 85
+    : p.outcome === "resolved_lethal_lawful" ? 60
+    : p.outcome === "timeout" ? 40
+    : 5;
+  return { huquqiy_qaror, vaziyat_tahlili, deeskalatsiya, natijadorlik };
 }
 
 /* ------------------------------------------------------------------------ */

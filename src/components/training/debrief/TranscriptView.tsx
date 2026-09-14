@@ -157,6 +157,25 @@ export function TranscriptView({ session }: { session: TrainingSession }) {
           )}
         </div>
       )}
+      {p.kind === "tir" && scenario?.kind === "tir" && (
+        <ol className="space-y-1.5 text-sm">
+          {p.events.map((e, i) => (
+            <li key={i} className={cn("flex gap-2 rounded-md border px-3 py-1.5", e.kind === "action" ? "border-primary/30 bg-primary/5" : e.kind === "actor" ? "border-accent/30 bg-accent/5" : "bg-muted/30")}>
+              <span className="w-12 shrink-0 font-mono text-xs text-muted-foreground">t:{Math.round(e.t)}</span>
+              <span className="w-16 shrink-0 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {e.kind === "action" ? "Xodim" : e.kind === "actor" ? scenario.actor.name : "Tizim"}
+              </span>
+              <span className="flex-1">{e.text}</span>
+              <span className="shrink-0 font-mono text-[11px] text-muted-foreground">{e.distance}m</span>
+              {e.legality != null && (
+                <Badge variant={e.legality >= 3 && (e.proportionality ?? 3) >= 3 ? "success" : e.legality <= 1 || (e.proportionality ?? 3) <= 1 ? "destructive" : "secondary"} className="shrink-0 font-mono text-[10px]">
+                  Q{e.legality}/M{e.proportionality}
+                </Badge>
+              )}
+            </li>
+          ))}
+        </ol>
+      )}
     </Card>
   );
 }

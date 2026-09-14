@@ -11,7 +11,8 @@
 | Xona | Route | Nima qiladi |
 |---|---|---|
 | **AI-Muloqot simulyatori** | `/simulyator/muloqot` | Gemini rol o'ynaydigan virtual fuqaro (jahldor / qo'rqqan / nizoli / jabrlanuvchi / norozi). Yashirin holat (taranglik, ishonch, hamkorlik) serverda hisoblanadi; xodim faqat trend + ohang + bosqichni ko'radi. Matn + ovoz (STT/TTS). |
-| **Qaror simulyatori** | `/simulyator/qaror` | Tarmoqlanuvchi (branching) ssenariy, tugun taymeri, 3–5 variant. Har variantda **qonuniylik** va **mutanosiblik** (0–3). Tezlik baholanmaydi; «to'g'ri otmaslik» = a'lo. |
+| **TIR — 3D qaror poligoni** | `/simulyator/tir` | PDF'dagi TIR o'quv zonasi (3 devorli ekran) uchun: Three.js real-vaqt 3D sahna (hovli / ko'cha / koridor), personaj yaqinlashadi, qurol ko'taradi, tashlanadi yoki taslim bo'ladi; xodim gapiradi (mikrofon / iboralar / matn), buyruq beradi, qurol chiqaradi, elektroshok, **nishonga oladi va otadi** (raycast), yordam chaqiradi, chekinadi, to'siq. Deterministik dvigatel har harakatni qonuniylik/mutanosiblik bilan jurnalga yozadi. 48:9 «3 ekran» rejimi, fullscreen, klaviatura. Personaj ovozi — TTS. |
+| **Qaror simulyatori (planshet)** | `/simulyator/qaror` | Tarmoqlanuvchi (branching) ssenariy, tugun taymeri, 3–5 variant. Har variantda **qonuniylik** va **mutanosiblik** (0–3). Tezlik baholanmaydi; «to'g'ri otmaslik» = a'lo. |
 | **Smart Mahalla** | `/simulyator/mahalla` | Virtual uchastka (SVG xarita, yashil/sariq/qizil), murojaatlar oqimi, TOP-3 muammo + harakat rejasi. Ustuvorlik deterministik, reja — AI rubrika bo'yicha. |
 | **Hujjatlashtirish** | `/simulyator/hujjat` | AI hujjat tekshiruvi (qonun va fakt): berilgan faktlardan bayonnoma/ma'lumotnoma, rubrika bo'yicha to'liqlik, o'ylab topilgan fakt/modda, aybdorlik xulosasi — xato. |
 | **Smart Debrifing** | `/simulyator/debrif/[id]` | 3 savol (to'g'ri / xato qayerda `turn:N`, `node:ID` / keyingi safar), 8 kompetensiya. `final = 0.6·tizim + 0.4·AI`. **Instruktor tasdiqlaydi** — shundan keyin HIMOYA-ID yangilanadi. |
@@ -27,7 +28,8 @@ Ssenariylar — `data/scenarios/` da qo'lda yozilgan TS data (runtime'da LLM yar
 ### Muhim texnik qarorlar
 - `src/lib/gemini/client.ts` → `generateJson()` — Gemini JSON mode (`responseSchema` + zod + 1 repair retry).
 - `src/lib/storage/training.ts` → `TrainingRepo` (async, localStorage) — Postgres'ga almashtirish nuqtasi. Kalitlar: `h360:profile:v1`, `h360:sessions:v1`, `h360:himoyaId:v1`.
-- `src/lib/training/` → `dialogState` (holat matematikasi), `decisionEngine`, `competency` (baholash), `mentor`, `debrief`.
+- `src/lib/training/` → `dialogState` (holat matematikasi), `decisionEngine`, `tirEngine` (3D poligon holat mashinasi), `competency` (baholash), `mentor`, `debrief`.
+- `src/components/training/tir/` → Three.js sahna (`TirScene`, `Actor` — protsedural personaj, `Environments`); glTF/Mixamo personajlar va lazer qurol (HID) uchun kontrakt tayyor.
 - `/api/sim/{dialog,debrief,mahalla-grade,document-check}` — barchasi `no_keys_configured` (500) / `ai_unavailable` (503) / `bad_ai_output` (502) kontraktida.
 - Auth yo'q (MVP): lokal profil `role: trainee|instructor`. Har yozuvda `traineeId` bor.
 

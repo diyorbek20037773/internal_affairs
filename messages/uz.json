@@ -270,6 +270,10 @@
       "document": {
         "title": "Hujjatlashtirish",
         "desc": "AI hujjat tekshiruvi: qonun va fakt. Berilgan faktlardan bayonnoma/ma'lumotnoma yozing."
+      },
+      "tir": {
+        "title": "TIR — 3D qaror poligoni",
+        "desc": "Immersiv 3D sahna (3 ekran): shaxs real vaqtda harakat qiladi, siz gapirasiz, buyruq berasiz, qurol/elektroshok, nishonga olasiz. Baho — qonuniylik va mutanosiblik."
       }
     },
     "scenario": {
@@ -539,6 +543,48 @@
         }
       },
       "traektoriya": "100 xodim — 100 xil o'quv traektoriyasi. AI qaror bermaydi — har bir xulosani instruktor tasdiqlaydi."
+    },
+    "tir": {
+      "briefing": "Navbatchi xabari",
+      "start": "Poligonni boshlash",
+      "hint": "Muloqot — birinchi. Qurol — oxirgi chora. Nishonga olish: qurol chiqarilgach ekranga bosing. Klaviatura: 1–5 iboralar, D qurol, H g'ilof, T elektroshok, B yordam, R chekinish, C to'siq.",
+      "distance": "Masofa",
+      "time": "Vaqt",
+      "backup": "Yordam",
+      "armed": "Qurol qo'lda",
+      "holstered": "Qurol g'ilofda",
+      "cover": "To'siqda",
+      "wide": "3 ekran (48:9)",
+      "voice": "Shaxs ovozi",
+      "fullscreen": "To'liq ekran",
+      "talk": "Gapirish (mikrofon / ibora / matn)",
+      "talkPlaceholder": "Shaxsga nima deysiz? Enter — yuborish",
+      "mic": "Mikrofon",
+      "actionsTitle": "Harakatlar",
+      "click": "bosish",
+      "shots": "O'q",
+      "actions": "Harakatlar",
+      "shootHint": "Ot: qurol chiqarilgach sahnaga bosing (tanaga tegishi hisoblanadi). Xavf shartlari bo'lmaganda o'q — qonunsiz kuch, mashg'ulot to'xtaydi.",
+      "act": {
+        "draw": "Qurol chiqar",
+        "holster": "G'ilofga sol",
+        "taser": "Elektroshok",
+        "backup": "Yordam chaqir",
+        "retreat": "Chekin (+2 m)",
+        "cover": "To'siq",
+        "shoot": "Ot"
+      },
+      "actor": {
+        "shouting": "Baqirmoqda",
+        "approaching": "Yaqinlashmoqda",
+        "knife_raised": "Qurol ko'tarilgan",
+        "lunging": "TASHLANMOQDA!",
+        "dropping": "Qurolni tashlamoqda",
+        "kneeling": "Itoat qildi",
+        "fleeing": "Qochmoqda",
+        "down": "Yerda",
+        "calm": "Tinchlandi"
+      }
     }
   }
 }

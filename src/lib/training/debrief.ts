@@ -7,6 +7,7 @@ import {
   dialogDeterministic,
   mahallaDeterministic,
   documentDeterministic,
+  tirDeterministic,
 } from "./competency";
 
 /** Deterministic component for a finished session (no LLM). */
@@ -18,6 +19,7 @@ export function computeDeterministic(session: TrainingSession): Partial<Competen
   if (p.kind === "decision" && scenario.kind === "decision") return decisionDeterministic(p, scenario);
   if (p.kind === "mahalla" && p.grade) return mahallaDeterministic(p.grade);
   if (p.kind === "document" && p.grade) return documentDeterministic(p.grade);
+  if (p.kind === "tir") return tirDeterministic(p);
   return undefined;
 }
 

@@ -8,6 +8,8 @@ import {
   TONES,
   TREND_LABELS,
   TURN_FLAGS,
+  TIR_ACTIONS,
+  TIR_ACTOR_STATES,
 } from "@/data/scenarios/types";
 
 /* ---------- competency ---------- */
@@ -93,6 +95,30 @@ export const DocumentGradeSchema = z.object({
   scores: PartialScoresSchema,
 });
 
+/* ---------- tir ---------- */
+
+export const TirEventSchema = z.object({
+  t: z.number(),
+  kind: z.enum(["action", "actor", "system"]),
+  action: z.enum(TIR_ACTIONS).optional(),
+  actorState: z.enum(TIR_ACTOR_STATES).optional(),
+  text: z.string(),
+  legality: z.number().min(0).max(3).optional(),
+  proportionality: z.number().min(0).max(3).optional(),
+  distance: z.number(),
+  agitation: z.number(),
+  compliance: z.number(),
+  hit: z.enum(["torso", "limb", "head", "miss"]).optional(),
+});
+export const TirOutcomeSchema = z.enum([
+  "resolved_verbal",
+  "resolved_less_lethal",
+  "resolved_lethal_lawful",
+  "unlawful_force",
+  "officer_injured",
+  "timeout",
+]);
+
 /* ---------- debrief ---------- */
 
 export const DebriefStatusSchema = z.enum(["pending", "confirmed"]);
@@ -148,12 +174,20 @@ export const SessionPayloadSchema = z.discriminatedUnion("kind", [
     text: z.string(),
     grade: DocumentGradeSchema.optional(),
   }),
+  z.object({
+    kind: z.literal("tir"),
+    events: z.array(TirEventSchema),
+    outcome: TirOutcomeSchema.optional(),
+    elapsedSec: z.number(),
+    shotsFired: z.number(),
+    hits: z.number(),
+  }),
 ]);
 
 export const TrainingSessionSchema = z.object({
   id: z.string(),
   traineeId: z.string(),
-  kind: z.enum(["dialog", "decision", "mahalla", "document"]),
+  kind: z.enum(["dialog", "decision", "mahalla", "document", "tir"]),
   scenarioId: z.string(),
   scenarioVersion: z.string(),
   startedAt: z.string(),
@@ -215,6 +249,7 @@ export type DialogPayload = Extract<SessionPayload, { kind: "dialog" }>;
 export type DecisionPayload = Extract<SessionPayload, { kind: "decision" }>;
 export type MahallaPayload = Extract<SessionPayload, { kind: "mahalla" }>;
 export type DocumentPayload = Extract<SessionPayload, { kind: "document" }>;
+export type TirPayload = Extract<SessionPayload, { kind: "tir" }>;
 export type DebriefResult = z.infer<typeof DebriefResultSchema>;
 export type DebriefLlm = z.infer<typeof DebriefLlmSchema>;
 export type TraineeProfile = z.infer<typeof TraineeProfileSchema>;

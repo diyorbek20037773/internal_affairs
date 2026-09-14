@@ -6,11 +6,13 @@ import type {
   MahallaScenario,
   Scenario,
   ScenarioKind,
+  TirScenario,
 } from "./types";
 import { DIALOG_SCENARIOS } from "./dialog";
 import { DECISION_SCENARIOS } from "./decision";
 import { MAHALLA_SCENARIOS } from "./mahalla";
 import { DOCUMENT_SCENARIOS } from "./document";
+import { TIR_SCENARIOS } from "./tir";
 import { birKunlikXizmat } from "./exam/bir-kunlik-xizmat";
 
 export * from "./types";
@@ -23,6 +25,7 @@ export const ALL_SCENARIOS: Scenario[] = [
   ...DECISION_SCENARIOS,
   ...MAHALLA_SCENARIOS,
   ...DOCUMENT_SCENARIOS,
+  ...TIR_SCENARIOS,
   ...EXAM_SCENARIOS,
 ];
 
@@ -50,6 +53,11 @@ export function getMahallaScenario(id: string): MahallaScenario | undefined {
 export function getDocumentScenario(id: string): DocumentScenario | undefined {
   const s = BY_ID.get(id);
   return s?.kind === "document" ? s : undefined;
+}
+
+export function getTirScenario(id: string): TirScenario | undefined {
+  const s = BY_ID.get(id);
+  return s?.kind === "tir" ? s : undefined;
 }
 
 export function getExamScenario(id: string): ExamScenario | undefined {

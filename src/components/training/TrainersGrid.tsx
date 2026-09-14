@@ -3,6 +3,7 @@ import { FeatureCard } from "@/components/dashboard/FeatureCard";
 
 export const TRAINERS = [
   { key: "dialog", href: "/simulyator/muloqot", icon: "MessageSquareWarning" },
+  { key: "tir", href: "/simulyator/tir", icon: "Crosshair" },
   { key: "decision", href: "/simulyator/qaror", icon: "Gauge" },
   { key: "mahalla", href: "/simulyator/mahalla", icon: "MapPinned" },
   { key: "document", href: "/simulyator/hujjat", icon: "FileText" },
@@ -12,7 +13,7 @@ export const TRAINERS = [
 export async function TrainersGrid() {
   const t = await getTranslations("sim.hub");
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {TRAINERS.map((tr) => (
         <FeatureCard
           key={tr.key}
