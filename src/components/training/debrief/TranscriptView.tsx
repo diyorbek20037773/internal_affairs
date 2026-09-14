@@ -163,7 +163,7 @@ export function TranscriptView({ session }: { session: TrainingSession }) {
             <li key={i} className={cn("flex gap-2 rounded-md border px-3 py-1.5", e.kind === "action" ? "border-primary/30 bg-primary/5" : e.kind === "actor" ? "border-accent/30 bg-accent/5" : "bg-muted/30")}>
               <span className="w-12 shrink-0 font-mono text-xs text-muted-foreground">t:{Math.round(e.t)}</span>
               <span className="w-16 shrink-0 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                {e.kind === "action" ? "Xodim" : e.kind === "actor" ? scenario.actor.name : "Tizim"}
+                {e.kind === "action" ? "Xodim" : e.kind === "actor" ? scenario.actors.find((a) => a.id === e.actorId)?.name ?? "Shaxs" : e.kind === "shock" ? "⚡" : "Tizim"}
               </span>
               <span className="flex-1">{e.text}</span>
               <span className="shrink-0 font-mono text-[11px] text-muted-foreground">{e.distance}m</span>

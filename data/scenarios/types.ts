@@ -288,89 +288,118 @@ export interface ExamScenario extends ScenarioBase {
 export type Scenario = DialogScenario | DecisionScenario | MahallaScenario | DocumentScenario | TirScenario | ExamScenario;
 
 /* ------------------------------------------------------------------------ */
-/* 6. TIR — immersive 3D use-of-force / decision range (VirTra-style)         */
+/* 6. TIR — immersive 3D range (VirTra V-300 style, multi-actor)              */
 /* ------------------------------------------------------------------------ */
 
 export const TIR_ACTIONS = [
-  "talk_calm",
-  "talk_command",
-  "talk_threat",
-  "draw",
-  "holster",
-  "taser",
-  "shoot",
-  "backup",
-  "retreat",
-  "cover",
+  "talk_calm", "talk_command", "talk_threat",
+  "draw", "holster", "taser", "shoot", "backup", "retreat", "cover",
 ] as const;
 export type TirAction = (typeof TIR_ACTIONS)[number];
 
+export const TIR_ROLES = ["suspect", "bystander", "hostage", "police", "vehicle", "target"] as const;
+export type TirRole = (typeof TIR_ROLES)[number];
+
 export const TIR_ACTOR_STATES = [
-  "shouting",
-  "approaching",
-  "knife_raised",
-  "lunging",
-  "dropping",
-  "kneeling",
-  "fleeing",
-  "down",
-  "calm",
+  // humans
+  "idle", "shouting", "approaching", "weapon_raised", "aiming", "lunging",
+  "dropping", "kneeling", "fleeing", "down", "calm", "hands_up", "cowering", "held", "walking",
+  // vehicle
+  "parked", "revving", "charging", "stopped", "fled",
+  // marksmanship plate
+  "standing", "hit",
 ] as const;
 export type TirActorState = (typeof TIR_ACTOR_STATES)[number];
 
-export type TirWeapon = "knife" | "bottle" | "bat" | "none";
-export type TirEnvironment = "yard" | "street" | "hallway";
-export type TirHitZone = "torso" | "limb" | "head" | "miss";
+export type TirWeapon = "knife" | "bottle" | "bat" | "gun" | "none";
+export type TirEnvironment = "yard" | "street" | "hallway" | "plaza" | "lobby" | "range";
+export type TirHitZone = "torso" | "limb" | "head" | "tire" | "driver" | "body" | "plate" | "miss";
+
+export interface TirActorDef {
+  id: string;
+  role: TirRole;
+  kind: "human" | "vehicle" | "plate";
+  name: string;
+  weapon: TirWeapon;
+  /** Scene position: officer at origin looking down -Z (metres). */
+  x: number;
+  z: number;
+  state: TirActorState;
+  agitation?: number;
+  compliance?: number;
+  /** Seconds from `aiming` until the actor fires at the officer (gun only). */
+  aimSec?: number;
+  /** Approach speed m/s (human) or charge speed (vehicle). */
+  speed?: number;
+  /** Hostage this suspect is holding (hostage actor id). */
+  holds?: string;
+  lines?: Partial<Record<TirActorState, string[]>>;
+  shirt?: string;
+  /** Spawn later via script (hidden until then). */
+  hidden?: boolean;
+  /** Fires at the officer periodically while `aiming` (active shooter). */
+  keepsFiring?: boolean;
+}
+
+export type TirScriptOp =
+  | { atSec: number; op: "set_state"; actorId: string; state: TirActorState; text?: string }
+  | { atSec: number; op: "spawn"; actorId: string; text?: string }
+  | { atSec: number; op: "move"; actorId: string; x: number; z: number }
+  | { atSec: number; op: "say"; actorId: string; text: string }
+  | { atSec: number; op: "system"; text: string }
+  /** Conditional: only if the named suspect is still not complying by then. */
+  | { atSec: number; op: "escalate_if_hostile"; actorId: string; state: TirActorState; text?: string };
 
 export interface TirScenario extends ScenarioBase {
   kind: "tir";
+  mode: "scenario" | "marksmanship";
   environment: TirEnvironment;
-  actor: {
-    name: string;
-    age: number;
-    weapon: TirWeapon;
-    /** Subtitles / TTS lines per state (uz). */
-    lines: Partial<Record<TirActorState, string[]>>;
-    /** What the actor wants — for the debrief grader. */
-    motive: string;
-  };
+  actors: TirActorDef[];
+  script: TirScriptOp[];
   partner: boolean;
-  initial: { distance: number; agitation: number; compliance: number };
   rules: {
     durationSec: number;
-    approachSpeed: number; // m/s while approaching
-    minDistance: number; // stops approaching here (unless lunging)
-    /** Seconds without any officer talk before weapon is raised. */
-    raiseWeaponAfterSec: number;
+    minDistance: number;
     lungeAgitation: number;
     lungeDistance: number;
     complyCompliance: number;
     backupEtaSec: number;
-    /** Agitation drift per second while shouting and unaddressed. */
     silenceDrift: number;
+    /** Officer is "down" after this many hits taken. */
+    officerHitsToFail: number;
+    /** Vehicle: distance at which a charging car is treated as imminent lethal threat. */
+    vehicleThreatDistance: number;
   };
-  briefing: LocalizedText; // dispatcher text shown before start
+  briefing: LocalizedText;
   rubricHints: Partial<Record<Competency, string>>;
 }
 
 export interface TirEvent {
-  t: number; // seconds since start
-  kind: "action" | "actor" | "system";
+  t: number;
+  kind: "action" | "actor" | "system" | "shock";
   action?: TirAction;
+  actorId?: string;
   actorState?: TirActorState;
-  text: string; // uz description / subtitle
+  text: string;
   legality?: Score03;
   proportionality?: Score03;
+  hit?: TirHitZone;
+  /** Snapshot of the primary threat for the debrief. */
   distance: number;
   agitation: number;
   compliance: number;
-  hit?: TirHitZone;
+  /** Marksmanship: split time since previous shot (s). */
+  split?: number;
 }
 
 export type TirOutcome =
-  | "resolved_verbal" // suspect complied without force
-  | "resolved_less_lethal" // taser, lawful
-  | "resolved_lethal_lawful" // shot as last resort
+  | "resolved_verbal"
+  | "resolved_less_lethal"
+  | "resolved_lethal_lawful"
+  | "vehicle_stopped"
   | "unlawful_force"
+  | "civilian_hit"
   | "officer_injured"
-  | "timeout";
+  | "officer_down"
+  | "timeout"
+  | "range_complete";

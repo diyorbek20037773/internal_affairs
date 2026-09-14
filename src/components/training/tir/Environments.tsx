@@ -6,6 +6,9 @@ import type { TirEnvironment } from "@/data/scenarios/types";
 export function Environment({ kind }: { kind: TirEnvironment }) {
   if (kind === "street") return <Street />;
   if (kind === "hallway") return <Hallway />;
+  if (kind === "plaza") return <Plaza />;
+  if (kind === "lobby") return <Lobby />;
+  if (kind === "range") return <Range />;
   return <Yard />;
 }
 
@@ -172,6 +175,128 @@ function Hallway() {
         <pointLight key={z} position={[0, 2.6, z]} intensity={45} distance={9} decay={1.6} />
       ))}
       <CoverWall color="#a39a8a" />
+    </group>
+  );
+}
+
+function Plaza() {
+  return (
+    <group>
+      <Sky top="#8fc0ea" bottom="#e8eef5" />
+      <fog attach="fog" args={["#cfdcea", 25, 70]} />
+      <Ground color="#a39a8c" />
+      {Array.from({ length: 6 }).map((_, i) => (
+        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, -2 - i * 3]}>
+          <planeGeometry args={[30, 0.08]} />
+          <meshStandardMaterial color="#8a8175" />
+        </mesh>
+      ))}
+      {[-6, 6].map((x) =>
+        [-5, -9, -13].map((z) => (
+          <group key={`${x}${z}`} position={[x, 0, z]}>
+            <mesh position={[0, 0.6, 0]}>
+              <boxGeometry args={[2.4, 1.2, 1.2]} />
+              <meshStandardMaterial color="#8b5e3c" />
+            </mesh>
+            <mesh position={[0, 2.1, 0]}>
+              <boxGeometry args={[2.8, 0.08, 1.8]} />
+              <meshStandardMaterial color={x < 0 ? "#c0392b" : "#2874a6"} />
+            </mesh>
+            {[-1.2, 1.2].map((px) => (
+              <mesh key={px} position={[px, 1.4, 0.8]}>
+                <cylinderGeometry args={[0.04, 0.04, 1.4, 8]} />
+                <meshStandardMaterial color="#555" />
+              </mesh>
+            ))}
+          </group>
+        ))
+      )}
+      <mesh position={[0, 4, -22]}>
+        <boxGeometry args={[34, 8, 4]} />
+        <meshStandardMaterial color="#d8cbb6" />
+      </mesh>
+      <mesh position={[0, 8.5, -22]}>
+        <sphereGeometry args={[4, 20, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <meshStandardMaterial color="#3a8fbf" />
+      </mesh>
+      <CoverWall color="#7f8c8d" />
+    </group>
+  );
+}
+
+function Lobby() {
+  return (
+    <group>
+      <Sky top="#d9dde3" bottom="#eef0f3" />
+      <Ground color="#b8bcc4" size={30} />
+      {Array.from({ length: 8 }).map((_, i) => (
+        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, -i * 2]}>
+          <planeGeometry args={[16, 0.03]} />
+          <meshStandardMaterial color="#8f949c" />
+        </mesh>
+      ))}
+      {[-8, 8].map((x) => (
+        <mesh key={x} position={[x, 2, -8]}>
+          <boxGeometry args={[0.3, 4, 26]} />
+          <meshStandardMaterial color="#e6e3dc" />
+        </mesh>
+      ))}
+      <mesh position={[0, 2, -15]}>
+        <boxGeometry args={[16, 4, 0.3]} />
+        <meshStandardMaterial color="#dcd8d0" />
+      </mesh>
+      <mesh position={[2.5, 1.1, -14.8]}>
+        <boxGeometry args={[1.2, 2.2, 0.1]} />
+        <meshStandardMaterial color="#4a3a2a" />
+      </mesh>
+      <mesh position={[1.5, 2, -12]}>
+        <cylinderGeometry args={[0.5, 0.5, 4, 16]} />
+        <meshStandardMaterial color="#cfd3d8" />
+      </mesh>
+      <mesh position={[3.5, 0.55, -8.5]}>
+        <boxGeometry args={[3, 1.1, 0.9]} />
+        <meshStandardMaterial color="#5b6b7c" />
+      </mesh>
+      <mesh position={[-3, 0.35, -6]}>
+        <boxGeometry args={[2.4, 0.7, 0.9]} />
+        <meshStandardMaterial color="#374151" />
+      </mesh>
+      <mesh position={[0, 4, -8]}>
+        <boxGeometry args={[16, 0.1, 26]} />
+        <meshStandardMaterial color="#f3f4f6" />
+      </mesh>
+      {[-3, -7, -11].map((z) => (
+        <pointLight key={z} position={[0, 3.8, z]} intensity={70} distance={12} decay={1.6} />
+      ))}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-2.2, 0.01, -6]}>
+        <circleGeometry args={[0.6, 20]} />
+        <meshBasicMaterial color="#6b0f0f" transparent opacity={0.7} />
+      </mesh>
+      <CoverWall color="#6b7280" />
+    </group>
+  );
+}
+
+function Range() {
+  return (
+    <group>
+      <Sky top="#b9d5f0" bottom="#e9d9b8" />
+      <fog attach="fog" args={["#d9d3c0", 30, 90]} />
+      <Ground color="#b39b6e" size={120} />
+      <mesh position={[0, 1.5, -22]}>
+        <boxGeometry args={[40, 3, 6]} />
+        <meshStandardMaterial color="#8c7a55" />
+      </mesh>
+      {[-18, -6, 8, 20].map((x, i) => (
+        <mesh key={x} position={[x, 3, -60]}>
+          <coneGeometry args={[10 + i * 2, 12 + (i % 2) * 5, 5]} />
+          <meshStandardMaterial color="#7a8ea6" />
+        </mesh>
+      ))}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, -1]}>
+        <planeGeometry args={[8, 0.1]} />
+        <meshBasicMaterial color="#dc2626" />
+      </mesh>
     </group>
   );
 }

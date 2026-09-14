@@ -132,13 +132,22 @@ export function tirDeterministic(p: TirPayload): Partial<CompetencyScores> {
   const firstTalk = acts.find((e) => e.action?.startsWith("talk_"))?.t;
   const earlyTalkBonus = firstTalk != null && firstTalk <= 10 ? 15 : 0;
   const deeskalatsiya = clampScore(40 + Math.min(talks, 5) * 8 - threats * 12 + earlyTalkBonus - (unlawfulShot ? 40 : 0));
+  const civilianHit = p.outcome === "civilian_hit";
   const natijadorlik =
     p.outcome === "resolved_verbal" ? 100
+    : p.outcome === "vehicle_stopped" ? 90
     : p.outcome === "resolved_less_lethal" ? 85
+    : p.outcome === "range_complete" ? clampScore(50 + (p.hitFactor ?? 0) * 25)
     : p.outcome === "resolved_lethal_lawful" ? 60
     : p.outcome === "timeout" ? 40
     : 5;
-  return { huquqiy_qaror, vaziyat_tahlili, deeskalatsiya, natijadorlik };
+  const officerHitsPenalty = (p.officerHits ?? 0) * 15;
+  return {
+    huquqiy_qaror: clampScore(civilianHit ? Math.min(10, huquqiy_qaror) : huquqiy_qaror),
+    vaziyat_tahlili: clampScore(vaziyat_tahlili - officerHitsPenalty - (civilianHit ? 40 : 0)),
+    deeskalatsiya,
+    natijadorlik,
+  };
 }
 
 /* ------------------------------------------------------------------------ */

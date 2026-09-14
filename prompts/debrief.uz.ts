@@ -191,9 +191,9 @@ export function tirEvidence(s: TirScenario, p: TirPayload): string {
   const hints = Object.entries(s.rubricHints).map(([k, v]) => `- ${k}: ${v}`).join("\n");
   return `# SSENARIY: ${s.code} — ${s.title.uz} (TIR, real vaqt 3D)
 ${s.briefing.uz}
-Shaxs: ${s.actor.name}, ${s.actor.age}, qurol: ${s.actor.weapon}. Motiv (yashirin): ${s.actor.motive}
-Yakun: ${p.outcome ?? "tugallanmagan"}; davomiylik ${Math.round(p.elapsedSec)}s; o'q ${p.shotsFired} (tegdi ${p.hits})
-Qoida: qurol — faqat tashlanish/bevosita xavfda oxirgi chora; qurolsiz yoki shisha bilan shaxsga qurol — 0 ball; "to'g'ri otmaslik" — a'lo.
+Aktyorlar: ${s.actors.map((a) => `${a.id}=${a.name} [${a.role}${a.weapon !== "none" ? `, ${a.weapon}` : ""}]`).join("; ")}
+Yakun: ${p.outcome ?? "tugallanmagan"}; davomiylik ${Math.round(p.elapsedSec)}s; o'q ${p.shotsFired} (tegdi ${p.hits}); xodimga tekkan o'q: ${p.officerHits ?? 0}${p.hitFactor != null ? `; Hit Factor ${p.hitFactor}` : ""}
+Qoida: qurol — faqat bevosita xavfda oxirgi chora (o'qotar qurol qaratilgan, tashlanish, harakatlanayotgan mashina → balon); olomon/garovdagi/formadagi xodim otilsa — 0; qurolsiz yoki shisha bilan shaxsga qurol — 0; "to'g'ri otmaslik" — a'lo.
 
 # BAHOLASH UCHUN YO'RIQ
 ${hints || "-"}

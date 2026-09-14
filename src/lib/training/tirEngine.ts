@@ -1,6 +1,7 @@
 import type {
   Score03,
   TirAction,
+  TirActorDef,
   TirActorState,
   TirEvent,
   TirHitZone,
@@ -9,107 +10,141 @@ import type {
 } from "@/data/scenarios/types";
 
 /**
- * TIR — immersive decision-range engine. Pure and deterministic: the 3D
- * scene only renders `TirState`; every officer action and every actor
- * transition is logged with legality / proportionality so the debrief can
- * point at the exact second. Speed is never scored — lawfulness is.
+ * TIR v2 — multi-actor immersive range engine (VirTra V-300 style).
+ * Pure + deterministic. Actors: suspects (knife/gun), bystanders, hostages,
+ * uniformed police (don't shoot!), vehicles (tire shot as last resort),
+ * marksmanship plates. Every officer action logged with legality /
+ * proportionality; shooting a non-threat ends the run.
  */
+
+export interface TirActor extends TirActorDef {
+  agitation: number;
+  compliance: number;
+  stateSince: number;
+  aimTimer: number;
+  hidden: boolean;
+  hp: number;
+}
 
 export interface TirState {
   t: number;
-  distance: number; // metres between officer and actor
-  agitation: number; // 0-100
-  compliance: number; // 0-100
-  actorState: TirActorState;
-  stateSince: number; // t when actorState was entered
+  actors: TirActor[];
   weaponDrawn: boolean;
   inCover: boolean;
   backupCalled: boolean;
-  backupEta: number | null; // seconds remaining
+  backupEta: number | null;
   backupArrived: boolean;
   lastTalkAt: number | null;
   talkCount: number;
   shotsFired: number;
   hits: number;
+  officerHits: number;
+  lastShotAt: number | null;
+  firstShotAt: number | null;
+  score: number;
   outcome: TirOutcome | null;
   events: TirEvent[];
-  /** Subtitle line the actor is currently saying (for HUD/TTS). */
-  currentLine: string | null;
+  currentLine: { actorId: string; text: string } | null;
   lineSeq: number;
+  shockSeq: number; // increments on every shock (client feedback)
+  scriptDone: number[];
+  paused: boolean;
 }
 
 const clamp = (n: number, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, n));
+const dist = (a: { x: number; z: number }) => Math.hypot(a.x, a.z);
+
+const HUMAN_THREAT: ReadonlySet<TirActorState> = new Set(["weapon_raised", "aiming", "lunging"]);
+const RESOLVED: ReadonlySet<TirActorState> = new Set(["kneeling", "down", "calm", "fleeing", "hands_up", "stopped", "fled", "hit"]);
+
+export const ACTOR_TEXT: Partial<Record<TirActorState, string>> = {
+  shouting: "baqirmoqda",
+  approaching: "yaqinlashmoqda",
+  weapon_raised: "qurolni ko'tardi",
+  aiming: "QUROLNI XODIMGA QARATDI",
+  lunging: "TASHLANDI!",
+  dropping: "qurolni tashlamoqda",
+  kneeling: "tiz cho'kdi — itoat qildi",
+  fleeing: "qochmoqda",
+  down: "yerda",
+  calm: "tinchlandi",
+  hands_up: "qo'llarini ko'tardi",
+  cowering: "yerga yotdi",
+  held: "garovda",
+  walking: "yurib o'tmoqda",
+  revving: "motorni gazladi",
+  charging: "MASHINA TO'G'RI KELMOQDA!",
+  stopped: "mashina to'xtadi",
+  fled: "mashina qochdi",
+  parked: "to'xtab turibdi",
+  idle: "turibdi",
+};
+
+/* ------------------------------------------------------------------------ */
 
 export function initTir(s: TirScenario): TirState {
-  const st: TirState = {
-    t: 0,
-    distance: s.initial.distance,
-    agitation: s.initial.agitation,
-    compliance: s.initial.compliance,
-    actorState: "shouting",
+  const actors: TirActor[] = s.actors.map((d) => ({
+    ...d,
+    agitation: d.agitation ?? 50,
+    compliance: d.compliance ?? 20,
     stateSince: 0,
-    weaponDrawn: false,
-    inCover: false,
-    backupCalled: false,
-    backupEta: null,
-    backupArrived: false,
-    lastTalkAt: null,
-    talkCount: 0,
-    shotsFired: 0,
-    hits: 0,
-    outcome: null,
-    events: [],
-    currentLine: null,
-    lineSeq: 0,
+    aimTimer: 0,
+    hidden: !!d.hidden,
+    hp: 1,
+  }));
+  let st: TirState = {
+    t: 0, actors, weaponDrawn: false, inCover: false, backupCalled: false, backupEta: null, backupArrived: false,
+    lastTalkAt: null, talkCount: 0, shotsFired: 0, hits: 0, officerHits: 0, lastShotAt: null, firstShotAt: null, score: 0,
+    outcome: null, events: [], currentLine: null, lineSeq: 0, shockSeq: 0, scriptDone: [], paused: false,
   };
-  return say(pushEvent(st, { kind: "system", text: s.briefing.uz }), s, "shouting");
+  st = pushEvent(st, { kind: "system", text: s.briefing.uz });
+  const primary = primarySuspect(st);
+  if (primary) st = say(st, primary.id, primary.state);
+  return st;
+}
+
+export function primarySuspect(st: TirState): TirActor | undefined {
+  const hostile = st.actors.filter((a) => !a.hidden && (a.role === "suspect" || a.role === "vehicle") && !RESOLVED.has(a.state));
+  hostile.sort((a, b) => dist(a) - dist(b));
+  return hostile[0] ?? st.actors.find((a) => a.role === "suspect" || a.role === "vehicle");
+}
+
+function snapshot(st: TirState) {
+  const p = primarySuspect(st);
+  return {
+    distance: p ? Math.round(dist(p) * 10) / 10 : 0,
+    agitation: p ? Math.round(p.agitation) : 0,
+    compliance: p ? Math.round(p.compliance) : 0,
+  };
 }
 
 function pushEvent(st: TirState, e: Omit<TirEvent, "t" | "distance" | "agitation" | "compliance">): TirState {
-  return {
-    ...st,
-    events: [
-      ...st.events,
-      {
-        t: Math.round(st.t * 10) / 10,
-        distance: Math.round(st.distance * 10) / 10,
-        agitation: Math.round(st.agitation),
-        compliance: Math.round(st.compliance),
-        ...e,
-      },
-    ],
-  };
+  return { ...st, events: [...st.events, { t: Math.round(st.t * 10) / 10, ...snapshot(st), ...e }] };
 }
 
-function say(st: TirState, s: TirScenario, state: TirActorState): TirState {
-  const lines = s.actor.lines[state];
-  if (!lines || lines.length === 0) return st;
-  const line = lines[st.lineSeq % lines.length];
-  return { ...st, currentLine: line, lineSeq: st.lineSeq + 1 };
+function say(st: TirState, actorId: string, state: TirActorState): TirState {
+  const a = st.actors.find((x) => x.id === actorId);
+  const lines = a?.lines?.[state];
+  if (!a || !lines || lines.length === 0) return st;
+  return { ...st, currentLine: { actorId, text: lines[st.lineSeq % lines.length] }, lineSeq: st.lineSeq + 1 };
 }
 
-function setActor(st: TirState, s: TirScenario, next: TirActorState, text?: string): TirState {
-  if (st.actorState === next) return st;
-  let out: TirState = { ...st, actorState: next, stateSince: st.t };
-  out = pushEvent(out, { kind: "actor", actorState: next, text: text ?? ACTOR_TEXT[next] });
-  return say(out, s, next);
+function updateActor(st: TirState, id: string, patch: Partial<TirActor>): TirState {
+  return { ...st, actors: st.actors.map((a) => (a.id === id ? { ...a, ...patch } : a)) };
 }
 
-const ACTOR_TEXT: Record<TirActorState, string> = {
-  shouting: "Shaxs baqirmoqda",
-  approaching: "Shaxs yaqinlashmoqda",
-  knife_raised: "Shaxs qurolni ko'tardi",
-  lunging: "Shaxs tashlandi!",
-  dropping: "Shaxs qurolni tashlamoqda",
-  kneeling: "Shaxs tiz cho'kdi — itoat qildi",
-  fleeing: "Shaxs qochmoqda",
-  down: "Shaxs yerda",
-  calm: "Shaxs tinchlandi",
-};
+function setActorState(st: TirState, id: string, next: TirActorState, text?: string): TirState {
+  const a = st.actors.find((x) => x.id === id);
+  if (!a || a.state === next) return st;
+  let out = updateActor(st, id, { state: next, stateSince: st.t, aimTimer: 0 });
+  out = pushEvent(out, { kind: "actor", actorId: id, actorState: next, text: text ?? `${a.name} ${ACTOR_TEXT[next] ?? next}` });
+  return say(out, id, next);
+}
 
-const weaponVisible = (s: TirScenario) => s.actor.weapon !== "none";
-const threatState = (a: TirActorState) => a === "knife_raised" || a === "lunging";
-const resolvedState = (a: TirActorState) => a === "kneeling" || a === "down" || a === "calm" || a === "fleeing";
+function shock(st: TirState, text: string): TirState {
+  const out: TirState = { ...st, officerHits: st.officerHits + 1, shockSeq: st.shockSeq + 1 };
+  return pushEvent(out, { kind: "shock", text });
+}
 
 /* ------------------------------------------------------------------------ */
 /* Officer actions                                                          */
@@ -121,144 +156,194 @@ export interface ActionResult {
   proportionality: Score03;
   text: string;
 }
+const noop = (st: TirState): ActionResult => ({ state: st, legality: 3, proportionality: 3, text: "" });
 
 export function applyAction(
   st: TirState,
   s: TirScenario,
   action: TirAction,
-  detail?: { hit?: TirHitZone; phrase?: string }
+  detail?: { hit?: TirHitZone; actorId?: string; phrase?: string }
 ): ActionResult {
-  if (st.outcome) return { state: st, legality: 3, proportionality: 3, text: "" };
+  if (st.outcome || st.paused) return noop(st);
   let n: TirState = { ...st };
   let L: Score03 = 3;
   let P: Score03 = 3;
   let text = "";
-  const a = st.actorState;
-  const d = st.distance;
-
-  // Talking works — but not as a button-mash: rapid repeats lose effect, and
-  // compliance only grows once agitation has been brought down first.
+  const p = primarySuspect(st);
+  const a = p?.state ?? "idle";
+  const d = p ? dist(p) : 99;
+  const threatVisible = !!p && p.weapon !== "none";
   const sinceTalk = st.lastTalkAt == null ? 99 : st.t - st.lastTalkAt;
   const talkEff = sinceTalk < 2.5 ? 0.35 : sinceTalk < 5 ? 0.7 : 1;
-  const complyGain = (base: number) => base * talkEff * Math.max(0.25, 1.15 - n.agitation / 100);
+
+  const talkAll = (agitDelta: number, complyBase: number) => {
+    n = {
+      ...n,
+      actors: n.actors.map((x) =>
+        x.role === "suspect" && x.kind === "human" && !RESOLVED.has(x.state)
+          ? {
+              ...x,
+              agitation: clamp(x.agitation + agitDelta * talkEff),
+              compliance: clamp(x.compliance + complyBase * talkEff * Math.max(0.4, 1.25 - x.agitation / 100)),
+            }
+          : x.role === "vehicle" && !RESOLVED.has(x.state)
+            ? { ...x, compliance: clamp(x.compliance + complyBase * 0.6 * talkEff) }
+            : x
+      ),
+      lastTalkAt: st.t,
+      talkCount: st.talkCount + 1,
+    };
+  };
 
   switch (action) {
     case "talk_calm": {
-      const drop = (a === "knife_raised" ? 6 : 10) * talkEff;
-      n.agitation = clamp(n.agitation - drop);
-      n.compliance = clamp(n.compliance + complyGain(9));
-      n.lastTalkAt = st.t;
-      n.talkCount++;
+      talkAll(a === "weapon_raised" || a === "aiming" ? -7 : -11, 10);
       text = detail?.phrase ?? "Xotirjam muloqot";
-      if (a === "lunging") { P = 1; text += " (tashlanish paytida — kech)"; }
+      if (a === "lunging" || a === "charging") { P = 1; text += " (kech — xavf rivojlanib bo'lgan)"; }
       break;
     }
     case "talk_command": {
-      if (n.agitation < 60 || a === "knife_raised") n.compliance = clamp(n.compliance + complyGain(12));
-      else n.agitation = clamp(n.agitation + 4 * talkEff);
-      n.lastTalkAt = st.t;
-      n.talkCount++;
+      if ((p?.agitation ?? 0) < 60 || HUMAN_THREAT.has(a) || a === "revving" || a === "parked") talkAll(0, 12);
+      else talkAll(4, 0);
       text = detail?.phrase ?? "Buyruq";
       break;
     }
     case "talk_threat": {
-      n.agitation = clamp(n.agitation + 14);
-      n.compliance = clamp(n.compliance - 5);
-      n.lastTalkAt = st.t;
-      n.talkCount++;
+      talkAll(14, -5);
       text = detail?.phrase ?? "Tahdid";
-      L = a === "lunging" ? 3 : 2;
-      P = a === "lunging" || a === "knife_raised" ? 2 : 1;
+      L = a === "lunging" || a === "aiming" ? 3 : 2;
+      P = HUMAN_THREAT.has(a) ? 2 : 1;
       break;
     }
     case "draw": {
-      if (n.weaponDrawn) return { state: st, legality: 3, proportionality: 3, text: "" };
+      if (n.weaponDrawn) return noop(st);
       n.weaponDrawn = true;
-      const justified = weaponVisible(s) && (threatState(a) || d <= 5);
+      const gunThreat = !!p && p.weapon === "gun";
+      const vehicleThreat = !!p && p.role === "vehicle" && (a === "revving" || a === "charging");
+      const justified = vehicleThreat || (threatVisible && (HUMAN_THREAT.has(a) || gunThreat || d <= 5));
       L = justified ? 3 : 2;
       P = justified ? 2 : 1;
-      if (!justified) n.agitation = clamp(n.agitation + 10);
-      else n.agitation = clamp(n.agitation + 3);
+      if (!justified) n = { ...n, actors: n.actors.map((x) => (x.role === "suspect" ? { ...x, agitation: clamp(x.agitation + 10) } : x)) };
       text = justified ? "Qurol chiqarildi (past tayyor holat)" : "Qurol muddatidan oldin chiqarildi";
       break;
     }
     case "holster": {
-      if (!n.weaponDrawn) return { state: st, legality: 3, proportionality: 3, text: "" };
+      if (!n.weaponDrawn) return noop(st);
       n.weaponDrawn = false;
-      const safe = !threatState(a);
-      L = 3;
+      const safe = !HUMAN_THREAT.has(a) && a !== "charging";
       P = safe ? 3 : 1;
-      if (safe) n.agitation = clamp(n.agitation - 6);
       text = safe ? "Qurol g'ilofga solindi" : "Xavf paytida qurol g'ilofga solindi";
       break;
     }
     case "taser": {
+      if (!p || p.kind !== "human") { text = "Elektroshok — maqsad yo'q"; L = 2; P = 1; break; }
       const inRange = d <= 6;
-      const threat = weaponVisible(s) && (threatState(a) || (a === "approaching" && n.agitation > 70 && d <= 4));
-      const verbalTried = n.talkCount >= 1;
-      if (!inRange) {
-        text = "Elektroshok — masofa uzoq, ta'sir yo'q";
-        L = threat ? 3 : 1;
-        P = threat ? 2 : 0;
-        break;
-      }
+      const threat = threatVisible && p.weapon !== "gun" && (HUMAN_THREAT.has(a) || (a === "approaching" && p.agitation > 70 && d <= 4));
+      if (!inRange) { text = "Elektroshok — masofa uzoq, ta'sir yo'q"; L = threat ? 3 : 1; P = threat ? 2 : 0; break; }
+      if (p.weapon === "gun" && HUMAN_THREAT.has(a)) { text = "Elektroshok o'qotar qurolga qarshi — xavfli, ta'sirsiz"; L = 2; P = 1; break; }
       if (threat) {
-        L = 3;
-        P = verbalTried ? 3 : 2;
+        L = 3; P = st.talkCount >= 1 ? 3 : 2;
         text = "Elektroshok qo'llanildi — shaxs yerga tushdi";
-        n = setActor(n, s, "down", "Shaxs elektroshokdan yerga tushdi");
-        n.outcome = "resolved_less_lethal";
+        n = setActorState(n, p.id, "down", `${p.name} elektroshokdan yerga tushdi`);
+        if (!n.actors.some((x) => x.role === "suspect" && !RESOLVED.has(x.state) && !x.hidden)) n.outcome = "resolved_less_lethal";
       } else {
-        L = 1;
-        P = 0;
+        L = 1; P = 0;
         text = "Elektroshok xavf bo'lmagan holatda — nomutanosib kuch";
-        n = setActor(n, s, "down", "Shaxs elektroshokdan yerga tushdi");
+        n = setActorState(n, p.id, "down", `${p.name} elektroshokdan yerga tushdi`);
         n.outcome = "unlawful_force";
       }
       break;
     }
     case "shoot": {
-      if (!n.weaponDrawn) {
-        return { state: st, legality: 3, proportionality: 3, text: "" };
-      }
-      const hit: TirHitZone = detail?.hit ?? "miss";
+      if (!n.weaponDrawn) return noop(st);
+      const zone: TirHitZone = detail?.hit ?? "miss";
+      const target = detail?.actorId ? n.actors.find((x) => x.id === detail.actorId) : undefined;
+      const split = st.lastShotAt == null ? undefined : Math.round((st.t - st.lastShotAt) * 100) / 100;
       n.shotsFired++;
-      const lastResort = a === "lunging" && d <= s.rules.lungeDistance + 0.5;
-      const imminent = a === "knife_raised" && d <= 3 && n.agitation >= 85;
-      if (lastResort) { L = 3; P = 3; }
-      else if (imminent) { L = 2; P = 2; }
-      else { L = 0; P = 0; }
-      text =
-        (lastResort ? "O'q uzildi — oxirgi chora" : imminent ? "O'q uzildi — bevosita xavf" : "O'q uzildi — xavf shartlari YO'Q") +
-        (hit === "miss" ? " (o'q tegmadi)" : ` (${hit})`);
-      if (hit !== "miss") {
-        n.hits++;
-        n = setActor(n, s, "down", "Shaxs o'qdan yerga tushdi");
-        n.outcome = L === 0 ? "unlawful_force" : "resolved_lethal_lawful";
-      } else if (L === 0) {
-        // Missing does not make an unlawful shot lawful.
-        n.outcome = "unlawful_force";
-        n.agitation = 100;
-      } else {
-        n.agitation = clamp(n.agitation + 5);
+      n.lastShotAt = st.t;
+      if (n.firstShotAt == null) n.firstShotAt = st.t;
+
+      // Marksmanship plate
+      if (s.mode === "marksmanship") {
+        if (target && target.kind === "plate" && target.state === "standing" && zone !== "miss") {
+          n.hits++;
+          n.score += 1;
+          n = updateActor(n, target.id, { state: "hit", stateSince: st.t });
+          text = `Plastina ${target.name} — TEGDI`;
+          if (n.actors.filter((x) => x.kind === "plate").every((x) => x.state === "hit")) {
+            n.outcome = "range_complete";
+          }
+        } else text = "O'q — o'tib ketdi";
+        return { state: pushEvent(n, { kind: "action", action, text, hit: zone, split, actorId: target?.id }), legality: 3, proportionality: 3, text };
       }
-      return { state: pushEvent(n, { kind: "action", action, text, legality: L, proportionality: P, hit }), legality: L, proportionality: P, text };
+
+      if (!target || zone === "miss") {
+        // Missing near bystanders is still a decision. Was there a lawful reason to fire at all?
+        const lawful = !!p && shootLegality(p, s).legality >= 2;
+        L = lawful ? 2 : 0;
+        P = lawful ? 2 : 0;
+        text = lawful ? "O'q uzildi — tegmadi" : "O'q uzildi xavf shartlarisiz — tegmadi";
+        if (!lawful) n.outcome = "unlawful_force";
+        return { state: pushEvent(n, { kind: "action", action, text, hit: zone, split }), legality: L, proportionality: P, text };
+      }
+
+      // Non-threat human hit → fail.
+      if (target.role === "bystander" || target.role === "hostage" || target.role === "police") {
+        L = 0; P = 0;
+        text =
+          target.role === "police" ? `FORMADAGI XODIM otildi (${target.name})` :
+          target.role === "hostage" ? `GAROVDAGI SHAXS otildi (${target.name})` : `TINCH FUQARO otildi (${target.name})`;
+        n.hits++;
+        n = setActorState(n, target.id, "down", `${target.name} yerga tushdi`);
+        n.outcome = "civilian_hit";
+        return { state: pushEvent(n, { kind: "action", action, text, hit: zone, split, actorId: target.id }), legality: L, proportionality: P, text };
+      }
+
+      // Vehicle
+      if (target.role === "vehicle") {
+        const charging = target.state === "charging";
+        const close = dist(target) <= s.rules.vehicleThreatDistance;
+        if (zone === "tire") {
+          if (charging) { L = 3; P = 3; text = "Balonga o'q — oxirgi chora, mashina to'xtadi"; n.hits++; n = setActorState(n, target.id, "stopped", "Mashina balonlari yorildi — to'xtadi"); n.outcome = "vehicle_stopped"; }
+          else if (target.state === "revving") { L = 1; P = 1; text = "Balonga o'q — mashina hali harakatlanmagan (muddatidan oldin)"; n.hits++; n = setActorState(n, target.id, "stopped"); n.outcome = "unlawful_force"; }
+          else { L = 0; P = 0; text = "To'xtab turgan mashinaga o'q — qonunsiz"; n.hits++; n.outcome = "unlawful_force"; }
+        } else if (zone === "driver") {
+          if (charging && close) { L = 2; P = 2; text = "Haydovchiga o'q — bevosita xavf, ammo balon afzal edi"; n.hits++; n = setActorState(n, target.id, "stopped", "Haydovchi jarohatlandi, mashina to'xtadi"); n.outcome = "resolved_lethal_lawful"; }
+          else { L = 0; P = 0; text = "Haydovchiga o'q — xavf shartlari yo'q"; n.hits++; n.outcome = "unlawful_force"; }
+        } else {
+          L = charging ? 2 : 0; P = charging ? 1 : 0; text = charging ? "Mashina tanasiga o'q — ta'sirsiz" : "Mashinaga o'q — qonunsiz";
+          n.hits++;
+          if (!charging) n.outcome = "unlawful_force";
+        }
+        return { state: pushEvent(n, { kind: "action", action, text, hit: zone, split, actorId: target.id }), legality: L, proportionality: P, text };
+      }
+
+      // Suspect human
+      const leg = shootLegality(target, s);
+      L = leg.legality; P = leg.proportionality;
+      n.hits++;
+      text = `${leg.text} (${target.name}, ${zone})`;
+      const stays = zone === "limb" && Math.random() < 0.35; // limb hit may not stop
+      if (!stays) {
+        n = setActorState(n, target.id, "down", `${target.name} o'qdan yerga tushdi`);
+        // hostage released
+        if (target.holds) n = setActorState(n, target.holds, "cowering", "Garovdagi shaxs ozod");
+      } else text += " — to'xtamadi";
+      if (L === 0) n.outcome = "unlawful_force";
+      else if (!n.actors.some((x) => x.role === "suspect" && !RESOLVED.has(x.state) && !x.hidden)) n.outcome = "resolved_lethal_lawful";
+      return { state: pushEvent(n, { kind: "action", action, text, hit: zone, split, actorId: target.id }), legality: L, proportionality: P, text };
     }
     case "backup": {
-      if (n.backupCalled) return { state: st, legality: 3, proportionality: 3, text: "" };
+      if (n.backupCalled) return noop(st);
       n.backupCalled = true;
       n.backupEta = s.rules.backupEtaSec;
       text = `Qo'shimcha kuch va tez yordam chaqirildi (≈${s.rules.backupEtaSec}s)`;
       break;
     }
     case "retreat": {
-      n.distance = Math.min(n.distance + 2, 12);
-      n.agitation = clamp(n.agitation - 3);
-      const useful = d < 6 && a !== "kneeling" && a !== "down";
-      L = 3;
-      P = useful ? 3 : 2;
+      n = { ...n, actors: n.actors.map((x) => (x.kind !== "plate" ? { ...x, z: x.z - 2 } : x)) };
+      P = d < 6 ? 3 : 2;
       text = "Masofa oshirildi (vaqt + masofa)";
-      if (a === "lunging") { n.distance = Math.min(n.distance + 1, 12); }
       break;
     }
     case "cover": {
@@ -268,7 +353,23 @@ export function applyAction(
       break;
     }
   }
-  return { state: pushEvent(n, { kind: "action", action, text, legality: L, proportionality: P }), legality: L, proportionality: P, text };
+  return { state: pushEvent(n, { kind: "action", action, text, legality: L, proportionality: P, actorId: p?.id }), legality: L, proportionality: P, text };
+}
+
+/** Legality of shooting THIS suspect right now. */
+function shootLegality(a: TirActor, s: TirScenario): { legality: Score03; proportionality: Score03; text: string } {
+  const d = dist(a);
+  if (a.weapon === "gun") {
+    if (a.state === "aiming") return { legality: 3, proportionality: 3, text: "O'q — o'qotar qurol xodimga/fuqaroga qaratilgan" };
+    if (a.state === "weapon_raised") return { legality: 3, proportionality: 3, text: "O'q — o'qotar qurol ko'tarilgan" };
+    if (a.state === "fleeing") return { legality: 1, proportionality: 1, text: "Qochayotgan shaxsga o'q — bevosita xavf yo'q" };
+    if (a.state === "hands_up" || a.state === "kneeling" || a.state === "dropping") return { legality: 0, proportionality: 0, text: "Taslim bo'lgan shaxsga o'q" };
+    return { legality: 1, proportionality: 1, text: "Qurol ko'rinadi, ammo qaratilmagan — muloqot/buyruq kerak edi" };
+  }
+  if (a.state === "lunging" && d <= s.rules.lungeDistance + 0.5) return { legality: 3, proportionality: 3, text: "O'q — oxirgi chora (tashlanish)" };
+  if (a.state === "weapon_raised" && d <= 3 && a.agitation >= 85) return { legality: 2, proportionality: 2, text: "O'q — bevosita xavf" };
+  if (a.weapon === "none") return { legality: 0, proportionality: 0, text: "Qurolsiz shaxsga o'q" };
+  return { legality: 0, proportionality: 0, text: "O'q — xavf shartlari YO'Q" };
 }
 
 /* ------------------------------------------------------------------------ */
@@ -276,79 +377,209 @@ export function applyAction(
 /* ------------------------------------------------------------------------ */
 
 export function tick(st: TirState, s: TirScenario, dt: number): TirState {
-  if (st.outcome) return st;
+  if (st.outcome || st.paused) return st;
   let n: TirState = { ...st, t: st.t + dt };
   const r = s.rules;
-  const a = n.actorState;
   const sinceTalk = n.lastTalkAt == null ? n.t : n.t - n.lastTalkAt;
 
-  // Backup timer.
+  // Script
+  s.script.forEach((op, idx) => {
+    if (n.scriptDone.includes(idx) || n.t < op.atSec) return;
+    n = { ...n, scriptDone: [...n.scriptDone, idx] };
+    if (op.op === "spawn") {
+      n = updateActor(n, op.actorId, { hidden: false, stateSince: n.t });
+      const a = n.actors.find((x) => x.id === op.actorId);
+      n = pushEvent(n, { kind: "actor", actorId: op.actorId, actorState: a?.state, text: op.text ?? `${a?.name ?? op.actorId} paydo bo'ldi` });
+      if (a) n = say(n, a.id, a.state);
+    } else if (op.op === "set_state") n = setActorState(n, op.actorId, op.state, op.text);
+    else if (op.op === "move") n = updateActor(n, op.actorId, { x: op.x, z: op.z });
+    else if (op.op === "say") { n = { ...n, currentLine: { actorId: op.actorId, text: op.text }, lineSeq: n.lineSeq + 1 }; }
+    else if (op.op === "system") n = pushEvent(n, { kind: "system", text: op.text });
+    else if (op.op === "escalate_if_hostile") {
+      const a = n.actors.find((x) => x.id === op.actorId);
+      if (a && !RESOLVED.has(a.state) && a.compliance < r.complyCompliance) n = setActorState(n, op.actorId, op.state, op.text);
+    }
+  });
+
+  // Backup
   if (n.backupCalled && n.backupEta != null && !n.backupArrived) {
     n.backupEta = Math.max(0, n.backupEta - dt);
     if (n.backupEta === 0) {
       n.backupArrived = true;
-      n.agitation = clamp(n.agitation - 15);
-      if (!threatState(a)) n.compliance = clamp(n.compliance + 15);
+      n = { ...n, actors: n.actors.map((x) => (x.role === "suspect" ? { ...x, agitation: clamp(x.agitation - 15), compliance: HUMAN_THREAT.has(x.state) ? x.compliance : clamp(x.compliance + 15) } : x)) };
       n = pushEvent(n, { kind: "system", text: "Qo'shimcha kuch yetib keldi" });
     }
   }
 
-  // Silence drift: unaddressed shouting escalates.
-  if ((a === "shouting" || a === "approaching" || a === "knife_raised") && sinceTalk > 6) {
-    n.agitation = clamp(n.agitation + r.silenceDrift * dt);
-  }
-  // Drawn weapon on a non-threatening actor keeps agitation up.
-  if (n.weaponDrawn && !threatState(a) && !resolvedState(a)) n.agitation = clamp(n.agitation + 1.5 * dt);
+  // Per-actor dynamics
+  for (const a0 of n.actors) {
+    if (a0.hidden || RESOLVED.has(a0.state)) continue;
+    let a = { ...a0 };
+    const d = dist(a);
+    const since = n.t - a.stateSince;
 
-  // State transitions.
-  if (a === "shouting") {
-    if (n.agitation >= 55 && n.t - n.stateSince > 4) n = setActor(n, s, "approaching");
-    else if (n.compliance >= r.complyCompliance && n.agitation < 45) n = setActor(n, s, "calm");
-  } else if (a === "approaching") {
-    if (n.distance > r.minDistance) n.distance = Math.max(r.minDistance, n.distance - r.approachSpeed * dt);
-    if (weaponVisible(s) && (n.agitation >= 70 || (n.lastTalkAt == null && n.t >= r.raiseWeaponAfterSec)))
-      n = setActor(n, s, "knife_raised");
-    else if (n.compliance >= r.complyCompliance && n.agitation < 55) n = setActor(n, s, weaponVisible(s) ? "dropping" : "calm");
-    else if (n.agitation < 40) n = setActor(n, s, "shouting");
-  } else if (a === "knife_raised") {
-    if (n.distance > r.minDistance && n.agitation >= 60) n.distance = Math.max(r.minDistance, n.distance - r.approachSpeed * 0.6 * dt);
-    if (n.agitation >= r.lungeAgitation && n.distance <= r.lungeDistance) n = setActor(n, s, "lunging");
-    else if (n.compliance >= r.complyCompliance) n = setActor(n, s, "dropping");
-    else if (n.agitation < 50 && n.t - n.stateSince > 6) n = setActor(n, s, "approaching");
-  } else if (a === "lunging") {
-    n.distance = Math.max(0, n.distance - 3.2 * dt);
-    if (n.distance <= 0.4) {
-      n = pushEvent(n, { kind: "system", text: n.inCover ? "Shaxs to'siqqa urildi — xodim to'siq ortida" : "Shaxs xodimga yetib keldi — xodim jarohatlandi" });
-      if (n.inCover) {
-        n.agitation = clamp(n.agitation - 20);
-        n.distance = 2;
-        n = setActor(n, s, "knife_raised");
-      } else {
-        n.outcome = "officer_injured";
+    if (a.kind === "human" && a.role === "suspect") {
+      if ((a.state === "shouting" || a.state === "approaching" || a.state === "weapon_raised") && sinceTalk > 6) a.agitation = clamp(a.agitation + r.silenceDrift * dt);
+      if (n.weaponDrawn && !HUMAN_THREAT.has(a.state) && a.weapon !== "gun") a.agitation = clamp(a.agitation + 1.5 * dt);
+      const speed = a.speed ?? 0.45;
+      const moveTowards = (v: number) => {
+        if (d > r.minDistance) { const k = Math.max(0, 1 - (v * dt) / d); a.x *= k; a.z *= k; }
+      };
+      let next: TirActorState | null = null;
+      switch (a.state) {
+        case "shouting":
+          if (a.agitation >= 55 && since > 4) next = "approaching";
+          else if (a.compliance >= r.complyCompliance && a.agitation < 45) next = a.weapon === "none" ? "calm" : "dropping";
+          break;
+        case "approaching":
+          moveTowards(speed);
+          if (a.weapon !== "none" && a.agitation >= 70) next = "weapon_raised";
+          else if (a.compliance >= r.complyCompliance && a.agitation < 55) next = a.weapon === "none" ? "calm" : "dropping";
+          else if (a.agitation < 40) next = "shouting";
+          break;
+        case "weapon_raised":
+          if (a.weapon === "gun") {
+            if (a.agitation >= 80 && since > 2) next = "aiming";
+            else if (a.compliance >= r.complyCompliance) next = "dropping";
+          } else {
+            if (a.agitation >= 60) moveTowards(speed * 0.6);
+            if (a.agitation >= r.lungeAgitation && d <= r.lungeDistance) next = "lunging";
+            else if (a.compliance >= r.complyCompliance) next = "dropping";
+            else if (a.agitation < 50 && since > 6) next = "approaching";
+          }
+          break;
+        case "aiming": {
+          a.aimTimer += dt;
+          const aimSec = a.aimSec ?? 3;
+          if (a.aimTimer >= aimSec) {
+            a.aimTimer = a.keepsFiring ? aimSec - 2.2 : 0;
+            const hitChance = n.inCover ? 0.25 : 0.65;
+            n = { ...n, actors: n.actors.map((x) => (x.id === a.id ? a : x)) };
+            if (Math.random() < hitChance) n = shock(n, `${a.name} xodimga o'q uzdi — TEGDI (elektroshok)`);
+            else n = pushEvent(n, { kind: "actor", actorId: a.id, text: `${a.name} xodimga o'q uzdi — o'tib ketdi` });
+            if (!a.keepsFiring) next = "weapon_raised";
+            if (n.officerHits >= r.officerHitsToFail) n.outcome = "officer_down";
+            a = n.actors.find((x) => x.id === a.id)!;
+          }
+          if (a.compliance >= r.complyCompliance + 15) next = "dropping";
+          break;
+        }
+        case "lunging":
+          moveTowards(3.2);
+          if (d <= 0.5) {
+            if (n.inCover) { a.agitation = clamp(a.agitation - 20); a.z = -2; a.x = 0; next = "weapon_raised"; n = pushEvent(n, { kind: "system", text: `${a.name} to'siqqa urildi — xodim to'siq ortida` }); }
+            else { n = shock(n, `${a.name} xodimga yetib keldi — jarohat (elektroshok)`); n.outcome = "officer_injured"; }
+          }
+          break;
+        case "dropping":
+          if (since > 2) next = "kneeling";
+          break;
+        default:
+          break;
+      }
+      n = { ...n, actors: n.actors.map((x) => (x.id === a.id ? a : x)) };
+      if (next) n = setActorState(n, a.id, next);
+    } else if (a.kind === "vehicle") {
+      switch (a.state) {
+        case "revving":
+          if (a.compliance >= r.complyCompliance) { n = setActorState(n, a.id, "stopped", "Haydovchi motorni o'chirdi — itoat qildi"); }
+          break;
+        case "charging": {
+          const v = a.speed ?? 6;
+          const k = Math.max(0, 1 - (v * dt) / Math.max(d, 0.01));
+          a.x *= k; a.z *= k;
+          n = { ...n, actors: n.actors.map((x) => (x.id === a.id ? a : x)) };
+          if (d <= 1.2) {
+            if (n.inCover) { n = pushEvent(n, { kind: "system", text: "Mashina to'siq yonidan o'tib ketdi — xodim to'siq ortida" }); n = setActorState(n, a.id, "fled"); n.outcome = "timeout"; }
+            else { n = shock(n, "Mashina xodimga urildi (elektroshok)"); n.outcome = "officer_down"; }
+          }
+          break;
+        }
+        default:
+          break;
       }
     }
-  } else if (a === "dropping") {
-    if (n.t - n.stateSince > 2) n = setActor(n, s, "kneeling");
-  } else if (a === "kneeling" || a === "calm") {
-    if (n.t - n.stateSince > 3) {
-      n.outcome = "resolved_verbal";
-      n = pushEvent(n, { kind: "system", text: "Vaziyat kuch ishlatmasdan hal qilindi" });
-    }
   }
 
-  if (!n.outcome && n.t >= r.durationSec) {
-    n.outcome = "timeout";
-    n = pushEvent(n, { kind: "system", text: "Vaqt tugadi — vaziyat hal qilinmadi" });
+  // Resolution checks
+  if (!n.outcome && s.mode === "scenario") {
+    const hostiles = n.actors.filter((x) => !x.hidden && (x.role === "suspect" || x.role === "vehicle") && !RESOLVED.has(x.state));
+    const pendingSpawns = s.script.some((op, i) => op.op === "spawn" && !n.scriptDone.includes(i));
+    if (hostiles.length === 0 && !pendingSpawns) {
+      const allCalm = n.actors.filter((x) => x.role === "suspect" || x.role === "vehicle").every((x) => x.state === "kneeling" || x.state === "calm" || x.state === "hands_up" || x.state === "stopped");
+      const settled = n.actors.filter((x) => (x.role === "suspect" || x.role === "vehicle") && RESOLVED.has(x.state)).every((x) => n.t - x.stateSince > 3);
+      if (settled) {
+        n.outcome = allCalm ? (n.actors.some((x) => x.role === "vehicle") ? "vehicle_stopped" : "resolved_verbal") : "resolved_lethal_lawful";
+        n = pushEvent(n, { kind: "system", text: allCalm ? "Vaziyat kuch ishlatmasdan hal qilindi" : "Vaziyat hal qilindi" });
+      }
+    }
+    if (!n.outcome && n.t >= r.durationSec) {
+      n.outcome = "timeout";
+      n = pushEvent(n, { kind: "system", text: "Vaqt tugadi — vaziyat hal qilinmadi" });
+    }
+  } else if (!n.outcome && s.mode === "marksmanship" && n.t >= r.durationSec) {
+    n.outcome = "range_complete";
   }
   return n;
 }
 
 /* ------------------------------------------------------------------------ */
-/* Talk classification (deterministic keyword heuristics, uz/ru)             */
+/* Instructor (ghost mode) commands                                          */
+/* ------------------------------------------------------------------------ */
+
+export type InstructorCmd =
+  | { cmd: "escalate" }
+  | { cmd: "deescalate" }
+  | { cmd: "spawn"; actorId: string }
+  | { cmd: "set_state"; actorId: string; state: TirActorState }
+  | { cmd: "pause" }
+  | { cmd: "resume" }
+  | { cmd: "all_stop" };
+
+export function applyInstructor(st: TirState, s: TirScenario, c: InstructorCmd): TirState {
+  let n = { ...st };
+  switch (c.cmd) {
+    case "escalate":
+      n = { ...n, actors: n.actors.map((x) => (x.role === "suspect" && !RESOLVED.has(x.state) ? { ...x, agitation: clamp(x.agitation + 20), compliance: clamp(x.compliance - 10) } : x)) };
+      return pushEvent(n, { kind: "system", text: "Instruktor: vaziyat keskinlashtirildi" });
+    case "deescalate":
+      n = { ...n, actors: n.actors.map((x) => (x.role === "suspect" && !RESOLVED.has(x.state) ? { ...x, agitation: clamp(x.agitation - 20), compliance: clamp(x.compliance + 10) } : x)) };
+      return pushEvent(n, { kind: "system", text: "Instruktor: vaziyat yumshatildi" });
+    case "spawn": {
+      n = updateActor(n, c.actorId, { hidden: false, stateSince: n.t });
+      const a = n.actors.find((x) => x.id === c.actorId);
+      return pushEvent(n, { kind: "actor", actorId: c.actorId, actorState: a?.state, text: `Instruktor: ${a?.name ?? c.actorId} sahnaga kiritildi` });
+    }
+    case "set_state":
+      return setActorState(n, c.actorId, c.state, `Instruktor: ${n.actors.find((x) => x.id === c.actorId)?.name ?? c.actorId} → ${ACTOR_TEXT[c.state] ?? c.state}`);
+    case "pause":
+      return { ...n, paused: true };
+    case "resume":
+      return { ...n, paused: false };
+    case "all_stop":
+      n.outcome = "timeout";
+      return pushEvent(n, { kind: "system", text: "ALL STOP — instruktor ssenariyni to'xtatdi" });
+  }
+  void s;
+  return n;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Scoring helpers (HUD)                                                    */
+/* ------------------------------------------------------------------------ */
+
+export function hitFactor(st: TirState): number {
+  if (st.firstShotAt == null || st.lastShotAt == null) return 0;
+  const total = Math.max(st.lastShotAt - st.firstShotAt, 0.01);
+  return Math.round((st.hits / total) * 1000) / 1000;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Talk classification                                                      */
 /* ------------------------------------------------------------------------ */
 
 const THREAT_WORDS = ["otaman", "o'ldiraman", "sindiraman", "urib", "ot!", "tashla bo'lmasa", "стреля", "убью", "сломаю"];
-const COMMAND_WORDS = ["qo'ying", "qo'y", "tashlang", "tashla", "to'xtang", "to'xta", "orqaga", "yerga", "qo'lingizni", "положи", "брось", "стой", "назад", "руки"];
+const COMMAND_WORDS = ["qo'ying", "qo'y", "tashlang", "tashla", "to'xtang", "to'xta", "orqaga", "yerga", "qo'lingizni", "motorni", "chiqing", "положи", "брось", "стой", "назад", "руки", "выходи"];
 const CALM_WORDS = ["tushunaman", "eshitaman", "yordam", "xotirjam", "ismingiz", "gaplashamiz", "kerak emas", "hech kim", "ishonaman", "понимаю", "помогу", "спокойно", "поговорим"];
 
 export function classifyTalk(text: string): TirAction {
@@ -363,8 +594,8 @@ export function classifyTalk(text: string): TirAction {
 export const TIR_PRESET_PHRASES: { action: TirAction; uz: string }[] = [
   { action: "talk_calm", uz: "Men ichki ishlar xodimi. Sizga yordam berish uchun keldim — meni eshiting." },
   { action: "talk_calm", uz: "Tushunaman, sizga og'ir. Hech kim sizga tegmaydi. Ismingiz nima?" },
-  { action: "talk_command", uz: "Pichoqni yerga qo'ying va orqaga bir qadam tashlang." },
-  { action: "talk_command", uz: "To'xtang! Yaqinlashmang. Qo'llaringizni ko'rsating." },
+  { action: "talk_command", uz: "Qurolni yerga qo'ying va orqaga bir qadam tashlang!" },
+  { action: "talk_command", uz: "To'xtang! Motorni o'chiring, qo'llaringizni ko'rsating!" },
   { action: "talk_threat", uz: "Tashla, bo'lmasa otaman!" },
 ];
 
@@ -373,8 +604,12 @@ export function outcomeSummary(o: TirOutcome): { uz: string; tone: "good" | "par
     case "resolved_verbal": return { uz: "Kuch ishlatmasdan hal qilindi — a'lo natija", tone: "good" };
     case "resolved_less_lethal": return { uz: "Elektroshok bilan, qonuniy va mutanosib", tone: "good" };
     case "resolved_lethal_lawful": return { uz: "O'q uzildi — oxirgi chora sifatida qonuniy", tone: "partial" };
+    case "vehicle_stopped": return { uz: "Mashina to'xtatildi — xavf bartaraf", tone: "good" };
     case "unlawful_force": return { uz: "Nomutanosib / qonunsiz kuch", tone: "bad" };
+    case "civilian_hit": return { uz: "TINCH FUQARO / GAROVDAGI / XODIM otildi — nishonni farqlash xatosi", tone: "bad" };
     case "officer_injured": return { uz: "Xodim jarohatlandi — vaziyat nazoratdan chiqdi", tone: "bad" };
-    case "timeout": return { uz: "Vaqt tugadi — vaziyat hal qilinmadi", tone: "partial" };
+    case "officer_down": return { uz: "Xodim safdan chiqdi", tone: "bad" };
+    case "timeout": return { uz: "Vaqt tugadi / to'xtatildi", tone: "partial" };
+    case "range_complete": return { uz: "Marksmanship yakunlandi", tone: "good" };
   }
 }

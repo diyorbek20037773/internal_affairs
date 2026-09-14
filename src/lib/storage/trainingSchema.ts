@@ -99,8 +99,9 @@ export const DocumentGradeSchema = z.object({
 
 export const TirEventSchema = z.object({
   t: z.number(),
-  kind: z.enum(["action", "actor", "system"]),
+  kind: z.enum(["action", "actor", "system", "shock"]),
   action: z.enum(TIR_ACTIONS).optional(),
+  actorId: z.string().optional(),
   actorState: z.enum(TIR_ACTOR_STATES).optional(),
   text: z.string(),
   legality: z.number().min(0).max(3).optional(),
@@ -108,15 +109,20 @@ export const TirEventSchema = z.object({
   distance: z.number(),
   agitation: z.number(),
   compliance: z.number(),
-  hit: z.enum(["torso", "limb", "head", "miss"]).optional(),
+  hit: z.enum(["torso", "limb", "head", "tire", "driver", "body", "plate", "miss"]).optional(),
+  split: z.number().optional(),
 });
 export const TirOutcomeSchema = z.enum([
   "resolved_verbal",
   "resolved_less_lethal",
   "resolved_lethal_lawful",
+  "vehicle_stopped",
   "unlawful_force",
+  "civilian_hit",
   "officer_injured",
+  "officer_down",
   "timeout",
+  "range_complete",
 ]);
 
 /* ---------- debrief ---------- */
@@ -181,6 +187,9 @@ export const SessionPayloadSchema = z.discriminatedUnion("kind", [
     elapsedSec: z.number(),
     shotsFired: z.number(),
     hits: z.number(),
+    officerHits: z.number().optional(),
+    score: z.number().optional(),
+    hitFactor: z.number().optional(),
   }),
 ]);
 

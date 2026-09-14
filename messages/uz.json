@@ -272,8 +272,8 @@
         "desc": "AI hujjat tekshiruvi: qonun va fakt. Berilgan faktlardan bayonnoma/ma'lumotnoma yozing."
       },
       "tir": {
-        "title": "TIR — 3D qaror poligoni",
-        "desc": "Immersiv 3D sahna (3 ekran): shaxs real vaqtda harakat qiladi, siz gapirasiz, buyruq berasiz, qurol/elektroshok, nishonga olasiz. Baho — qonuniylik va mutanosiblik."
+        "title": "TIR — 3D poligon (V-300)",
+        "desc": "3 ekranli immersiv poligon: mashina (balonga o'q), olomon ichida qurolli shaxs, bino ichida otuvchi, marksmanship. Nishonni farqlash, oxirgi chora, elektroshok."
       }
     },
     "scenario": {
@@ -584,6 +584,27 @@
         "fleeing": "Qochmoqda",
         "down": "Yerda",
         "calm": "Tinchlandi"
+      },
+      "shock": "ELEKTROSHOK — XODIMGA O'Q TEGDI",
+      "hits": "Tegdi",
+      "paused": "PAUZA",
+      "scenarioComplete": "Ssenariy yakunlandi",
+      "allStopHint": "Qurolni xavfsiz holatga keltiring. Instruktor debrifingiga o'ting.",
+      "hintRange": "Marksmanship: D — qurol, plastinalarga bosing. Taymer birinchi o'qdan. Hit Factor = tegish / soniya.",
+      "instructor": "Instruktor (ghost mode)",
+      "hintKeys": "",
+      "ins": {
+        "escalate": "Keskinlashtir",
+        "deescalate": "Yumshat",
+        "pause": "Pauza",
+        "resume": "Davom",
+        "station": "Instruktor stansiyasi (yangi oyna)",
+        "connected": "Ulangan",
+        "waiting": "Poligonni kutmoqda...",
+        "commands": "Buyruqlar",
+        "agitation": "Taranglik",
+        "compliance": "Itoat",
+        "hint": "Instruktor ssenariyni jonli boshqaradi: keskinlashtirish, yangi shaxs kiritish, pauza, ALL STOP. Ikkinchi oyna/planshet — shu brauzer profilida."
       }
     }
   }

@@ -272,8 +272,8 @@
         "desc": "AI document check: law and facts. Write a protocol/report from the given facts."
       },
       "tir": {
-        "title": "TIR — 3D decision range",
-        "desc": "Immersive 3D scene (3 screens): the subject acts in real time; you talk, command, draw/taser, aim. Graded on legality and proportionality."
+        "title": "TIR — 3D range (V-300)",
+        "desc": "Immersive 3-screen range: vehicle (tire shot), armed man in a crowd, gunman in a building, marksmanship. Target discrimination, last resort, shock feedback."
       }
     },
     "scenario": {
@@ -584,6 +584,27 @@
         "fleeing": "Fleeing",
         "down": "Down",
         "calm": "Calm"
+      },
+      "shock": "SHOCK — OFFICER HIT",
+      "hits": "Hits",
+      "paused": "PAUSED",
+      "scenarioComplete": "Scenario complete",
+      "allStopHint": "Make all weapons safe. Report to your instructor for debrief.",
+      "hintRange": "Marksmanship: D — draw, click the plates. Timer starts at first shot. Hit Factor = hits / second.",
+      "instructor": "Instructor (ghost mode)",
+      "hintKeys": "",
+      "ins": {
+        "escalate": "Escalate",
+        "deescalate": "De-escalate",
+        "pause": "Pause",
+        "resume": "Resume",
+        "station": "Instructor station (new window)",
+        "connected": "Connected",
+        "waiting": "Waiting for range...",
+        "commands": "Commands",
+        "agitation": "Agitation",
+        "compliance": "Compliance",
+        "hint": "The instructor drives the scenario live: escalate, spawn actors, pause, ALL STOP. Second window/tablet — same browser profile."
       }
     }
   }
