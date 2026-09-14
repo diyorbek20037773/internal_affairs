@@ -136,7 +136,7 @@ export const tirBino: TirScenario = {
     bystander("v2", "Xodima (stol)", 3.2, -8.5, "cowering", "#c9a26a"),
     bystander("v3", "Yigit (burchak)", -3.6, -9, "cowering", "#5a6b8a"),
     bystander("v4", "Ayol (burchak)", -4.2, -8.2, "cowering", "#b06a9a"),
-    { id: "g1", role: "suspect", kind: "human", name: "Otuvchi", weapon: "gun", x: 1.5, z: -11, state: "weapon_raised", agitation: 95, compliance: 0, aimSec: 2.5, hidden: true, shirt: "#222",
+    { id: "g1", role: "suspect", kind: "human", name: "Otuvchi", weapon: "gun", x: 1.5, z: -11, state: "weapon_raised", agitation: 95, compliance: 0, aimSec: 2.5, hidden: true, keepsFiring: true, shirt: "#222",
       lines: { weapon_raised: ["Hamma yerga!"], aiming: ["Sen ham!"], dropping: [], kneeling: [] } },
     { id: "cop", role: "police", kind: "human", name: "Hamkasb (formada)", weapon: "gun", x: -5, z: -7, state: "walking", hidden: true, speed: 3, shirt: "#1c2a4a" },
     { id: "g2", role: "suspect", kind: "human", name: "Ikkinchi shaxs (eshik)", weapon: "gun", x: 2.5, z: -9.5, state: "hands_up", agitation: 60, compliance: 85, hidden: true, shirt: "#5a3a2a",

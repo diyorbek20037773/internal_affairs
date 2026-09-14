@@ -54,6 +54,10 @@ export interface TirState {
 const clamp = (n: number, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, n));
 const dist = (a: { x: number; z: number }) => Math.hypot(a.x, a.z);
 
+/** No visible unresolved hostile AND nothing hidden waiting to be spawned. */
+const allHostilesResolved = (st: TirState) =>
+  !st.actors.some((x) => (x.role === "suspect" || x.role === "vehicle") && (x.hidden || !RESOLVED.has(x.state)));
+
 const HUMAN_THREAT: ReadonlySet<TirActorState> = new Set(["weapon_raised", "aiming", "lunging"]);
 const RESOLVED: ReadonlySet<TirActorState> = new Set(["kneeling", "down", "calm", "fleeing", "hands_up", "stopped", "fled", "hit"]);
 
@@ -245,7 +249,7 @@ export function applyAction(
         L = 3; P = st.talkCount >= 1 ? 3 : 2;
         text = "Elektroshok qo'llanildi — shaxs yerga tushdi";
         n = setActorState(n, p.id, "down", `${p.name} elektroshokdan yerga tushdi`);
-        if (!n.actors.some((x) => x.role === "suspect" && !RESOLVED.has(x.state) && !x.hidden)) n.outcome = "resolved_less_lethal";
+        if (allHostilesResolved(n)) n.outcome = "resolved_less_lethal";
       } else {
         L = 1; P = 0;
         text = "Elektroshok xavf bo'lmagan holatda — nomutanosib kuch";
@@ -279,7 +283,8 @@ export function applyAction(
 
       if (!target || zone === "miss") {
         // Missing near bystanders is still a decision. Was there a lawful reason to fire at all?
-        const lawful = !!p && shootLegality(p, s).legality >= 2;
+        const lawful =
+          !!p && (p.role === "vehicle" ? p.state === "charging" : shootLegality(p, s).legality >= 2);
         L = lawful ? 2 : 0;
         P = lawful ? 2 : 0;
         text = lawful ? "O'q uzildi — tegmadi" : "O'q uzildi xavf shartlarisiz — tegmadi";
@@ -330,7 +335,7 @@ export function applyAction(
         if (target.holds) n = setActorState(n, target.holds, "cowering", "Garovdagi shaxs ozod");
       } else text += " — to'xtamadi";
       if (L === 0) n.outcome = "unlawful_force";
-      else if (!n.actors.some((x) => x.role === "suspect" && !RESOLVED.has(x.state) && !x.hidden)) n.outcome = "resolved_lethal_lawful";
+      else if (allHostilesResolved(n)) n.outcome = "resolved_lethal_lawful";
       return { state: pushEvent(n, { kind: "action", action, text, hit: zone, split, actorId: target.id }), legality: L, proportionality: P, text };
     }
     case "backup": {
