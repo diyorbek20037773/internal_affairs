@@ -69,6 +69,15 @@ export function isRetriableKeyError(err: unknown): boolean {
   const status = anyErr?.status ?? anyErr?.code;
   if (status === 429 || status === 503 || status === 500) return true;
   const msg = (anyErr?.message ?? String(err)).toUpperCase();
+  // A revoked / mistyped key must not sink the whole request — rotate.
+  if (
+    msg.includes("API_KEY_INVALID") ||
+    msg.includes("API KEY NOT VALID") ||
+    msg.includes("PERMISSION_DENIED") ||
+    msg.includes("API KEY EXPIRED") ||
+    msg.includes("CONSUMER_SUSPENDED")
+  )
+    return true;
   return (
     msg.includes("429") ||
     msg.includes("RESOURCE_EXHAUSTED") ||

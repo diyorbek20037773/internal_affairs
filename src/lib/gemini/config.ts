@@ -12,8 +12,10 @@ export const GENERATION_CONFIG = {
  * `grader`  — debrief / rubric grading: cold and deterministic.
  */
 export const JSON_GENERATION_CONFIG = {
-  citizen: { temperature: 0.7, topP: 0.95, maxOutputTokens: 1024 },
-  grader: { temperature: 0.2, topP: 0.9, maxOutputTokens: 4096 },
+  // thinkingBudget: gemini-2.5 "thinking" tokens count against maxOutputTokens;
+  // an unbounded budget can truncate the JSON. Citizen turns need none.
+  citizen: { temperature: 0.7, topP: 0.95, maxOutputTokens: 2048, thinkingBudget: 0 },
+  grader: { temperature: 0.2, topP: 0.9, maxOutputTokens: 8192, thinkingBudget: 1024 },
 } as const;
 
 export type JsonProfile = keyof typeof JSON_GENERATION_CONFIG;

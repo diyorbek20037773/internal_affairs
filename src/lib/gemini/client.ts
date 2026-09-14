@@ -143,6 +143,7 @@ export async function generateJson<T>({
           temperature: gen.temperature,
           topP: gen.topP,
           maxOutputTokens: gen.maxOutputTokens,
+          thinkingConfig: { thinkingBudget: gen.thinkingBudget },
           responseMimeType: "application/json",
           responseSchema,
           safetySettings: SAFETY_SETTINGS as unknown as never,
@@ -159,7 +160,9 @@ export async function generateJson<T>({
       lastErr = err;
       console.warn(
         `[gemini] JSON parse failed (attempt ${attempt + 1}/${retries + 1})`,
-        err instanceof Error ? err.message : err
+        err instanceof Error ? err.message : err,
+        "raw:",
+        raw.slice(0, 400)
       );
     }
   }
