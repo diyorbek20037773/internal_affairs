@@ -7,6 +7,7 @@ import {
 } from "@/data/scenarios/types";
 
 const MAX_DELTA = 25;
+const POSITIVE: ReadonlySet<string> = new Set(["faol_tinglash", "empatiya", "huquqiy_tushuntirish", "savol_ochiq"]);
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, Math.round(n)));
 
 /**
@@ -19,9 +20,22 @@ export function applyDelta(
   a: DialogTurnAssessment,
   scenario: DialogScenario
 ): DialogHiddenState {
-  const dT = clamp(a.delta.tension, -MAX_DELTA, MAX_DELTA);
-  const dR = clamp(a.delta.trust, -MAX_DELTA, MAX_DELTA);
-  const dC = clamp(a.delta.cooperation, -MAX_DELTA, MAX_DELTA);
+  let dT = clamp(a.delta.tension, -MAX_DELTA, MAX_DELTA);
+  let dR = clamp(a.delta.trust, -MAX_DELTA, MAX_DELTA);
+  let dC = clamp(a.delta.cooperation, -MAX_DELTA, MAX_DELTA);
+
+  // Consistency floor: a turn the model itself tagged with 2+ constructive
+  // behaviours must move the needle, whatever mood the citizen is in.
+  const positives = a.flags.filter((f) => POSITIVE.has(f)).length;
+  const negatives = a.flags.some((f) => f === "haqorat" || f === "tahdid" || f === "qonun_buzilishi");
+  if (positives >= 2 && !negatives) {
+    dT = Math.min(dT, -8);
+    dR = Math.max(dR, 6);
+    dC = Math.max(dC, 4);
+  } else if (positives === 1 && !negatives) {
+    dT = Math.min(dT, -3);
+    dR = Math.max(dR, 2);
+  }
 
   let tension = clamp(state.tension + dT, 0, 100);
   let trust = clamp(state.trust + dR, 0, 100);
@@ -67,7 +81,8 @@ export function detectReveals(
   state: DialogHiddenState,
   scenario: DialogScenario
 ): string[] {
-  if (state.trust < scenario.revealTrust) return state.revealed;
+  // No trust gate here: the model decides WHEN to reveal (prompt-gated);
+  // we only record what actually surfaced in the reply.
   const lower = reply.toLowerCase();
   const found = scenario.persona.secretFacts.filter((fact) => {
     if (state.revealed.includes(fact)) return false;

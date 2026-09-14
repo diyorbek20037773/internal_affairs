@@ -61,7 +61,7 @@ export const case04Agressiv: DialogScenario = {
     "Uch oydan beri hech kim quloq solmaydi! Yetar endi! Uchinchi marta kelyapman, har safar 'ko'rib chiqamiz' deysizlar! Kim menga javob beradi?!",
   maxTurns: 14,
   revealTrust: 55,
-  successCondition: { minTrust: 60, maxTension: 35 },
+  successCondition: { minTrust: 55, maxTension: 40 },
   failCondition: { tension: 95 },
   rubricHints: {
     muloqot: "Xodim o'zini tanishtirdimi, ismini so'radimi, gapini bo'lmadimi?",
