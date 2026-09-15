@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type MutableRefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { TirActorState, TirHitZone, TirRole, TirWeapon } from "@/data/scenarios/types";
+import type { TirState } from "@/lib/training/tirEngine";
+
+/** Live engine binding: read the actor from the state ref every frame (no React re-renders). */
+export interface ActorSourceRef { ref: MutableRefObject<TirState>; id: string }
 
 export interface OfficerXZ { x: number; z: number }
 const ORIGIN: OfficerXZ = { x: 0, z: 0 };
@@ -35,6 +39,7 @@ export function Human({
   officer = ORIGIN,
   actorId,
   hp = 1,
+  source,
 }: {
   x: number;
   z: number;
@@ -51,12 +56,14 @@ export function Human({
   /** Engine actor id for camera-centre raycast hits. */
   actorId?: string;
   hp?: number;
+  source?: ActorSourceRef;
 }) {
   const root = useRef<THREE.Group>(null);
   const hurt = useRef({ hp, t: 0 });
+  const live = useRef({ state, weapon, agitation });
   useEffect(() => {
-    if (root.current) root.current.userData.actorId = actorId;
-  }, [actorId]);
+    if (root.current) root.current.userData.actorId = actorId ?? source?.id;
+  }, [actorId, source?.id]);
   const body = useRef<THREE.Group>(null);
   const armR = useRef<THREE.Group>(null);
   const armL = useRef<THREE.Group>(null);
@@ -76,27 +83,37 @@ export function Human({
     const v = sm.current;
     const lerp = (a: number, b: number, k: number) => a + (b - a) * Math.min(1, k * dt);
 
-    v.x = lerp(v.x, x, 4);
-    v.z = lerp(v.z, z, 4);
+    // live actor from the engine ref, or static props
+    let tx = x, tz = z, hpNow = hp;
+    if (source) {
+      const a = source.ref.current.actors.find((o) => o.id === source.id);
+      if (a) { tx = a.x; tz = a.z; hpNow = a.hp; live.current = { state: a.state, weapon: a.weapon, agitation: a.agitation }; g.visible = !a.hidden; if (a.hidden) return; }
+    } else live.current = { state, weapon, agitation };
+    const { state: st, weapon: wp, agitation: ag } = live.current;
+    void officer;
+
+    v.x = lerp(v.x, tx, 4);
+    v.z = lerp(v.z, tz, 4);
     g.position.x = v.x;
     g.position.z = v.z;
-    // face the officer (smooth turn)
-    const yawGoal = Math.atan2(officer.x - v.x, officer.z - v.z) + Math.PI;
+    // face the camera (officer's eyes), smooth turn
+    const cam = s.camera.position;
+    const yawGoal = Math.atan2(cam.x - v.x, cam.z - v.z) + Math.PI;
     g.rotation.y = lerpAngle(g.rotation.y, yawGoal, Math.min(1, 5 * dt));
-    if (hp < hurt.current.hp) hurt.current.t = 0.25;
-    hurt.current.hp = hp;
+    if (hpNow < hurt.current.hp) hurt.current.t = 0.25;
+    hurt.current.hp = hpNow;
     hurt.current.t = Math.max(0, hurt.current.t - dt);
 
-    const moving = state === "approaching" || state === "lunging" || state === "walking" || state === "fleeing";
-    const speed = state === "lunging" ? 14 : state === "walking" || state === "fleeing" ? 9 : 5;
+    const moving = st === "approaching" || st === "lunging" || st === "walking" || st === "fleeing";
+    const speed = st === "lunging" ? 14 : st === "walking" || st === "fleeing" ? 9 : 5;
     const walk = moving ? Math.sin(t * speed) : 0;
     if (legL.current) legL.current.rotation.x = walk * 0.6;
     if (legR.current) legR.current.rotation.x = -walk * 0.6;
 
-    const jitter = (agitation / 100) * 0.04;
+    const jitter = (ag / 100) * 0.04;
     if (body.current) {
       body.current.position.y = Math.abs(Math.sin(t * (moving ? speed : 2))) * (moving ? 0.05 : 0.015) + (role === "suspect" ? Math.sin(t * 9) * jitter : 0);
-      body.current.rotation.y = state === "shouting" ? Math.sin(t * 3) * 0.15 : 0;
+      body.current.rotation.y = st === "shouting" ? Math.sin(t * 3) * 0.15 : 0;
     }
 
     // target poses
@@ -106,8 +123,8 @@ export function Human({
     let tLean = 0;
     let tDown = 0;
     let tCrouch = 0;
-    switch (state) {
-      case "weapon_raised": tArmR = weapon === "gun" ? -1.4 : -2.2; break;
+    switch (st) {
+      case "weapon_raised": tArmR = wp === "gun" ? -1.4 : -2.2; break;
       case "aiming": tArmR = -1.55; tArmL = -1.45; break;
       case "lunging": tArmR = -1.6; tLean = 0.45; break;
       case "shouting": tArmR = -0.9 + Math.sin(t * 6) * 0.3; tArmL = -0.6 + Math.sin(t * 6 + 1) * 0.3; break;
@@ -134,7 +151,7 @@ export function Human({
       legL.current.rotation.x -= v.kneel * 1.5 + v.crouch * 1.9;
       legR.current.rotation.x -= v.kneel * 1.5 + v.crouch * 1.9;
     }
-    if (weaponRef.current) weaponRef.current.visible = weapon !== "none" && !["kneeling", "down", "calm", "hands_up", "cowering", "held"].includes(state);
+    if (weaponRef.current) weaponRef.current.visible = wp !== "none" && !["kneeling", "down", "calm", "hands_up", "cowering", "held"].includes(st);
   });
 
   const hit = (zone: TirHitZone) => (e: { stopPropagation: () => void }) => {
@@ -257,6 +274,7 @@ export function Vehicle({
   color = "#c8ccd2",
   officer = ORIGIN,
   actorId,
+  source,
 }: {
   x: number;
   z: number;
@@ -265,33 +283,45 @@ export function Vehicle({
   color?: string;
   officer?: OfficerXZ;
   actorId?: string;
+  source?: ActorSourceRef;
 }) {
   const root = useRef<THREE.Group>(null);
   const wheels = useRef<THREE.Mesh[]>([]);
   useEffect(() => {
-    if (root.current) root.current.userData.actorId = actorId;
-  }, [actorId]);
+    if (root.current) root.current.userData.actorId = actorId ?? source?.id;
+  }, [actorId, source?.id]);
   const sm = useRef({ x, z, tilt: 0 });
   useFrame((s, dt) => {
     const g = root.current;
     if (!g) return;
     const v = sm.current;
     const lerp = (a: number, b: number, k: number) => a + (b - a) * Math.min(1, k * dt);
-    v.x = lerp(v.x, x, 6);
-    v.z = lerp(v.z, z, 6);
+    let tx = x, tz = z, st = state;
+    if (source) {
+      const a = source.ref.current.actors.find((o) => o.id === source.id);
+      if (a) { tx = a.x; tz = a.z; st = a.state; g.visible = !a.hidden; if (a.hidden) return; }
+    }
+    void officer;
+    v.x = lerp(v.x, tx, 6);
+    v.z = lerp(v.z, tz, 6);
     g.position.x = v.x;
     g.position.z = v.z;
-    // nose (+Z) toward the officer; a parked car keeps its heading
-    if (state !== "parked" && state !== "stopped") g.rotation.y = lerpAngle(g.rotation.y, Math.atan2(officer.x - v.x, officer.z - v.z), Math.min(1, 2.5 * dt));
+    // nose (+Z) toward the camera / officer; a parked car keeps its heading
+    const cam = s.camera.position;
+    if (st !== "parked" && st !== "stopped") g.rotation.y = lerpAngle(g.rotation.y, Math.atan2(cam.x - v.x, cam.z - v.z), Math.min(1, 2.5 * dt));
     const t = s.clock.elapsedTime;
-    const rev = state === "revving" ? Math.sin(t * 40) * 0.01 : 0;
+    const rev = st === "revving" ? Math.sin(t * 40) * 0.01 : 0;
     g.position.y = rev;
-    const spin = state === "charging" ? 18 : state === "revving" ? 6 : 0;
+    const spin = st === "charging" ? 18 : st === "revving" ? 6 : 0;
     wheels.current.forEach((w) => { if (w) w.rotation.x += spin * dt; });
-    v.tilt = lerp(v.tilt, state === "stopped" ? 0.08 : 0, 3);
+    v.tilt = lerp(v.tilt, st === "stopped" ? 0.08 : 0, 3);
+    if (lightRef.current) lightRef.current.intensity = st === "charging" ? 80 : 0;
+    headlights.current.forEach((m) => { if (m) (m.material as THREE.MeshStandardMaterial).emissiveIntensity = st === "charging" || st === "revving" ? 2.5 : 0.6; });
     g.rotation.z = v.tilt;
     // headlights flicker when charging
   });
+  const lightRef = useRef<THREE.PointLight>(null);
+  const headlights = useRef<THREE.Mesh[]>([]);
   const hit = (zone: TirHitZone) => (e: { stopPropagation: () => void }) => { e.stopPropagation(); onShot?.(zone); };
   const wheel = (i: number, px: number, pz: number) => (
     <mesh key={i} ref={(m) => { if (m) wheels.current[i] = m; }} position={[px, 0.32, pz]} rotation={[0, 0, Math.PI / 2]} onPointerDown={hit("tire")} userData={{ zone: "tire" }}>
@@ -322,13 +352,13 @@ export function Vehicle({
         <meshStandardMaterial color="#d9a679" />
       </mesh>
       {/* headlights */}
-      {[-0.65, 0.65].map((hx) => (
-        <mesh key={hx} position={[hx, 0.7, 2.16]}>
+      {[-0.65, 0.65].map((hx, i) => (
+        <mesh key={hx} ref={(m) => { if (m) headlights.current[i] = m; }} position={[hx, 0.7, 2.16]}>
           <boxGeometry args={[0.35, 0.18, 0.05]} />
-          <meshStandardMaterial color="#fff7d6" emissive="#fff1b8" emissiveIntensity={state === "charging" || state === "revving" ? 2.5 : 0.6} />
+          <meshStandardMaterial color="#fff7d6" emissive="#fff1b8" emissiveIntensity={0.6} />
         </mesh>
       ))}
-      {state === "charging" && <pointLight position={[0, 0.8, 2.5]} intensity={80} color="#fff1b8" distance={12} />}
+      <pointLight ref={lightRef} position={[0, 0.8, 2.5]} intensity={0} color="#fff1b8" distance={12} />
       {wheel(0, -0.95, 1.4)}
       {wheel(1, 0.95, 1.4)}
       {wheel(2, -0.95, -1.4)}
@@ -342,17 +372,21 @@ export function Vehicle({
 }
 
 /** Steel plate on a stand (marksmanship). Falls when hit. */
-export function Plate({ x, z, state, onShot, label, actorId }: { x: number; z: number; state: TirActorState; onShot?: (zone: TirHitZone) => void; label: string; actorId?: string }) {
+export function Plate({ x, z, state, onShot, label, actorId, source }: { x: number; z: number; state: TirActorState; onShot?: (zone: TirHitZone) => void; label: string; actorId?: string; source?: ActorSourceRef }) {
   const ref = useRef<THREE.Group>(null);
   const root = useRef<THREE.Group>(null);
+  const disc = useRef<THREE.Mesh>(null);
   useEffect(() => {
-    if (root.current) root.current.userData.actorId = actorId;
-  }, [actorId]);
+    if (root.current) root.current.userData.actorId = actorId ?? source?.id;
+  }, [actorId, source?.id]);
   const sm = useRef(0);
   useFrame((_, dt) => {
-    const target = state === "hit" ? 1 : 0;
+    let st = state;
+    if (source) { const a = source.ref.current.actors.find((o) => o.id === source.id); if (a) st = a.state; }
+    const target = st === "hit" ? 1 : 0;
     sm.current += (target - sm.current) * Math.min(1, 8 * dt);
     if (ref.current) ref.current.rotation.x = -sm.current * (Math.PI / 2);
+    if (disc.current) (disc.current.material as THREE.MeshStandardMaterial).color.set(st === "hit" ? "#9ca3af" : "#e5e7eb");
   });
   return (
     <group ref={root} position={[x, 0, z]}>
@@ -362,9 +396,9 @@ export function Plate({ x, z, state, onShot, label, actorId }: { x: number; z: n
       </mesh>
       <group ref={ref} position={[0, 1.1, 0]}>
         {/* steel disc faces the officer (+Z); the group tips it flat when hit */}
-        <mesh position={[0, 0.2, 0]} rotation={[Math.PI / 2, 0, 0]} onPointerDown={(e) => { e.stopPropagation(); onShot?.("plate"); }} userData={{ zone: "plate" }}>
+        <mesh ref={disc} position={[0, 0.2, 0]} rotation={[Math.PI / 2, 0, 0]} onPointerDown={(e) => { e.stopPropagation(); onShot?.("plate"); }} userData={{ zone: "plate" }}>
           <cylinderGeometry args={[0.2, 0.2, 0.03, 24]} />
-          <meshStandardMaterial color={state === "hit" ? "#9ca3af" : "#e5e7eb"} metalness={0.7} roughness={0.3} />
+          <meshStandardMaterial color="#e5e7eb" metalness={0.7} roughness={0.3} />
         </mesh>
         <mesh position={[0, 0.2, 0.02]} rotation={[Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.06, 0.09, 24]} />

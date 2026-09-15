@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { RoundedBox } from "@react-three/drei";
 import type { MutableRefObject } from "react";
 import type { PlayerState } from "../player/playerTypes";
+import type { TirState } from "@/lib/training/tirEngine";
 
 /**
  * First-person weapon viewmodel (service pistol / stun gun) built from
@@ -14,16 +15,14 @@ import type { PlayerState } from "../player/playerTypes";
  * Marked `userData.noHit` so the shot raycast ignores it.
  */
 export function Viewmodel({
-  visible,
+  stateRef,
   weapon,
-  shotSeq,
-  reloading,
+  shotSeqRef,
   playerRef,
 }: {
-  visible: boolean;
+  stateRef: MutableRefObject<TirState>;
   weapon: "pistol" | "taser";
-  shotSeq: number;
-  reloading: boolean;
+  shotSeqRef: MutableRefObject<number>;
   playerRef: MutableRefObject<PlayerState>;
 }) {
   const { camera } = useThree();
@@ -31,7 +30,7 @@ export function Viewmodel({
   const rig = useRef<THREE.Group>(null);
   const flash = useRef<THREE.Mesh>(null);
   const light = useRef<THREE.PointLight>(null);
-  const lastShot = useRef(shotSeq);
+  const lastShot = useRef(shotSeqRef.current);
   const kick = useRef(0);
   const flashT = useRef(0);
   const sway = useRef({ x: 0, y: 0 });
@@ -50,6 +49,10 @@ export function Viewmodel({
     const g = root.current;
     const r = rig.current;
     if (!g || !r) return;
+    const st = stateRef.current;
+    const visible = st.weaponDrawn && !st.outcome;
+    const reloading = st.ammo.reloadLeft > 0;
+    const shotSeq = shotSeqRef.current;
     g.visible = visible;
     if (!visible) return;
 
@@ -95,7 +98,7 @@ export function Viewmodel({
   const dark = "#1b1d22";
   const grip = "#26282e";
   return (
-    <group ref={root} visible={visible}>
+    <group ref={root} visible={false}>
       <group ref={rig} scale={0.75}>
         {weapon === "pistol" ? (
           <group>

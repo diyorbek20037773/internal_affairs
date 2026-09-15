@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   ArrowRight, Crosshair, Maximize2, Mic, MonitorPlay, Radio, Shield, ShieldOff, Zap, MoveLeft, Volume2, VolumeX,
@@ -30,7 +30,8 @@ import { TirVideoLayer } from "./TirVideoLayer";
 import { AssetLoading } from "./AssetLoading";
 import { sfx } from "./tirAudio";
 import { initialPlayer, type PlayerState, type TirGameState } from "./player/playerTypes";
-import type { FpsProps } from "./TirScene";
+import type { FpsProps, TirRunFlags } from "./TirScene";
+import { detectQuality } from "./quality";
 import { cn } from "@/lib/utils";
 
 const TirScene = dynamic(() => import("./TirScene").then((m) => m.TirScene), { ssr: false });
@@ -76,8 +77,9 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
     if (typeof window === "undefined") return "high";
     const q = new URLSearchParams(window.location.search).get("quality");
     if (q === "low" || q === "high") return q;
-    return /Android|iPhone|iPad/i.test(navigator.userAgent) ? "low" : "high";
+    return detectQuality();
   });
+  const [fpsMeter, setFpsMeter] = useState(0);
   const [controls, setControls] = useState<ControlMode>(() => {
     if (typeof window === "undefined") return "fixed";
     const q = new URLSearchParams(window.location.search).get("controls");
@@ -99,6 +101,8 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
   const [lastFeedback, setLastFeedback] = useState<{ text: string; L: number; P: number } | null>(null);
   const stateRef = useRef(state);
   stateRef.current = state;
+  // Flags the 3D scene reads per frame (never re-renders the Canvas tree).
+  const flagsRef = useRef<TirRunFlags>({ started: false, locked: false, lockFailed: false, shotSeq: 0 });
   const controlsRef = useRef<ControlMode>("fixed");
   const officerRef = useRef({ x: 0, z: 0, crouch: false });
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -261,9 +265,9 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
 
   // FPS bridge (all callbacks stable; hot data lives in refs).
   const fpsMove = useCallback((x: number, z: number, crouch: boolean) => {
-    officerRef.current = { x, z, crouch };
-    setState((cur) => setOfficer(cur, scenario, x, z, crouch));
-  }, [scenario]);
+    officerRef.current = { x, z, crouch }; // the 10 Hz tick stamps it into the engine — no extra React render
+  }, []);
+  const onFpsSample = useCallback((v: number) => setFpsMeter(v), []);
   const fpsLock = useCallback((v: boolean) => setLocked(v), []);
   const fpsLockError = useCallback(() => setLockFailed(true), []);
   const fpsStep = useCallback((sprint: boolean) => sfx.step(sprint), []);
@@ -321,21 +325,16 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
     : state.outcome === "officer_down" || state.outcome === "officer_injured" ? "PLAYER_DEAD"
     : outcome?.tone === "good" ? "ROUND_WON" : "ROUND_LOST";
   const reloading = state.ammo.reloadLeft > 0;
-  const fpsProps: FpsProps = {
-    playing,
-    canFireFromClick: locked || lockFailed,
-    allowLock: !lockFailed,
+  flagsRef.current = { started, locked, lockFailed, shotSeq };
+  const fpsProps = useMemo<FpsProps>(() => ({
     weapon: PISTOL,
-    canFire: state.ammo.mag > 0 && !reloading,
-    reloading,
-    shotSeq,
     playerRef,
     onMove: fpsMove,
     onLockChange: fpsLock,
     onLockError: fpsLockError,
     onStep: fpsStep,
     onDryFire: fpsDry,
-  };
+  }), [fpsMove, fpsLock, fpsLockError, fpsStep, fpsDry]);
   const remaining = Math.max(0, Math.ceil(scenario.rules.durationSec - state.t));
   const primary = primarySuspect(state);
   const shots = state.events.filter((e) => e.kind === "action" && e.action === "shoot");
@@ -349,7 +348,7 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
         ref={wrapRef}
         className={cn("relative w-full overflow-hidden rounded-xl border bg-black shadow-elevated", wide ? "aspect-[48/9]" : "aspect-video")}
       >
-        <TirScene scenario={scenario} state={state} wide={wide} onShoot={onShoot} quality={quality} controls={controls} fps={fpsMode ? fpsProps : undefined} />
+        <TirScene scenario={scenario} stateRef={stateRef} flagsRef={flagsRef} wide={wide} onShoot={onShoot} quality={quality} controls={controls} fps={fpsMode ? fpsProps : undefined} onFps={onFpsSample} />
         <TirVideoLayer scenario={scenario} state={primarySuspect(state)?.state} muted={!voice} />
         <AssetLoading />
 
@@ -535,6 +534,7 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
         )}
 
         <div className="absolute right-3 bottom-3 flex gap-1">
+          {fpsMeter > 0 && <span className={cn("flex h-8 items-center rounded-md bg-black/60 px-2 font-mono text-[10px]", fpsMeter >= 50 ? "text-success" : fpsMeter >= 30 ? "text-accent" : "text-destructive")} title="FPS">{fpsMeter} fps</span>}
           <Button size="sm" variant="secondary" className="h-8 bg-black/60 px-2 font-mono text-[10px] text-white hover:bg-black/80" onClick={() => setControls((c) => (c === "fps" ? "fixed" : "fps"))} title={t("controls.toggle")}>{fpsMode ? <Gamepad2 className="mr-1 h-3.5 w-3.5" /> : <MousePointer2 className="mr-1 h-3.5 w-3.5" />}{fpsMode ? t("controls.fps") : t("controls.fixed")}</Button>
           <Button size="sm" variant="secondary" className="h-8 bg-black/60 px-2 font-mono text-[10px] text-white hover:bg-black/80" onClick={() => setQuality((q) => (q === "high" ? "low" : "high"))} title={t("quality")}>{quality === "high" ? "HQ" : "LQ"}</Button>
           <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={() => setWide((v) => !v)} title={t("wide")}><MonitorPlay className="h-4 w-4" /></Button>

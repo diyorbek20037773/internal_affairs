@@ -14,22 +14,20 @@ import type { WeaponConfig } from "@/lib/training/weaponConfig";
  * Rate-limited by the weapon's fireRate; semi-auto = one shot per click.
  */
 export function ShotRaycaster({
-  armed,
-  clickFires,
-  canFire,
+  armedRef,
+  clickFiresRef,
   weapon,
   onShoot,
   onDryFire,
   onLockTimeout,
   recoilRef,
 }: {
-  /** Round is playing with the weapon drawn. */
-  armed: boolean;
+  /** Round is playing with the weapon drawn; `canFire` = magazine not empty and not reloading. */
+  armedRef: MutableRefObject<{ armed: boolean; canFire: boolean }>;
   /** Pointer is locked, or locking is known to be unavailable — a click is a trigger pull. */
-  clickFires: boolean;
+  clickFiresRef: MutableRefObject<boolean>;
   /** Called when a click neither locked the pointer nor errored within ~0.5 s (headless / embedded). */
   onLockTimeout?: () => void;
-  canFire: boolean;
   weapon: WeaponConfig;
   onShoot: (actorId: string | null, zone: TirHitZone, point: THREE.Vector3) => void;
   onDryFire: () => void;
@@ -39,23 +37,24 @@ export function ShotRaycaster({
   const lastShot = useRef(0);
   const ray = useRef(new THREE.Raycaster()).current;
   const centre = useRef(new THREE.Vector2(0, 0)).current;
-  const cb = useRef({ armed, clickFires, canFire, weapon, onShoot, onDryFire, onLockTimeout });
-  cb.current = { armed, clickFires, canFire, weapon, onShoot, onDryFire, onLockTimeout };
+  const cb = useRef({ weapon, onShoot, onDryFire, onLockTimeout });
+  cb.current = { weapon, onShoot, onDryFire, onLockTimeout };
 
   useEffect(() => {
     const el = gl.domElement;
     const down = (e: PointerEvent) => {
       const c = cb.current;
-      if (e.button !== 0 || !c.armed) return;
-      if (!c.clickFires) {
+      const { armed, canFire } = armedRef.current;
+      if (e.button !== 0 || !armed) return;
+      if (!clickFiresRef.current) {
         // this click is the lock request; if nothing happens, fall back to click-to-fire
-        window.setTimeout(() => { if (!cb.current.clickFires && !document.pointerLockElement) cb.current.onLockTimeout?.(); }, 500);
+        window.setTimeout(() => { if (!clickFiresRef.current && !document.pointerLockElement) cb.current.onLockTimeout?.(); }, 500);
         return;
       }
       const now = performance.now();
       if (now - lastShot.current < 1000 / c.weapon.fireRate) return;
       lastShot.current = now;
-      if (!c.canFire) { c.onDryFire(); return; }
+      if (!canFire) { c.onDryFire(); return; }
       ray.setFromCamera(centre, camera);
       ray.far = c.weapon.range;
       const hits = ray.intersectObjects(scene.children, true);
@@ -72,7 +71,7 @@ export function ShotRaycaster({
     };
     el.addEventListener("pointerdown", down);
     return () => el.removeEventListener("pointerdown", down);
-  }, [gl, camera, scene, ray, centre, recoilRef]);
+  }, [gl, camera, scene, ray, centre, recoilRef, armedRef, clickFiresRef]);
 
   return null;
 }

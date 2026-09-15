@@ -1,11 +1,12 @@
 "use client";
 
-import { Component, Suspense, useEffect, useMemo, useRef, type ReactNode } from "react";
+import { Component, Suspense, memo, useEffect, useMemo, useRef, type MutableRefObject, type ReactNode } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { SkeletonUtils } from "three-stdlib";
 import type { TirActorState, TirHitZone, TirRole, TirWeapon } from "@/data/scenarios/types";
+import type { TirState } from "@/lib/training/tirEngine";
 import { Human as ProceduralHuman, lerpAngle, type OfficerXZ } from "./Actor";
 
 /**
@@ -13,9 +14,12 @@ import { Human as ProceduralHuman, lerpAngle, type OfficerXZ } from "./Actor";
  * textures) + RPM motion-captured clips (idle, talking, gestures, walk, run,
  * crouch). Scenario states are layered on the clips by steering bones toward
  * world directions (gun aimed at the officer, knife raised, hands up, held,
- * cowering, kneeling, down). Same skeleton names as Mixamo without the
- * prefix, so any RPM/Mixamo glTF works. Assets are fetched at build time by
- * scripts/fetch-assets.mjs; if missing, falls back to the procedural figure.
+ * cowering, kneeling, down).
+ *
+ * Performance model (CS-style): when `source` is given the component never
+ * re-renders — every frame it reads its actor (position, state, hp, hidden)
+ * straight from the engine state ref and faces the live camera. React only
+ * mounts/unmounts it.
  */
 
 const AVATAR = { m: "/models/rpm_m_tpose.glb", f: "/models/rpm_f_tpose.glb" } as const;
@@ -36,7 +40,7 @@ const SHIRT_PALETTE = ["#6b7280", "#8a5a3c", "#3f6b4f", "#5a6b8a", "#7a4a6a", "#
 const tintCache = new Map<string, THREE.CanvasTexture>();
 
 let blobTex: THREE.CanvasTexture | null = null;
-/** Soft radial ground-contact shadow (replaces the per-frame ContactShadows pass). */
+/** Soft radial ground-contact shadow (cheap stand-in for a per-frame contact-shadow pass). */
 function blobShadow(): THREE.CanvasTexture | null {
   if (blobTex || typeof document === "undefined") return blobTex;
   const c = document.createElement("canvas");
@@ -99,6 +103,12 @@ function recolorAtlas(src: THREE.Texture, color: string, key: string): THREE.Tex
   }
 }
 
+/** Live engine binding: the component reads its actor from this ref every frame. */
+export interface ActorSource {
+  ref: MutableRefObject<TirState>;
+  id: string;
+}
+
 export interface HumanProps {
   x: number;
   z: number;
@@ -111,17 +121,17 @@ export interface HumanProps {
   gender?: "m" | "f";
   /** Deterministic per-actor variation (height, idle offset). */
   seed?: number;
-  /** Where the officer stands — the actor faces this point. */
+  /** Fallback facing target when there is no camera (unused when rendered in a Canvas). */
   officer?: OfficerXZ;
   /** Engine actor id for the camera-centre raycast. */
   actorId?: string;
   /** Remaining hp (0-1); a drop flashes the body red. */
   hp?: number;
+  /** Bind to the engine state ref — no React re-renders while the round runs. */
+  source?: ActorSource;
 }
 
-const ORIGIN: OfficerXZ = { x: 0, z: 0 };
-
-export function SmartHuman(props: HumanProps) {
+export const SmartHuman = memo(function SmartHuman(props: HumanProps) {
   return (
     <ModelErrorBoundary fallback={<ProceduralHuman {...props} />}>
       <Suspense fallback={<ProceduralHuman {...props} />}>
@@ -129,7 +139,7 @@ export function SmartHuman(props: HumanProps) {
       </Suspense>
     </ModelErrorBoundary>
   );
-}
+});
 
 class ModelErrorBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
@@ -163,7 +173,7 @@ function findBone(root: THREE.Object3D, name: string): THREE.Bone | undefined {
   return found;
 }
 
-function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender = "m", seed = 0, officer = ORIGIN, actorId, hp = 1, shirt }: HumanProps) {
+function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender = "m", seed = 0, actorId, hp = 1, shirt, source }: HumanProps) {
   const avatar = useGLTF(AVATAR[gender]);
   const clipSet = CLIPS[gender];
   const clipGltfs = {
@@ -177,6 +187,7 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
     const scene = SkeletonUtils.clone(avatar.scene) as THREE.Group;
     // every actor gets their own shirt colour (scenario `shirt`, police navy, else palette by seed)
     const shirtColor = role === "police" ? "#1c2a4a" : shirt ?? SHIRT_PALETTE[Math.abs(seed) % SHIRT_PALETTE.length];
+    const mats: THREE.MeshStandardMaterial[] = [];
     scene.traverse((o) => {
       const m = o as THREE.Mesh;
       if (m.isMesh) {
@@ -187,6 +198,7 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
         mat.envMapIntensity = 0.9;
         if (mat.map) mat.map = recolorAtlas(mat.map, shirtColor, `${gender}:${shirtColor}`);
         m.material = mat;
+        mats.push(mat);
       }
     });
     const mixer = new THREE.AnimationMixer(scene);
@@ -195,8 +207,6 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
       const clip = clipGltfs[k].animations[0];
       if (clip) actions[k] = mixer.clipAction(clip);
     });
-    const mats: THREE.MeshStandardMaterial[] = [];
-    scene.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh) mats.push(m.material as THREE.MeshStandardMaterial); });
     const bones = {
       hips: findBone(scene, "Hips"), spine: findBone(scene, "Spine1"), head: findBone(scene, "Head"),
       rArm: findBone(scene, "RightArm"), rFore: findBone(scene, "RightForeArm"), rHand: findBone(scene, "RightHand"),
@@ -209,22 +219,24 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [avatar, gender, shirt, role]);
 
+  // Latest static props in a ref so the frame loop never closes over stale values.
+  const props = useRef({ x, z, state, weapon, agitation, hp });
+  props.current = { x, z, state, weapon, agitation, hp };
+  const live = useRef({ state, hp, hidden: false });
+
   // Raycast identity: actor id + zone-by-height on the root group.
   useEffect(() => {
     const g = group.current;
     if (!g) return;
-    g.userData.actorId = actorId;
+    g.userData.actorId = actorId ?? source?.id;
     g.userData.zoneOf = (p: THREE.Vector3): TirHitZone => {
       const localY = (p.y - g.position.y) / height;
-      if (stateRef.current === "down") return "torso";
+      if (live.current.state === "down") return "torso";
       if (localY > 1.5) return "head";
       if (localY > 0.85) return "torso";
       return "limb";
     };
-  }, [actorId, height]);
-  const stateRef = useRef(state);
-  stateRef.current = state;
-  const hurt = useRef({ hp, t: 0 });
+  }, [actorId, source?.id, height]);
 
   // Weapon → right hand bone.
   useEffect(() => {
@@ -235,20 +247,19 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
     return () => { hand.remove(w); };
   }, [bones.rHand]);
 
-  // Clip crossfade.
   const current = useRef<ClipKey | null>(null);
-  useEffect(() => {
-    const want = clipFor(state, role);
+  const setClip = (st: TirActorState) => {
+    const want = clipFor(st, role);
     if (want === current.current) return;
     const next = actions[want] ?? actions.idle;
     if (!next) return;
     const prev = current.current ? actions[current.current] : undefined;
-    next.reset().setEffectiveTimeScale(state === "lunging" ? 1.35 : 1).setEffectiveWeight(1).fadeIn(0.3).play();
+    next.reset().setEffectiveTimeScale(st === "lunging" ? 1.35 : 1).setEffectiveWeight(1).fadeIn(0.3).play();
     if (prev && prev !== next) prev.fadeOut(0.3);
     current.current = want;
-  }, [state, role, actions]);
+  };
 
-  const sm = useRef({ x, z, down: 0, kneel: 0, crouch: 0, lean: 0 });
+  const sm = useRef({ x, z, down: 0, kneel: 0, crouch: 0, hurt: 0, lastHp: hp, init: false });
   const tmp = useMemo(() => ({ q: new THREE.Quaternion(), pq: new THREE.Quaternion(), v: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), tgt: new THREE.Vector3() }), []);
 
   const aimBone = (bone: THREE.Bone | undefined, dirWorld: THREE.Vector3, blend = 1) => {
@@ -259,48 +270,59 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
     bone.quaternion.slerp(tmp.q, blend);
   };
 
-  useFrame((s, dt) => {
+  useFrame((s, rawDt) => {
     const g = group.current;
     if (!g) return;
+    const dt = Math.min(0.1, rawDt);
     const v = sm.current;
+
+    // --- read the live actor (engine ref) or the static props ---
+    let ax = props.current.x, az = props.current.z, ast = props.current.state, aweapon = props.current.weapon, aagit = props.current.agitation, ahp = props.current.hp, hidden = false;
+    if (source) {
+      const a = source.ref.current.actors.find((o) => o.id === source.id);
+      if (a) { ax = a.x; az = a.z; ast = a.state; aweapon = a.weapon; aagit = a.agitation; ahp = a.hp; hidden = a.hidden; }
+    }
+    live.current.state = ast; live.current.hp = ahp; live.current.hidden = hidden;
+    if (hidden) { g.visible = false; return; }
+    g.visible = true;
+    setClip(ast);
+
     const lerp = (a: number, b: number, k: number) => a + (b - a) * Math.min(1, k * dt);
-    v.x = lerp(v.x, x, 4);
-    v.z = lerp(v.z, z, 4);
+    if (!v.init) { v.x = ax; v.z = az; v.init = true; }
+    v.x = lerp(v.x, ax, 5);
+    v.z = lerp(v.z, az, 5);
     g.position.x = v.x;
     g.position.z = v.z;
-    // face the officer wherever they walk (smooth turn, faster when hostile)
-    const yawGoal = Math.atan2(officer.x - v.x, officer.z - v.z) + Math.PI;
-    const turn = state === "lunging" || state === "aiming" ? 9 : 4;
+
+    // face the live camera (the officer's eyes) — smooth turn, faster when hostile
+    const cam = s.camera.position;
+    const yawGoal = Math.atan2(cam.x - v.x, cam.z - v.z) + Math.PI;
+    const turn = ast === "lunging" || ast === "aiming" ? 9 : 4;
     g.rotation.y = lerpAngle(g.rotation.y, yawGoal, Math.min(1, turn * dt));
 
     // hit reaction: short red flash
-    if (hp < hurt.current.hp) hurt.current.t = 0.3;
-    hurt.current.hp = hp;
-    if (hurt.current.t > 0 || mats[0]?.emissiveIntensity) {
-      hurt.current.t = Math.max(0, hurt.current.t - dt);
-      const k = hurt.current.t / 0.3;
+    if (ahp < v.lastHp) v.hurt = 0.3;
+    v.lastHp = ahp;
+    if (v.hurt > 0 || (mats[0] && mats[0].emissiveIntensity > 0)) {
+      v.hurt = Math.max(0, v.hurt - dt);
+      const k = v.hurt / 0.3;
       for (const m of mats) { m.emissive.setRGB(1, 0.05, 0.05); m.emissiveIntensity = k * 0.8; }
     }
 
     mixer.update(dt);
 
-    const tDown = state === "down" ? 1 : 0;
-    const tKneel = state === "kneeling" ? 1 : 0;
-    const tCrouch = state === "cowering" ? 1 : 0;
-    const tLean = 0;
-    v.down = lerp(v.down, tDown, 3);
-    v.kneel = lerp(v.kneel, tKneel, 3);
-    v.crouch = lerp(v.crouch, tCrouch, 3);
-    v.lean = lerp(v.lean, tLean, 5);
-    g.rotation.x = v.lean + v.down * (Math.PI / 2) * 0.98;
+    v.down = lerp(v.down, ast === "down" ? 1 : 0, 3);
+    v.kneel = lerp(v.kneel, ast === "kneeling" ? 1 : 0, 3);
+    v.crouch = lerp(v.crouch, ast === "cowering" ? 1 : 0, 3);
+    g.rotation.x = v.down * (Math.PI / 2) * 0.98;
     g.position.y = -v.kneel * 0.5 - v.crouch * 0.35 - v.down * 0.1;
     g.updateWorldMatrix(true, true);
 
-    const toOfficer = tmp.tgt.set(officer.x - v.x, 0, officer.z - v.z).normalize();
-    const jitter = (agitation / 100) * 0.05;
+    const toOfficer = tmp.tgt.set(cam.x - v.x, 0, cam.z - v.z).normalize();
+    const jitter = (aagit / 100) * 0.05;
     const t = s.clock.elapsedTime;
 
-    switch (state) {
+    switch (ast) {
       case "aiming":
         tmp.v.set(toOfficer.x, 0.12 + Math.sin(t * 7) * jitter, toOfficer.z); aimBone(bones.rArm, tmp.v); aimBone(bones.rFore, tmp.v.clone());
         tmp.v.set(toOfficer.x, 0.04, toOfficer.z); aimBone(bones.lArm, tmp.v); aimBone(bones.lFore, tmp.v.clone());
@@ -335,18 +357,12 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
       default:
         break;
     }
-    if (weaponRef.current) weaponRef.current.visible = weapon !== "none" && !WEAPON_HIDDEN.has(state);
+    if (weaponRef.current) weaponRef.current.visible = aweapon !== "none" && !WEAPON_HIDDEN.has(ast);
   });
 
   const zoneFromPoint = (p: THREE.Vector3): TirHitZone => {
-    const g = group.current;
-    const fn = g?.userData.zoneOf as ((q: THREE.Vector3) => TirHitZone) | undefined;
-    if (fn) return fn(p);
-    const localY = (g ? p.y - g.position.y : p.y) / height;
-    if (state === "down") return "torso";
-    if (localY > 1.5) return "head";
-    if (localY > 0.85) return "torso";
-    return "limb";
+    const fn = group.current?.userData.zoneOf as ((q: THREE.Vector3) => TirHitZone) | undefined;
+    return fn ? fn(p) : "torso";
   };
 
   const blob = useMemo(() => blobShadow(), []);
@@ -361,10 +377,7 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
       <group scale={height}>
         <primitive
           object={scene}
-          onPointerDown={(e: { stopPropagation: () => void; point: THREE.Vector3 }) => {
-            e.stopPropagation();
-            onShot?.(zoneFromPoint(e.point));
-          }}
+          onPointerDown={onShot ? (e: { stopPropagation: () => void; point: THREE.Vector3 }) => { e.stopPropagation(); onShot(zoneFromPoint(e.point)); } : undefined}
         />
         {role === "police" && <PoliceKit bones={bones} />}
       </group>

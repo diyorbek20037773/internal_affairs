@@ -16,25 +16,27 @@ import { initialPlayer, PLAYER_CFG, type PlayerState } from "./playerTypes";
  * player's eyes: position = body + eye height + a small bob while moving.
  */
 export function FpsControls({
-  enabled,
+  enabledRef,
   lockSelector,
   clamp,
   onMove,
   onLockChange,
   onLockError,
   onStep,
-  shockSeq,
+  shockRef,
   recoilRef,
   playerRef,
 }: {
-  enabled: boolean;
+  /** Movement/look allowed (PLAYING) — read every frame, never re-renders. */
+  enabledRef: MutableRefObject<boolean>;
   lockSelector: string;
   clamp: (x: number, z: number) => { x: number; z: number };
   onMove: (x: number, z: number, crouch: boolean) => void;
   onLockChange: (locked: boolean) => void;
   onLockError?: () => void;
   onStep?: (sprint: boolean) => void;
-  shockSeq: number;
+  /** Engine shock counter (read from the state ref). */
+  shockRef: MutableRefObject<number>;
   /** Pending camera pitch kick (radians) written by the shooter; consumed here. */
   recoilRef: MutableRefObject<number>;
   playerRef?: MutableRefObject<PlayerState>;
@@ -49,7 +51,8 @@ export function FpsControls({
   const lastStepCycle = useRef(0);
   const lastReport = useRef({ t: 0, x: 0, z: 0, crouch: false });
   const kick = useRef(0);
-  const lastShock = useRef(shockSeq);
+  const lastShock = useRef(shockRef.current);
+  const wasEnabled = useRef(false);
   const recoilRecover = useRef(0);
   const jumpLatch = useRef(false);
   const tmp = useRef({ fwd: new THREE.Vector3(), right: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), wish: new THREE.Vector3(), e: new THREE.Euler(0, 0, 0, "YXZ") }).current;
@@ -63,7 +66,7 @@ export function FpsControls({
     const MOVE = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight", "KeyC", "Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
     const down = (e: KeyboardEvent) => {
       if (isTyping(e.target) || !MOVE.has(e.code)) return;
-      if (!enabled) return;
+      if (!enabledRef.current) return;
       keys.current.add(e.code);
       if (e.code === "Space" || e.code.startsWith("Arrow") || (e.ctrlKey && e.code === "KeyW")) e.preventDefault();
     };
@@ -73,12 +76,9 @@ export function FpsControls({
     window.addEventListener("keyup", up);
     window.addEventListener("blur", blur);
     return () => { window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); window.removeEventListener("blur", blur); };
-  }, [enabled]);
+  }, [enabledRef]);
 
-  // Release the pointer when the round ends / pauses; surface lock errors (headless, iframes).
-  useEffect(() => {
-    if (!enabled) { keys.current.clear(); if (document.pointerLockElement) document.exitPointerLock(); }
-  }, [enabled]);
+  // Surface lock errors (headless, iframes).
   useEffect(() => {
     const err = () => onLockError?.();
     document.addEventListener("pointerlockerror", err);
@@ -90,6 +90,11 @@ export function FpsControls({
     const p = body.current;
     const k = keys.current;
     const t = s.clock.elapsedTime;
+    const enabled = enabledRef.current;
+    const shockSeq = shockRef.current;
+    // Release the pointer when the round ends / pauses.
+    if (wasEnabled.current && !enabled) { keys.current.clear(); if (document.pointerLockElement) document.exitPointerLock(); }
+    wasEnabled.current = enabled;
 
     // --- horizontal movement relative to camera yaw ---
     camera.getWorldDirection(tmp.fwd);
@@ -190,7 +195,6 @@ export function FpsControls({
     <PointerLockControls
       ref={plc}
       selector={lockSelector}
-      enabled={enabled}
       minPolarAngle={lim}
       maxPolarAngle={Math.PI - lim}
       pointerSpeed={PLAYER_CFG.sensitivity}
