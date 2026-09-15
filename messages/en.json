@@ -446,6 +446,26 @@
       "date": "Date",
       "score": "Score"
     },
+    "auth": {
+      "intro": "Server mode: sign in with your badge ID and PIN. Profile, sessions and HIMOYA-ID are the same on every tablet. Offline data stays on the device and syncs when connected.",
+      "login": "Sign in",
+      "register": "Register",
+      "badgeId": "Badge ID",
+      "pin": "PIN (4–8 digits)",
+      "name": "Full name",
+      "rank": "Rank",
+      "district": "District",
+      "pinRule": "Enter a badge ID and a 4–8 digit PIN",
+      "nameRequired": "Full name is required",
+      "welcome": "Welcome",
+      "errInvalid": "Wrong badge ID or PIN",
+      "errLocked": "5 failed attempts — wait 1 minute",
+      "errTaken": "This badge ID is already registered",
+      "errServer": "Server unreachable — try again later",
+      "errBad": "Invalid input",
+      "roleServer": "role is assigned on the server (instructor list)",
+      "logout": "Sign out"
+    },
     "profile": {
       "title": "Profile",
       "subtitle": "HIMOYA-ID is bound to this profile. Data is stored only on this device.",

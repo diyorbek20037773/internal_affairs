@@ -9,7 +9,8 @@ import { useTraineeProfile } from "@/hooks/useTraineeProfile";
 /** Shows a "fill in your profile" banner until a local trainee profile exists. */
 export function ProfileGate() {
   const t = useTranslations("dashboard");
-  const { profile, loaded } = useTraineeProfile();
+  const ta = useTranslations("sim.auth");
+  const { profile, loaded, authRequired } = useTraineeProfile();
   if (!loaded || profile) return null;
   return (
     <Link href="/profil" className="group block">
@@ -18,8 +19,8 @@ export function ProfileGate() {
           <IdCard className="h-6 w-6" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-semibold">{t("setupProfile")}</p>
-          <p className="text-sm text-muted-foreground">{t("setupProfileDesc")}</p>
+          <p className="font-semibold">{authRequired ? ta("login") : t("setupProfile")}</p>
+          <p className="text-sm text-muted-foreground">{authRequired ? ta("intro") : t("setupProfileDesc")}</p>
         </div>
         <ArrowRight className="h-5 w-5 shrink-0 text-accent transition-transform group-hover:translate-x-1" />
       </Card>

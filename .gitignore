@@ -41,3 +41,4 @@ yarn-error.log*
 /public/models/anim/
 /public/hdri/
 /public/tex/
+.next-dev

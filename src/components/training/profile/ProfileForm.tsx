@@ -8,13 +8,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useTraineeProfile } from "@/hooks/useTraineeProfile";
 import { cn } from "@/lib/utils";
+import { AuthForm } from "./AuthForm";
 
 const ROLES = ["trainee", "instructor"] as const;
 
 export function ProfileForm() {
   const t = useTranslations("sim.profile");
   const tc = useTranslations("common");
-  const { profile, loaded, save } = useTraineeProfile();
+  const ta = useTranslations("sim.auth");
+  const { profile, loaded, save, authEnabled, authRequired, logout } = useTraineeProfile();
 
   const [name, setName] = useState("");
   const [badgeId, setBadgeId] = useState("");
@@ -48,6 +50,7 @@ export function ProfileForm() {
   };
 
   if (!loaded) return null;
+  if (authRequired) return <AuthForm />;
 
   return (
     <form onSubmit={submit}>
@@ -57,7 +60,7 @@ export function ProfileForm() {
         </Field>
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label={t("badgeId")}>
-            <Input value={badgeId} onChange={(e) => setBadgeId(e.target.value)} placeholder="SH-0473" />
+            <Input value={badgeId} onChange={(e) => setBadgeId(e.target.value)} placeholder="SH-0473" disabled={authEnabled} />
           </Field>
           <Field label={t("rank")}>
             <Input value={rank} onChange={(e) => setRank(e.target.value)} placeholder="mayor" />
@@ -66,6 +69,11 @@ export function ProfileForm() {
         <Field label={t("district")}>
           <Input value={district} onChange={(e) => setDistrict(e.target.value)} placeholder="Bog'imaydon MFY, Mirzo Ulug'bek tumani" />
         </Field>
+        {authEnabled ? (
+          <p className="text-xs text-muted-foreground">
+            {t("role")}: <b>{role === "instructor" ? t("roleInstructor") : t("roleTrainee")}</b> · {ta("roleServer")}
+          </p>
+        ) : (
         <Field label={t("role")} asDiv>
           <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t("role")}>
             {ROLES.map((r) => (
@@ -87,7 +95,15 @@ export function ProfileForm() {
             ))}
           </div>
         </Field>
-        <div className="flex justify-end">
+        )}
+        <div className="flex justify-between gap-3">
+          {authEnabled ? (
+            <Button type="button" variant="outline" size="lg" onClick={() => void logout()}>
+              {ta("logout")}
+            </Button>
+          ) : (
+            <span />
+          )}
           <Button type="submit" size="lg">
             {tc("save")}
           </Button>

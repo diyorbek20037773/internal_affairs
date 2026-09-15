@@ -27,6 +27,8 @@ const MAX_SESSIONS = 200;
 export interface TrainingRepo {
   getProfile(): Promise<TraineeProfile | null>;
   saveProfile(p: TraineeProfile): Promise<void>;
+  /** Forget the device profile (logout). Sessions/HIMOYA-ID stay for later sync. */
+  clearProfile(): Promise<void>;
 
   listSessions(traineeId?: string): Promise<TrainingSession[]>;
   getSession(id: string): Promise<TrainingSession | undefined>;
@@ -107,6 +109,9 @@ export const localTrainingRepo: TrainingRepo = {
   async saveProfile(p) {
     writeJson(TRAINING_KEYS.profile, { version: 1, profile: p });
   },
+  async clearProfile() {
+    if (typeof window !== "undefined") window.localStorage.removeItem(TRAINING_KEYS.profile);
+  },
 
   async listSessions(traineeId) {
     const all = readSessions().filter((s) => !traineeId || s.traineeId === traineeId);
@@ -182,6 +187,9 @@ export const hybridTrainingRepo: TrainingRepo = {
   async saveProfile(p) {
     await localTrainingRepo.saveProfile(p);
     push(() => remoteStore.saveProfile(p));
+  },
+  async clearProfile() {
+    await localTrainingRepo.clearProfile();
   },
 
   async listSessions(traineeId) {

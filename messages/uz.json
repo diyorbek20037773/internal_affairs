@@ -446,6 +446,26 @@
       "date": "Sana",
       "score": "Ball"
     },
+    "auth": {
+      "intro": "Server rejimi: xizmat ID va PIN bilan kiring. Profil, mashg'ulotlar va HIMOYA-ID barcha planshetlarda bir xil bo'ladi. Oflayn bo'lsa ma'lumot qurilmada saqlanib, ulanishda sinxronlanadi.",
+      "login": "Kirish",
+      "register": "Ro'yxatdan o'tish",
+      "badgeId": "Xizmat ID",
+      "pin": "PIN (4–8 raqam)",
+      "name": "F.I.Sh.",
+      "rank": "Unvon",
+      "district": "Hudud / MFY",
+      "pinRule": "Xizmat ID va 4–8 raqamli PIN kiriting",
+      "nameRequired": "F.I.Sh. majburiy",
+      "welcome": "Xush kelibsiz",
+      "errInvalid": "Xizmat ID yoki PIN noto'g'ri",
+      "errLocked": "5 ta xato urinish — 1 daqiqa kutib turing",
+      "errTaken": "Bu xizmat ID allaqachon ro'yxatdan o'tgan",
+      "errServer": "Server bilan aloqa yo'q — keyinroq urinib ko'ring",
+      "errBad": "Ma'lumotlar noto'g'ri",
+      "roleServer": "rol serverda belgilanadi (instruktor ro'yxati)",
+      "logout": "Chiqish"
+    },
     "profile": {
       "title": "Profil",
       "subtitle": "HIMOYA-ID shu profilga bog'lanadi. Ma'lumotlar faqat shu qurilmada saqlanadi.",

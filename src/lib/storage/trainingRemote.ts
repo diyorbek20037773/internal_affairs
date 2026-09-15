@@ -10,6 +10,13 @@ import type { HimoyaId, TraineeProfile, TrainingSession } from "./trainingSchema
 
 export type StoreMode = "postgres" | "local";
 
+/** Raw /api/store health: server present? logged in? */
+export type StoreHealth = { mode: StoreMode; authenticated: boolean; role: "trainee" | "instructor" | null };
+let healthCache: StoreHealth | null = null;
+export function cachedStoreHealth(): StoreHealth | null {
+  return healthCache;
+}
+
 const RECHECK_MS = 60_000;
 let modeCache: { mode: StoreMode; at: number } | null = null;
 let probe: Promise<StoreMode> | null = null;
@@ -33,8 +40,20 @@ export function storeMode(force = false): Promise<StoreMode> {
   if (fresh && !force) return Promise.resolve(modeCache!.mode);
   if (!probe) {
     probe = fetch("/api/store", { cache: "no-store" })
-      .then(async (r) => (((await r.json()) as { mode?: StoreMode }).mode === "postgres" ? "postgres" : "local"))
-      .catch((): StoreMode => "local")
+      .then(async (r) => {
+        const h = (await r.json()) as Partial<StoreHealth>;
+        healthCache = {
+          mode: h.mode === "postgres" ? "postgres" : "local",
+          authenticated: Boolean(h.authenticated),
+          role: h.role ?? null,
+        };
+        // The server is only "usable" once the tablet is signed in.
+        return healthCache.mode === "postgres" && healthCache.authenticated ? "postgres" : "local";
+      })
+      .catch((): StoreMode => {
+        healthCache = null;
+        return "local";
+      })
       .then((mode) => {
         modeCache = { mode, at: Date.now() };
         probe = null;
@@ -98,4 +117,35 @@ export const remoteStore = {
     ),
   listHimoyaIds: () => call<{ items: HimoyaId[] }>("/api/store/himoya-id").then((r) => r.items),
   saveHimoyaId: (h: HimoyaId) => call<{ ok: true }>("/api/store/himoya-id", json(h)).then(() => undefined),
+};
+
+/* ---------- auth (badge + PIN; only when the server store is on) ---------- */
+
+export type AuthMe = { enabled: boolean; profile: TraineeProfile | null };
+
+async function authCall<T>(path: string, body?: unknown): Promise<{ status: number; data: T }> {
+  const res = await fetch(path, {
+    method: body === undefined ? "GET" : "POST",
+    cache: "no-store",
+    headers: body === undefined ? undefined : { "content-type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  const data = (await res.json().catch(() => ({}))) as T;
+  return { status: res.status, data };
+}
+
+export const remoteAuth = {
+  me: async (): Promise<AuthMe> => {
+    try {
+      const { data } = await authCall<Partial<AuthMe>>("/api/auth/me");
+      return { enabled: Boolean(data.enabled), profile: data.profile ?? null };
+    } catch {
+      return { enabled: false, profile: null };
+    }
+  },
+  login: (badgeId: string, pin: string) =>
+    authCall<{ profile?: TraineeProfile | null; error?: string }>("/api/auth/login", { badgeId, pin }),
+  register: (input: { badgeId: string; pin: string; name: string; rank: string; district: string }) =>
+    authCall<{ profile?: TraineeProfile; error?: string }>("/api/auth/register", input),
+  logout: () => authCall<{ ok: boolean }>("/api/auth/logout", {}),
 };
