@@ -93,7 +93,9 @@ function DialogRunner({ scenario, initial }: { scenario: DialogScenario; initial
           ? tc("noKeys")
           : sim.error === "bad_ai_output"
             ? tc("badOutput")
-            : tc("errorGeneric")
+            : sim.error === "too_long"
+              ? t("tooLong")
+              : tc("errorGeneric")
     );
     sim.clearError();
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -17,9 +17,9 @@ const BodySchema = z.object({
   state: DialogHiddenStateSchema,
   history: z
     .array(z.object({ role: z.enum(["officer", "citizen"]), text: z.string() }))
-    .max(40)
+    .max(80)
     .default([]),
-  officerText: z.string().min(1).max(1500),
+  officerText: z.string().min(1).max(6000),
   /** Officer turns so far INCLUDING this one. */
   officerTurns: z.number().int().min(1),
 });
@@ -35,8 +35,9 @@ export async function POST(req: NextRequest) {
   let body: z.infer<typeof BodySchema>;
   try {
     body = BodySchema.parse(await req.json());
-  } catch {
-    return Response.json({ error: "invalid_request" }, { status: 400 });
+  } catch (e) {
+    const detail = e instanceof z.ZodError ? e.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ") : String(e);
+    return Response.json({ error: "invalid_request", detail }, { status: 400 });
   }
 
   const scenario = getDialogScenario(body.scenarioId);

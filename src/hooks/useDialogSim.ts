@@ -19,7 +19,7 @@ interface DialogApiResponse {
   ended: null | { reason: Exclude<DialogEndReason, "abandoned"> };
 }
 
-export type DialogSimError = "ai_unavailable" | "no_keys_configured" | "bad_ai_output" | "generic";
+export type DialogSimError = "ai_unavailable" | "no_keys_configured" | "bad_ai_output" | "too_long" | "generic";
 
 /**
  * Drives one AI-Muloqot session: sends officer utterances to /api/sim/dialog,
@@ -78,13 +78,16 @@ export function useDialogSim(scenario: DialogScenario, initial: TrainingSession,
           }),
         });
         if (!res.ok) {
-          const j = (await res.json().catch(() => ({}))) as { error?: string };
+          const j = (await res.json().catch(() => ({}))) as { error?: string; detail?: string };
           const code = j.error;
           setError(
             code === "ai_unavailable" || code === "no_keys_configured" || code === "bad_ai_output"
               ? code
-              : "generic"
+              : code === "invalid_request"
+                ? "too_long"
+                : "generic"
           );
+          if (code === "invalid_request") console.warn("[dialog] invalid_request:", j.detail);
           setSession(cur);
           return;
         }

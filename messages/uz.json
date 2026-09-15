@@ -323,7 +323,8 @@
         "hamdard": "hamdard"
       },
       "sttRecording": "Yozilmoqda... (to'xtatish uchun mikrofonni bosing)",
-      "sttProcessing": "Nutq tanilmoqda (Gemini)..."
+      "sttProcessing": "Nutq tanilmoqda (Gemini)...",
+      "tooLong": "Gap juda uzun (6000 belgidan ko'p). Qisqartirib, qayta yuboring."
     },
     "decision": {
       "title": "Qaror simulyatori",

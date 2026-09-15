@@ -323,7 +323,8 @@
         "hamdard": "empathetic"
       },
       "sttRecording": "Recording... (tap the mic to stop)",
-      "sttProcessing": "Recognizing speech (Gemini)..."
+      "sttProcessing": "Recognizing speech (Gemini)...",
+      "tooLong": "Your line is too long (over 6,000 characters). Shorten it and send again."
     },
     "decision": {
       "title": "Decision simulator",
