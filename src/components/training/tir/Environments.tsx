@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Component, Suspense, type ReactNode } from "react";
 import { Environment as DreiEnvironment, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import type { TirEnvironment } from "@/data/scenarios/types";
@@ -61,19 +61,50 @@ export function Environment({ kind, quality = "high" }: { kind: TirEnvironment; 
           shadow-camera-far={40}
         />
       )}
-      <Suspense fallback={<FlatSky kind={kind} />}>
-        <DreiEnvironment files={hdri} background ground={{ height: def.groundHeight, radius: def.radius, scale: def.radius * 2 }} environmentIntensity={def.envIntensity ?? 1} backgroundIntensity={def.bgIntensity ?? 1} />
-      </Suspense>
-      {def.floor && (
-        <Suspense fallback={null}>
-          <TexturedFloor tex={def.floor.tex} size={def.floor.size} repeat={def.floor.repeat} />
+      <AssetBoundary fallback={<FlatSky kind={kind} />}>
+        <Suspense fallback={<FlatSky kind={kind} />}>
+          <DreiEnvironment files={hdri} background ground={{ height: def.groundHeight, radius: def.radius, scale: def.radius * 2 }} environmentIntensity={def.envIntensity ?? 1} backgroundIntensity={def.bgIntensity ?? 1} />
         </Suspense>
+      </AssetBoundary>
+      {def.floor && (
+        <AssetBoundary fallback={null}>
+          <Suspense fallback={null}>
+            <TexturedFloor tex={def.floor.tex} size={def.floor.size} repeat={def.floor.repeat} />
+          </Suspense>
+        </AssetBoundary>
       )}
-      <Suspense fallback={null}>
-        <CoverWall tex={def.cover} />
-      </Suspense>
-      <Props kind={kind} />
+      <AssetBoundary fallback={<PlainCoverWall />}>
+        <Suspense fallback={null}>
+          <CoverWall tex={def.cover} />
+        </Suspense>
+      </AssetBoundary>
+      <AssetBoundary fallback={null}>
+        <Props kind={kind} />
+      </AssetBoundary>
     </group>
+  );
+}
+
+/** A missing texture / panorama degrades to a plain material instead of crashing the range. */
+class AssetBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch(e: unknown) {
+    console.warn("[h360] TIR asset failed, using fallback", e);
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
+
+function PlainCoverWall() {
+  return (
+    <mesh position={[1.4, 0.5, -0.6]} castShadow receiveShadow>
+      <boxGeometry args={[0.6, 1.0, 1.6]} />
+      <meshStandardMaterial color="#8c8c86" roughness={1} />
+    </mesh>
   );
 }
 

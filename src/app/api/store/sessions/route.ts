@@ -30,12 +30,21 @@ export async function PUT(req: NextRequest) {
   const body = await req.json().catch(() => null);
   // Accept one session or a batch (client-side sync of local-only sessions).
   const list = Array.isArray(body?.items) ? body.items : [body];
+  if (list.length > 200) return Response.json({ error: "bad_request" }, { status: 400 });
   const items = [];
   for (const raw of list) {
     const p = TrainingSessionSchema.safeParse(raw);
     if (!p.success) return Response.json({ error: "bad_request" }, { status: 400 });
     if (!canAccess(user, p.data.traineeId)) return FORBIDDEN();
-    items.push(p.data);
+    let s = p.data;
+    // Only an instructor confirms a debrief: a trainee's upload can never carry a
+    // confirmation the server has not already recorded.
+    if (user.role !== "instructor" && s.debrief?.status === "confirmed") {
+      const prev = await store.getSession(s.id).catch(() => undefined);
+      if (prev?.debrief?.status === "confirmed") s = { ...s, debrief: { ...s.debrief, status: "confirmed", confirmedBy: prev.debrief.confirmedBy, instructorNote: prev.debrief.instructorNote }, finalScores: prev.finalScores };
+      else s = { ...s, debrief: { ...s.debrief, status: "pending", confirmedBy: undefined } };
+    }
+    items.push(s);
   }
   try {
     for (const s of items) await store.saveSession(s);

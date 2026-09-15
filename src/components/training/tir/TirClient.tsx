@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Component, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   ArrowRight, Crosshair, Maximize2, Mic, MonitorPlay, Radio, Shield, ShieldOff, Zap, MoveLeft, Volume2, VolumeX,
@@ -36,7 +36,32 @@ import { InputDevicesPanel } from "./InputDevicesPanel";
 import { inputHub, onTirInput } from "@/lib/tir/input";
 import { cn } from "@/lib/utils";
 
-const TirScene = dynamic(() => import("./TirScene").then((m) => m.TirScene), { ssr: false });
+const TirSceneInner = dynamic(() => import("./TirScene").then((m) => m.TirScene), { ssr: false });
+
+/** WebGL / asset crash inside the range must not take the whole trainer page down. */
+class SceneBoundary extends Component<{ children: React.ReactNode; label: string }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch(e: unknown) {
+    console.error("[h360] TIR scene crashed", e);
+  }
+  render() {
+    if (!this.state.failed) return this.props.children;
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-black p-6 text-center text-sm text-white/80">{this.props.label}</div>
+    );
+  }
+}
+const TirScene: typeof TirSceneInner = (props) => {
+  const t = useTranslations("sim.tir");
+  return (
+    <SceneBoundary label={t("sceneError")}>
+      <TirSceneInner {...props} />
+    </SceneBoundary>
+  );
+};
 
 const TICK_MS = 100;
 type ControlMode = "fps" | "fixed";
@@ -200,6 +225,23 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [speech.listening, speech.transcript]);
+
+  // Leaving mid-scenario (back button, tab closed) → the session is not left "in progress" forever.
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
+  const startedRef = useRef(started);
+  startedRef.current = started;
+  useEffect(() => {
+    const finish = () => {
+      const s = sessionRef.current;
+      if (s.status !== "in_progress") return;
+      const st = stateRef.current;
+      if (!startedRef.current || st.outcome) return;
+      void trainingRepo.saveSession(touch(s, { status: "abandoned", endedAt: new Date().toISOString(), payload: { kind: "tir", events: st.events, outcome: undefined, elapsedSec: st.t, shotsFired: st.shotsFired, hits: st.hits, officerHits: st.officerHits, score: st.score, hitFactor: hitFactor(st) } }));
+    };
+    window.addEventListener("pagehide", finish);
+    return () => { window.removeEventListener("pagehide", finish); finish(); };
+  }, []);
 
   // Outcome → ALL STOP → persist.
   useEffect(() => {

@@ -30,8 +30,18 @@ export async function PUT(req: NextRequest) {
   const parsed = HimoyaIdSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "bad_request" }, { status: 400 });
   if (!canAccess(user, parsed.data.traineeId)) return FORBIDDEN();
+  let h = parsed.data;
+  // A trainee may only add/refresh PROVISIONAL entries; finalised ones stay as the instructor left them.
+  if (user.role !== "instructor") {
+    const prev = await store.getHimoyaId(h.traineeId).catch(() => undefined);
+    const finalised = new Map((prev?.history ?? []).filter((e) => e.provisional === false).map((e) => [e.sessionId, e]));
+    h = {
+      ...h,
+      history: h.history.map((e) => (e.provisional === false ? finalised.get(e.sessionId) ?? { ...e, provisional: true } : e)),
+    };
+  }
   try {
-    await store.saveHimoyaId(parsed.data);
+    await store.saveHimoyaId(h);
     return Response.json({ ok: true });
   } catch (e) {
     return storeError("store/himoya-id", e);

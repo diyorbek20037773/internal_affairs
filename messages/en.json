@@ -34,7 +34,10 @@
     "yes": "Yes",
     "no": "No",
     "confirm": "Confirm",
-    "edit": "Edit"
+    "edit": "Edit",
+    "pageErrorTitle": "Something went wrong on this page",
+    "pageErrorDesc": "Your data is saved. Try again or go back to the home page.",
+    "goHome": "Home"
   },
   "modules": {
     "title": "Modules",
@@ -692,7 +695,8 @@
           "retreat": "Retreat",
           "pause": "Pause"
         }
-      }
+      },
+      "sceneError": "The 3D range failed to load (graphics error). Reload the page or switch to LQ."
     }
   }
 }

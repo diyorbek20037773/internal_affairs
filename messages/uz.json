@@ -34,7 +34,10 @@
     "yes": "Ha",
     "no": "Yo'q",
     "confirm": "Tasdiqlash",
-    "edit": "Tahrirlash"
+    "edit": "Tahrirlash",
+    "pageErrorTitle": "Sahifada xatolik yuz berdi",
+    "pageErrorDesc": "Ma'lumotlaringiz saqlangan. Qayta urinib ko'ring yoki bosh sahifaga qayting.",
+    "goHome": "Bosh sahifa"
   },
   "modules": {
     "title": "Modullar",
@@ -692,7 +695,8 @@
           "retreat": "Chekinish",
           "pause": "Pauza"
         }
-      }
+      },
+      "sceneError": "3D poligon yuklanmadi (grafik xatolik). Sahifani yangilang yoki LQ rejimini tanlang."
     }
   }
 }
