@@ -629,7 +629,22 @@
         "down": "Yerda",
         "calm": "Tinchlandi"
       },
-      "shock": "ELEKTROSHOK — XODIMGA O'Q TEGDI",
+      "shock": {
+        "title": "Elektroshok kamari (chiqish)",
+        "enabled": "Yoqilgan",
+        "intro": "Xodim o'q yeganda (h360:shock) kamarga signal yuboriladi: USB/RS-232 (Web Serial) yoki BLE (Web Bluetooth). Shablon: {ms} — davomiylik, {level} — kuch; «hex:» bilan boshlansa — baytlar.",
+        "connect": "Ulanish",
+        "reconnect": "Qayta ulanish",
+        "disconnect": "Uzish",
+        "test": "Test signal",
+        "connected": "Ulangan",
+        "notConnected": "Ulanmagan",
+        "sent": "Yuborildi",
+        "unsupported": "Bu brauzerda yo'q (Chrome/Edge kerak)",
+        "duration": "Davomiylik, ms",
+        "intensity": "Kuch, 1–100",
+        "template": "Shablon"
+      },
       "hits": "Tegdi",
       "paused": "PAUZA",
       "scenarioComplete": "Ssenariy yakunlandi",

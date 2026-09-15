@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Gamepad2, Usb, Crosshair, X } from "lucide-react";
+import { Gamepad2, Usb, Crosshair, X, Zap, Bluetooth, Cable } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -16,6 +17,7 @@ import {
   type InputAction,
   type InputBindings,
 } from "@/lib/tir/input";
+import { bleSupported, serialSupported, shockHub, type ShockConfig, type ShockStatus } from "@/lib/tir/shock";
 
 /** Laser pistol / gamepad binding UI for the TIR range (see docs/tir-input-devices.md). */
 export function InputDevicesPanel({ onClose }: { onClose: () => void }) {
@@ -109,6 +111,79 @@ export function InputDevicesPanel({ onClose }: { onClose: () => void }) {
         <span data-testid="last-control">{t("last")}: <code className="font-mono">{describeControl(status.lastControl ?? undefined)}</code></span>
         <Button size="sm" variant="ghost" className="h-6 text-[11px]" onClick={reset}>{t("reset")}</Button>
       </div>
+
+      <ShockSection />
     </Card>
+  );
+}
+
+/** Shock belt output (`h360:shock` → Web Serial / Web Bluetooth). See docs/tir-shock-belt.md. */
+function ShockSection() {
+  const t = useTranslations("sim.tir.shock");
+  const [cfg, setCfg] = useState<ShockConfig>(shockHub.getConfig());
+  const [st, setSt] = useState<ShockStatus>(shockHub.getStatus());
+  const [busy, setBusy] = useState(false);
+  useEffect(() => shockHub.subscribe(setSt), []);
+
+  const update = (patch: Partial<ShockConfig>) => {
+    const next = { ...cfg, ...patch };
+    setCfg(next);
+    shockHub.setConfig(next);
+  };
+  const connect = async () => {
+    setBusy(true);
+    try {
+      if (cfg.transport === "serial") await shockHub.connectSerial();
+      else await shockHub.connectBle();
+    } catch (e) {
+      setSt({ ...shockHub.getStatus(), lastError: String((e as Error)?.message ?? e) });
+    } finally {
+      setBusy(false);
+    }
+  };
+  const supported = cfg.transport === "serial" ? serialSupported() : bleSupported();
+
+  return (
+    <div className="space-y-2 rounded-lg border p-2 text-xs" data-testid="shock-section">
+      <div className="flex items-center justify-between">
+        <span className="flex items-center gap-2 font-medium"><Zap className="h-4 w-4 text-destructive" /> {t("title")}</span>
+        <label className="flex items-center gap-1.5">
+          <input type="checkbox" checked={cfg.enabled} onChange={(e) => update({ enabled: e.target.checked })} data-testid="shock-enabled" />
+          {t("enabled")}
+        </label>
+      </div>
+      <p className="text-[11px] leading-relaxed text-muted-foreground">{t("intro")}</p>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Button size="sm" variant={cfg.transport === "serial" ? "secondary" : "outline"} className="h-7 text-xs" onClick={() => update({ transport: "serial" })}><Cable className="mr-1 h-3.5 w-3.5" /> Serial</Button>
+        <Button size="sm" variant={cfg.transport === "ble" ? "secondary" : "outline"} className="h-7 text-xs" onClick={() => update({ transport: "ble" })}><Bluetooth className="mr-1 h-3.5 w-3.5" /> Bluetooth</Button>
+        <Button size="sm" variant="outline" className="h-7 text-xs" disabled={!supported || busy} onClick={() => void connect()} data-testid="shock-connect">{st.connected ? t("reconnect") : t("connect")}</Button>
+        {st.connected && <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => void shockHub.disconnect()}>{t("disconnect")}</Button>}
+        <Button size="sm" variant="destructive" className="h-7 text-xs" disabled={!st.connected || busy} onClick={() => void shockHub.fire("test")} data-testid="shock-test">{t("test")}</Button>
+      </div>
+      <p className="text-muted-foreground" data-testid="shock-status">
+        {!supported ? t("unsupported") : st.connected ? `${t("connected")}: ${st.device}` : t("notConnected")}
+        {st.sent > 0 && ` · ${t("sent")}: ${st.sent}`}
+        {st.lastError && <span className="text-destructive"> · {st.lastError}</span>}
+      </p>
+      <div className="grid gap-2 sm:grid-cols-3">
+        <label className="space-y-1"><span className="text-[10px] uppercase text-muted-foreground">{t("duration")}</span>
+          <Input type="number" min={1} max={2000} className="h-7 text-xs" value={cfg.durationMs} onChange={(e) => update({ durationMs: Number(e.target.value) || 1 })} /></label>
+        <label className="space-y-1"><span className="text-[10px] uppercase text-muted-foreground">{t("intensity")}</span>
+          <Input type="number" min={1} max={100} className="h-7 text-xs" value={cfg.intensity} onChange={(e) => update({ intensity: Number(e.target.value) || 1 })} /></label>
+        {cfg.transport === "serial" ? (
+          <label className="space-y-1"><span className="text-[10px] uppercase text-muted-foreground">Baud</span>
+            <Input type="number" className="h-7 text-xs" value={cfg.serial.baudRate} onChange={(e) => update({ serial: { baudRate: Number(e.target.value) || 9600 } })} /></label>
+        ) : (
+          <label className="space-y-1"><span className="text-[10px] uppercase text-muted-foreground">BLE service</span>
+            <Input className="h-7 font-mono text-[10px]" value={cfg.ble.service} onChange={(e) => update({ ble: { ...cfg.ble, service: e.target.value.trim() } })} /></label>
+        )}
+      </div>
+      <label className="block space-y-1"><span className="text-[10px] uppercase text-muted-foreground">{t("template")}</span>
+        <Input className="h-7 font-mono text-[10px]" value={cfg.template} onChange={(e) => update({ template: e.target.value })} data-testid="shock-template" /></label>
+      {cfg.transport === "ble" && (
+        <label className="block space-y-1"><span className="text-[10px] uppercase text-muted-foreground">BLE characteristic</span>
+          <Input className="h-7 font-mono text-[10px]" value={cfg.ble.characteristic} onChange={(e) => update({ ble: { ...cfg.ble, characteristic: e.target.value.trim() } })} /></label>
+      )}
+    </div>
   );
 }

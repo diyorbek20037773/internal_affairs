@@ -34,6 +34,7 @@ import type { FpsProps, TirRunFlags } from "./TirScene";
 import { detectQuality } from "./quality";
 import { InputDevicesPanel } from "./InputDevicesPanel";
 import { inputHub, onTirInput } from "@/lib/tir/input";
+import { shockHub } from "@/lib/tir/shock";
 import { cn } from "@/lib/utils";
 
 const TirSceneInner = dynamic(() => import("./TirScene").then((m) => m.TirScene), { ssr: false });
@@ -368,6 +369,7 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
   // the rest map onto the same actions as the keyboard.
   useEffect(() => {
     inputHub.start();
+    shockHub.start();
     const off = onTirInput(({ action }) => {
       const cur = stateRef.current;
       switch (action) {
@@ -381,7 +383,7 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
         case "pause": instructorRef.current({ cmd: stateRef.current.paused ? "resume" : "pause" }); break;
       }
     });
-    return () => { off(); inputHub.stop(); };
+    return () => { off(); inputHub.stop(); shockHub.stop(); };
   }, [act]);
 
   controlsRef.current = controls;

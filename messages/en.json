@@ -629,7 +629,22 @@
         "down": "Down",
         "calm": "Calm"
       },
-      "shock": "SHOCK — OFFICER HIT",
+      "shock": {
+        "title": "Shock belt (output)",
+        "enabled": "Enabled",
+        "intro": "When the officer is hit (h360:shock) a command goes to the belt over USB/RS-232 (Web Serial) or BLE (Web Bluetooth). Template: {ms} duration, {level} intensity; prefix “hex:” for raw bytes.",
+        "connect": "Connect",
+        "reconnect": "Reconnect",
+        "disconnect": "Disconnect",
+        "test": "Test pulse",
+        "connected": "Connected",
+        "notConnected": "Not connected",
+        "sent": "Sent",
+        "unsupported": "Not available in this browser (Chrome/Edge)",
+        "duration": "Duration, ms",
+        "intensity": "Intensity, 1–100",
+        "template": "Template"
+      },
       "hits": "Hits",
       "paused": "PAUSED",
       "scenarioComplete": "Scenario complete",
