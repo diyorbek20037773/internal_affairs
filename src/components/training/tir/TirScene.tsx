@@ -16,6 +16,8 @@ import { FpsControls } from "./player/FpsControls";
 import type { PlayerState } from "./player/playerTypes";
 import { Viewmodel } from "./weapons/Viewmodel";
 import { ShotRaycaster } from "./weapons/ShotRaycaster";
+import { XrRig } from "./xr/XrRig";
+import { TIR_INPUT_EVENT } from "@/lib/tir/input";
 import { Impacts, type ImpactEvent } from "./weapons/Impacts";
 
 export const TIR_CANVAS_CLASS = "tir-canvas";
@@ -73,8 +75,9 @@ export function TirScene({
   const isFps = controls === "fps" && !!fps;
   // Adaptive quality: PerformanceMonitor drops the pixel ratio / post-effects when the frame rate sags.
   const [degraded, setDegraded] = useState(false);
+  const [xr, setXr] = useState(false);
   const impacts = useRef<ImpactEvent[]>([]);
-  const fx = quality === "high" && !degraded;
+  const fx = quality === "high" && !degraded && !xr; // post-processing is incompatible with WebXR
 
   // Per-frame refs derived from engine state (updated by <FrameBridge/>).
   const enabledRef = useRef(false);
@@ -117,7 +120,7 @@ export function TirScene({
             recoilRef={recoilRef}
             playerRef={fps.playerRef}
           />
-          <Viewmodel stateRef={stateRef} weapon={fps.weapon.id} shotSeqRef={shotSeqRef} playerRef={fps.playerRef} />
+          {!xr && <Viewmodel stateRef={stateRef} weapon={fps.weapon.id} shotSeqRef={shotSeqRef} playerRef={fps.playerRef} />}
           <ShotRaycaster
             armedRef={armedRef}
             clickFiresRef={clickFiresRef}
@@ -140,6 +143,22 @@ export function TirScene({
         </>
       )}
       <FovSync fov={wide ? 86 : isFps ? 70 : 55} />
+      {/* WebXR: headset + controller trigger; follows the FPS body when in fps mode */}
+      <XrRig
+        armedRef={armedRef}
+        weapon={fps?.weapon ?? PISTOL}
+        playerRef={isFps ? fps?.playerRef : undefined}
+        clamp={isFps ? (x, z) => clampOfficer(x, z, scenario, stateRef.current.actors) : undefined}
+        onMove={isFps ? fps?.onMove : undefined}
+        onShoot={(id, zone, point) => {
+          const a = id ? stateRef.current.actors.find((x) => x.id === id) : undefined;
+          impacts.current.push({ point: point.clone(), kind: a?.kind === "human" && zone !== "miss" ? "blood" : a?.kind === "plate" || zone === "tire" || zone === "body" ? "spark" : "dust" });
+          onShoot(id, zone);
+        }}
+        onDryFire={() => fps?.onDryFire()}
+        onReload={() => window.dispatchEvent(new CustomEvent(TIR_INPUT_EVENT, { detail: { action: "reload", source: "hid", device: "xr-controller" } }))}
+        onPresenting={setXr}
+      />
       <Environment kind={scenario.environment} quality={quality} />
       <Impacts queue={impacts} />
       {quality === "high" && <PerformanceMonitor flipflops={3} onDecline={() => setDegraded(true)} onIncline={() => setDegraded(false)} onFallback={() => setDegraded(true)} />}

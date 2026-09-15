@@ -92,7 +92,7 @@ export function ShotRaycaster({
 }
 
 /** Skip the viewmodel, invisible subtrees and non-mesh helpers. */
-function isHittable(o: THREE.Object3D): boolean {
+export function isHittable(o: THREE.Object3D): boolean {
   let cur: THREE.Object3D | null = o;
   while (cur) {
     if (cur.userData?.noHit || cur.visible === false) return false;
@@ -101,7 +101,7 @@ function isHittable(o: THREE.Object3D): boolean {
   return (o as THREE.Mesh).isMesh === true;
 }
 
-function resolveActor(o: THREE.Object3D, point: THREE.Vector3): { actorId: string; zone: TirHitZone } | null {
+export function resolveActor(o: THREE.Object3D, point: THREE.Vector3): { actorId: string; zone: TirHitZone } | null {
   let zone: TirHitZone | undefined;
   let cur: THREE.Object3D | null = o;
   while (cur) {

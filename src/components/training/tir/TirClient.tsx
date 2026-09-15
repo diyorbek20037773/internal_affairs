@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import {
   ArrowRight, Crosshair, Maximize2, Mic, MonitorPlay, Radio, Shield, ShieldOff, Zap, MoveLeft, Volume2, VolumeX,
   Play, MessageCircle, AlertTriangle, CheckCircle2, Timer, Trophy, Pause, Square, Flame, ExternalLink, ChevronDown, ChevronUp,
-  RotateCcw, Gamepad2, MousePointer2, Heart, Skull, Usb,
+  RotateCcw, Gamepad2, MousePointer2, Heart, Skull, Usb, Glasses,
 } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { Card } from "@/components/ui/card";
@@ -35,7 +35,9 @@ import { detectQuality } from "./quality";
 import { InputDevicesPanel } from "./InputDevicesPanel";
 import { inputHub, onTirInput } from "@/lib/tir/input";
 import { shockHub } from "@/lib/tir/shock";
+import { XR_EVENT, XR_STATE_EVENT, xrSupported, type XrCmd } from "./xr/XrRig";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const TirSceneInner = dynamic(() => import("./TirScene").then((m) => m.TirScene), { ssr: false });
 
@@ -126,6 +128,20 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
   const [allStop, setAllStop] = useState(false);
   const [instructorOpen, setInstructorOpen] = useState(false);
   const [devicesOpen, setDevicesOpen] = useState(false);
+  // WebXR: VR button only when a headset runtime is present; state mirrors the session.
+  const [xrOk, setXrOk] = useState(false);
+  const [xrOn, setXrOn] = useState(false);
+  useEffect(() => {
+    void xrSupported().then(setXrOk);
+    const onState = (e: Event) => {
+      const d = (e as CustomEvent<{ presenting: boolean; error?: string }>).detail;
+      setXrOn(d.presenting);
+      if (d.error) toast.error(`VR: ${d.error}`);
+    };
+    window.addEventListener(XR_STATE_EVENT, onState);
+    return () => window.removeEventListener(XR_STATE_EVENT, onState);
+  }, []);
+  const xrCmd = (cmd: XrCmd["cmd"]) => window.dispatchEvent(new CustomEvent<XrCmd>(XR_EVENT, { detail: { cmd } }));
   const [talkText, setTalkText] = useState("");
   const [lastFeedback, setLastFeedback] = useState<{ text: string; L: number; P: number } | null>(null);
   const stateRef = useRef(state);
@@ -607,6 +623,9 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
           <Button size="sm" variant="secondary" className="h-8 bg-black/60 px-2 font-mono text-[10px] text-white hover:bg-black/80" onClick={() => setControls((c) => (c === "fps" ? "fixed" : "fps"))} title={t("controls.toggle")}>{fpsMode ? <Gamepad2 className="mr-1 h-3.5 w-3.5" /> : <MousePointer2 className="mr-1 h-3.5 w-3.5" />}{fpsMode ? t("controls.fps") : t("controls.fixed")}</Button>
           <Button size="sm" variant="secondary" className="h-8 bg-black/60 px-2 font-mono text-[10px] text-white hover:bg-black/80" onClick={() => setQuality((q) => (q === "high" ? "low" : "high"))} title={t("quality")}>{quality === "high" ? "HQ" : "LQ"}</Button>
           <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={() => setDevicesOpen((v) => !v)} title={t("input.title")} data-testid="devices-toggle"><Usb className="h-4 w-4" /></Button>
+          {xrOk && (
+            <Button size="sm" variant={xrOn ? "accent" : "secondary"} className={cn("h-8 px-2 font-mono text-[10px]", !xrOn && "bg-black/60 text-white hover:bg-black/80")} onClick={() => xrCmd(xrOn ? "exit" : "enter")} title={xrOn ? t("xr.exit") : t("xr.enter")} data-testid="xr-toggle"><Glasses className="mr-1 h-3.5 w-3.5" />{xrOn ? t("xr.exit") : "VR"}</Button>
+          )}
           <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={() => setWide((v) => !v)} title={t("wide")}><MonitorPlay className="h-4 w-4" /></Button>
           <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={() => { if (!voice) speech.stopSpeaking(); setVoice((v) => !v); }} title={t("voice")}>{voice ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}</Button>
           <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={toggleFullscreen} title={t("fullscreen")}><Maximize2 className="h-4 w-4" /></Button>
