@@ -623,15 +623,15 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
 
         <div className="absolute right-3 bottom-3 flex gap-1">
           {fpsMeter > 0 && <span className={cn("flex h-8 items-center rounded-md bg-black/60 px-2 font-mono text-[10px]", fpsMeter >= 50 ? "text-success" : fpsMeter >= 30 ? "text-accent" : "text-destructive")} title="FPS">{fpsMeter} fps</span>}
-          {!touchDevice && <Button size="sm" variant="secondary" className="h-8 bg-black/60 px-2 font-mono text-[10px] text-white hover:bg-black/80" onClick={() => setControls((c) => (c === "fps" ? "fixed" : "fps"))} title={t("controls.toggle")}>{fpsMode ? <Gamepad2 className="mr-1 h-3.5 w-3.5" /> : <MousePointer2 className="mr-1 h-3.5 w-3.5" />}{fpsMode ? t("controls.fps") : t("controls.fixed")}</Button>}
-          <Button size="sm" variant="secondary" className="h-8 bg-black/60 px-2 font-mono text-[10px] text-white hover:bg-black/80" onClick={() => setQuality((q) => (q === "high" ? "low" : "high"))} title={t("quality")}>{quality === "high" ? "HQ" : "LQ"}</Button>
-          <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={() => setDevicesOpen((v) => !v)} title={t("input.title")} data-testid="devices-toggle"><Usb className="h-4 w-4" /></Button>
+          {!touchDevice && <Button size="sm" variant="secondary" className="h-10 bg-black/60 px-3 font-mono text-[10px] text-white hover:bg-black/80 md:h-8 md:px-2" onClick={() => setControls((c) => (c === "fps" ? "fixed" : "fps"))} title={t("controls.toggle")}>{fpsMode ? <Gamepad2 className="mr-1 h-3.5 w-3.5" /> : <MousePointer2 className="mr-1 h-3.5 w-3.5" />}{fpsMode ? t("controls.fps") : t("controls.fixed")}</Button>}
+          <Button size="sm" variant="secondary" className="h-10 bg-black/60 px-3 font-mono text-[10px] text-white hover:bg-black/80 md:h-8 md:px-2" onClick={() => setQuality((q) => (q === "high" ? "low" : "high"))} title={t("quality")}>{quality === "high" ? "HQ" : "LQ"}</Button>
+          <Button size="icon" variant="secondary" className="h-10 w-10 bg-black/60 text-white hover:bg-black/80 md:h-8 md:w-8" onClick={() => setDevicesOpen((v) => !v)} title={t("input.title")} data-testid="devices-toggle"><Usb className="h-4 w-4" /></Button>
           {xrOk && (
-            <Button size="sm" variant={xrOn ? "accent" : "secondary"} className={cn("h-8 px-2 font-mono text-[10px]", !xrOn && "bg-black/60 text-white hover:bg-black/80")} onClick={() => xrCmd(xrOn ? "exit" : "enter")} title={xrOn ? t("xr.exit") : t("xr.enter")} data-testid="xr-toggle"><Glasses className="mr-1 h-3.5 w-3.5" />{xrOn ? t("xr.exit") : "VR"}</Button>
+            <Button size="sm" variant={xrOn ? "accent" : "secondary"} className={cn("h-10 px-3 font-mono text-[10px] md:h-8 md:px-2", !xrOn && "bg-black/60 text-white hover:bg-black/80")} onClick={() => xrCmd(xrOn ? "exit" : "enter")} title={xrOn ? t("xr.exit") : t("xr.enter")} data-testid="xr-toggle"><Glasses className="mr-1 h-3.5 w-3.5" />{xrOn ? t("xr.exit") : "VR"}</Button>
           )}
-          <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={() => setWide((v) => !v)} title={t("wide")}><MonitorPlay className="h-4 w-4" /></Button>
-          <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={() => { if (!voice) speech.stopSpeaking(); setVoice((v) => !v); }} title={t("voice")}>{voice ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}</Button>
-          <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={toggleFullscreen} title={t("fullscreen")}><Maximize2 className="h-4 w-4" /></Button>
+          <Button size="icon" variant="secondary" className="h-10 w-10 bg-black/60 text-white hover:bg-black/80 md:h-8 md:w-8" onClick={() => setWide((v) => !v)} title={t("wide")}><MonitorPlay className="h-4 w-4" /></Button>
+          <Button size="icon" variant="secondary" className="h-10 w-10 bg-black/60 text-white hover:bg-black/80 md:h-8 md:w-8" onClick={() => { if (!voice) speech.stopSpeaking(); setVoice((v) => !v); }} title={t("voice")}>{voice ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}</Button>
+          <Button size="icon" variant="secondary" className="h-10 w-10 bg-black/60 text-white hover:bg-black/80 md:h-8 md:w-8" onClick={toggleFullscreen} title={t("fullscreen")}><Maximize2 className="h-4 w-4" /></Button>
         </div>
       </div>
 

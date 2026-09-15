@@ -66,7 +66,7 @@ export function InputDevicesPanel({ onClose }: { onClose: () => void }) {
         <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <Crosshair className="h-3.5 w-3.5 text-accent" /> {t("title")}
         </span>
-        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onClose} aria-label={t("close")}><X className="h-4 w-4" /></Button>
+        <Button size="icon" variant="ghost" className="h-10 w-10 md:h-8 md:w-8" onClick={onClose} aria-label={t("close")}><X className="h-4 w-4" /></Button>
       </div>
       <p className="text-[11px] leading-relaxed text-muted-foreground">{t("intro")}</p>
 
@@ -84,8 +84,8 @@ export function InputDevicesPanel({ onClose }: { onClose: () => void }) {
           </p>
           {hidSupported() && (
             <div className="mt-2 flex gap-1.5">
-              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => void pickHid()}>{t("hidPick")}</Button>
-              {bindings.hid && <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => void inputHub.forgetHidDevice().then(() => setBindings(inputHub.getBindings()))}>{t("hidForget")}</Button>}
+              <Button size="sm" variant="outline" className="h-10 text-xs md:h-8" onClick={() => void pickHid()}>{t("hidPick")}</Button>
+              {bindings.hid && <Button size="sm" variant="ghost" className="h-10 text-xs md:h-8" onClick={() => void inputHub.forgetHidDevice().then(() => setBindings(inputHub.getBindings()))}>{t("hidForget")}</Button>}
             </div>
           )}
         </div>
@@ -98,10 +98,10 @@ export function InputDevicesPanel({ onClose }: { onClose: () => void }) {
             <span className="font-medium">{t(`action.${a}`)}</span>
             <span className="flex items-center gap-1">
               <code className="rounded bg-muted px-1 py-0.5 font-mono text-[10px]">{describeControl(bindings.map[a])}</code>
-              <Button size="sm" variant={capturing === a ? "accent" : "outline"} className="h-6 px-1.5 text-[10px]" onClick={() => capture(a)} disabled={capturing !== null && capturing !== a}>
+              <Button size="sm" variant={capturing === a ? "accent" : "outline"} className="h-10 px-3 text-[11px] md:h-8 md:px-2" onClick={() => capture(a)} disabled={capturing !== null && capturing !== a}>
                 {capturing === a ? t("press") : t("bind")}
               </Button>
-              {bindings.map[a] && <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => clear(a)} aria-label={t("clear")}><X className="h-3 w-3" /></Button>}
+              {bindings.map[a] && <Button size="sm" variant="ghost" className="h-10 w-10 p-0 md:h-8 md:w-8" onClick={() => clear(a)} aria-label={t("clear")}><X className="h-3 w-3" /></Button>}
             </span>
           </div>
         ))}
@@ -109,7 +109,7 @@ export function InputDevicesPanel({ onClose }: { onClose: () => void }) {
 
       <div className="flex items-center justify-between text-[11px] text-muted-foreground">
         <span data-testid="last-control">{t("last")}: <code className="font-mono">{describeControl(status.lastControl ?? undefined)}</code></span>
-        <Button size="sm" variant="ghost" className="h-6 text-[11px]" onClick={reset}>{t("reset")}</Button>
+        <Button size="sm" variant="ghost" className="h-10 text-[11px] md:h-8" onClick={reset}>{t("reset")}</Button>
       </div>
 
       <ShockSection />
@@ -148,17 +148,17 @@ function ShockSection() {
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-2 font-medium"><Zap className="h-4 w-4 text-destructive" /> {t("title")}</span>
         <label className="flex items-center gap-1.5">
-          <input type="checkbox" checked={cfg.enabled} onChange={(e) => update({ enabled: e.target.checked })} data-testid="shock-enabled" />
+          <input type="checkbox" className="h-5 w-5" checked={cfg.enabled} onChange={(e) => update({ enabled: e.target.checked })} data-testid="shock-enabled" />
           {t("enabled")}
         </label>
       </div>
       <p className="text-[11px] leading-relaxed text-muted-foreground">{t("intro")}</p>
       <div className="flex flex-wrap items-center gap-1.5">
-        <Button size="sm" variant={cfg.transport === "serial" ? "secondary" : "outline"} className="h-7 text-xs" onClick={() => update({ transport: "serial" })}><Cable className="mr-1 h-3.5 w-3.5" /> Serial</Button>
-        <Button size="sm" variant={cfg.transport === "ble" ? "secondary" : "outline"} className="h-7 text-xs" onClick={() => update({ transport: "ble" })}><Bluetooth className="mr-1 h-3.5 w-3.5" /> Bluetooth</Button>
-        <Button size="sm" variant="outline" className="h-7 text-xs" disabled={!supported || busy} onClick={() => void connect()} data-testid="shock-connect">{st.connected ? t("reconnect") : t("connect")}</Button>
-        {st.connected && <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => void shockHub.disconnect()}>{t("disconnect")}</Button>}
-        <Button size="sm" variant="destructive" className="h-7 text-xs" disabled={!st.connected || busy} onClick={() => void shockHub.fire("test")} data-testid="shock-test">{t("test")}</Button>
+        <Button size="sm" variant={cfg.transport === "serial" ? "secondary" : "outline"} className="h-10 text-xs md:h-8" onClick={() => update({ transport: "serial" })}><Cable className="mr-1 h-3.5 w-3.5" /> Serial</Button>
+        <Button size="sm" variant={cfg.transport === "ble" ? "secondary" : "outline"} className="h-10 text-xs md:h-8" onClick={() => update({ transport: "ble" })}><Bluetooth className="mr-1 h-3.5 w-3.5" /> Bluetooth</Button>
+        <Button size="sm" variant="outline" className="h-10 text-xs md:h-8" disabled={!supported || busy} onClick={() => void connect()} data-testid="shock-connect">{st.connected ? t("reconnect") : t("connect")}</Button>
+        {st.connected && <Button size="sm" variant="ghost" className="h-10 text-xs md:h-8" onClick={() => void shockHub.disconnect()}>{t("disconnect")}</Button>}
+        <Button size="sm" variant="destructive" className="h-10 text-xs md:h-8" disabled={!st.connected || busy} onClick={() => void shockHub.fire("test")} data-testid="shock-test">{t("test")}</Button>
       </div>
       <p className="text-muted-foreground" data-testid="shock-status">
         {!supported ? t("unsupported") : st.connected ? `${t("connected")}: ${st.device}` : t("notConnected")}
@@ -167,22 +167,22 @@ function ShockSection() {
       </p>
       <div className="grid gap-2 sm:grid-cols-3">
         <label className="space-y-1"><span className="text-[10px] uppercase text-muted-foreground">{t("duration")}</span>
-          <Input type="number" min={1} max={2000} className="h-7 text-xs" value={cfg.durationMs} onChange={(e) => update({ durationMs: Number(e.target.value) || 1 })} /></label>
+          <Input type="number" min={1} max={2000} className="h-10 text-xs md:h-8" value={cfg.durationMs} onChange={(e) => update({ durationMs: Number(e.target.value) || 1 })} /></label>
         <label className="space-y-1"><span className="text-[10px] uppercase text-muted-foreground">{t("intensity")}</span>
-          <Input type="number" min={1} max={100} className="h-7 text-xs" value={cfg.intensity} onChange={(e) => update({ intensity: Number(e.target.value) || 1 })} /></label>
+          <Input type="number" min={1} max={100} className="h-10 text-xs md:h-8" value={cfg.intensity} onChange={(e) => update({ intensity: Number(e.target.value) || 1 })} /></label>
         {cfg.transport === "serial" ? (
           <label className="space-y-1"><span className="text-[10px] uppercase text-muted-foreground">Baud</span>
-            <Input type="number" className="h-7 text-xs" value={cfg.serial.baudRate} onChange={(e) => update({ serial: { baudRate: Number(e.target.value) || 9600 } })} /></label>
+            <Input type="number" className="h-10 text-xs md:h-8" value={cfg.serial.baudRate} onChange={(e) => update({ serial: { baudRate: Number(e.target.value) || 9600 } })} /></label>
         ) : (
           <label className="space-y-1"><span className="text-[10px] uppercase text-muted-foreground">BLE service</span>
-            <Input className="h-7 font-mono text-[10px]" value={cfg.ble.service} onChange={(e) => update({ ble: { ...cfg.ble, service: e.target.value.trim() } })} /></label>
+            <Input className="h-10 font-mono text-[11px] md:h-8" value={cfg.ble.service} onChange={(e) => update({ ble: { ...cfg.ble, service: e.target.value.trim() } })} /></label>
         )}
       </div>
       <label className="block space-y-1"><span className="text-[10px] uppercase text-muted-foreground">{t("template")}</span>
-        <Input className="h-7 font-mono text-[10px]" value={cfg.template} onChange={(e) => update({ template: e.target.value })} data-testid="shock-template" /></label>
+        <Input className="h-10 font-mono text-[11px] md:h-8" value={cfg.template} onChange={(e) => update({ template: e.target.value })} data-testid="shock-template" /></label>
       {cfg.transport === "ble" && (
         <label className="block space-y-1"><span className="text-[10px] uppercase text-muted-foreground">BLE characteristic</span>
-          <Input className="h-7 font-mono text-[10px]" value={cfg.ble.characteristic} onChange={(e) => update({ ble: { ...cfg.ble, characteristic: e.target.value.trim() } })} /></label>
+          <Input className="h-10 font-mono text-[11px] md:h-8" value={cfg.ble.characteristic} onChange={(e) => update({ ble: { ...cfg.ble, characteristic: e.target.value.trim() } })} /></label>
       )}
     </div>
   );

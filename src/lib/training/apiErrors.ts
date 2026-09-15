@@ -14,6 +14,15 @@ export function simErrorResponse(tag: string, err: unknown): Response {
     return Response.json({ error: "bad_ai_output" }, { status: 502 });
   }
   console.error(`[${tag}] error`, err);
-  const detail = err instanceof Error ? err.message.slice(0, 300) : String(err).slice(0, 300);
-  return Response.json({ error: "internal_error", detail }, { status: 500 });
+  return Response.json({ error: "internal_error", ...errorDetail(err) }, { status: 500 });
+}
+
+/**
+ * Raw error text for API responses — development only. In production the
+ * message stays in the server log: it can carry hostnames, SQL, file paths
+ * or upstream request ids that a client has no business seeing.
+ */
+export function errorDetail(err: unknown): { detail?: string } {
+  if (process.env.NODE_ENV === "production") return {};
+  return { detail: err instanceof Error ? err.message.slice(0, 300) : String(err).slice(0, 300) };
 }

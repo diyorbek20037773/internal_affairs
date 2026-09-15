@@ -1,3 +1,4 @@
+import { errorDetail } from "@/lib/training/apiErrors";
 import { NextRequest } from "next/server";
 import { aiGuard } from "@/lib/aiGuard";
 import { z } from "zod";
@@ -91,8 +92,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err) {
-    const detail = err instanceof Error ? err.message.slice(0, 300) : String(err).slice(0, 300);
-    console.error("[/api/tts] error", detail);
-    return Response.json({ error: "tts_failed", detail }, { status: 502 });
+    console.error("[/api/tts] error", err);
+    return Response.json({ error: "tts_failed", ...errorDetail(err) }, { status: 502 });
   }
 }

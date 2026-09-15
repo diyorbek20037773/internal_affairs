@@ -1,3 +1,4 @@
+import { errorDetail } from "@/lib/training/apiErrors";
 import { NextRequest } from "next/server";
 import { aiGuard } from "@/lib/aiGuard";
 import { z } from "zod";
@@ -59,9 +60,7 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "ai_unavailable" }, { status: 503 });
     }
     console.error("[/api/legal] error", err);
-    const detail =
-      err instanceof Error ? err.message.slice(0, 300) : String(err).slice(0, 300);
-    return Response.json({ error: "internal_error", detail }, { status: 500 });
+    return Response.json({ error: "internal_error", ...errorDetail(err) }, { status: 500 });
   }
 
   const encoder = new TextEncoder();

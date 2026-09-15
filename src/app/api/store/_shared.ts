@@ -1,3 +1,4 @@
+import { errorDetail } from "@/lib/training/apiErrors";
 import type { NextRequest } from "next/server";
 import { dbEnabled } from "@/lib/db/pg";
 import { getSessionUser, type AuthUser } from "@/lib/auth/server";
@@ -8,8 +9,7 @@ export function storeDisabled(): Response | null {
 
 export function storeError(tag: string, err: unknown): Response {
   console.error(`[${tag}] store error`, err);
-  const detail = err instanceof Error ? err.message.slice(0, 300) : String(err).slice(0, 300);
-  return Response.json({ error: "store_unavailable", detail }, { status: 503 });
+  return Response.json({ error: "store_unavailable", ...errorDetail(err) }, { status: 503 });
 }
 
 /**

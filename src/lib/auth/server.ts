@@ -17,17 +17,30 @@ const LOCK_MS = 60_000;
 
 export type AuthUser = { id: string; badgeId: string; role: "trainee" | "instructor" };
 
+let warned = false;
+/**
+ * Auth needs the DB and, in production, an explicit AUTH_SECRET: a secret
+ * derived from DATABASE_URL is acceptable for local development only. Without
+ * it the store stays local-only rather than issuing weakly-signed cookies.
+ */
 export function authEnabled(): boolean {
-  return dbEnabled();
+  if (!dbEnabled()) return false;
+  if (process.env.NODE_ENV === "production" && !process.env.AUTH_SECRET) {
+    if (!warned) {
+      warned = true;
+      console.error("[auth] AUTH_SECRET is not set — login disabled, store stays local-only. Set AUTH_SECRET on the server.");
+    }
+    return false;
+  }
+  return true;
 }
 
-let warned = false;
 function secret(): string {
   const s = process.env.AUTH_SECRET;
   if (s) return s;
   if (!warned) {
     warned = true;
-    console.warn("[auth] AUTH_SECRET not set — deriving from DATABASE_URL. Set AUTH_SECRET in production.");
+    console.warn("[auth] AUTH_SECRET not set — deriving from DATABASE_URL (development only).");
   }
   return createHmac("sha256", "h360-auth").update(process.env.DATABASE_URL ?? "").digest("hex");
 }

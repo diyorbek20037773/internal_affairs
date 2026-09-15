@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
-import { dbEnabled, query } from "@/lib/db/pg";
-import { getSessionUser } from "@/lib/auth/server";
+import { query } from "@/lib/db/pg";
+import { authEnabled, getSessionUser } from "@/lib/auth/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,7 +11,8 @@ export const dynamic = "force-dynamic";
  * it stays on localStorage until the user signs in on /profil.
  */
 export async function GET(req: NextRequest) {
-  if (!dbEnabled()) return Response.json({ mode: "local", ok: true, authenticated: false });
+  // No DB, or production without AUTH_SECRET → nobody can log in → the store is effectively local.
+  if (!authEnabled()) return Response.json({ mode: "local", ok: true, authenticated: false });
   try {
     await query("SELECT 1");
     const user = await getSessionUser(req);
