@@ -1,4 +1,6 @@
 import type { DocumentScenario } from "../types";
+import { mastHaydovchiMalumotnoma } from "./mast-haydovchi-malumotnoma";
+import { reydHisobot } from "./reyd-hisobot";
 
 /**
  * Hujjatlashtirish — pptx slide 9, 15:00: "AI hujjat tekshiruvi: qonun va fakt".
@@ -190,4 +192,4 @@ export const oilaviyBayonnoma: DocumentScenario = {
   ],
 };
 
-export const DOCUMENT_SCENARIOS: DocumentScenario[] = [pichoqHodisaBayonnoma, oilaviyBayonnoma];
+export const DOCUMENT_SCENARIOS: DocumentScenario[] = [pichoqHodisaBayonnoma, oilaviyBayonnoma, mastHaydovchiMalumotnoma, reydHisobot];
