@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useTraineeProfile } from "@/hooks/useTraineeProfile";
 import { useTrainingSessions } from "@/hooks/useTrainingSessions";
-import { localTrainingRepo } from "@/lib/storage/training";
-import type { HimoyaId } from "@/lib/storage/trainingSchema";
+import { trainingRepo } from "@/lib/storage/training";
+import { onStoreMode, storeMode, type StoreMode } from "@/lib/storage/trainingRemote";
+import type { HimoyaId, TraineeProfile } from "@/lib/storage/trainingSchema";
 import { getScenario } from "@/data/scenarios";
 import { COMPETENCIES } from "@/data/scenarios/competencies";
 import { localized } from "@/data/sops/types";
@@ -25,16 +26,25 @@ export function InstructorClient() {
   const { profile, loaded: pLoaded, isInstructor } = useTraineeProfile();
   const { sessions, loaded, removeSession } = useTrainingSessions(); // all trainees on this device
   const [ids, setIds] = useState<HimoyaId[]>([]);
+  const [profiles, setProfiles] = useState<TraineeProfile[]>([]);
+  const [mode, setMode] = useState<StoreMode | null>(null);
 
   useEffect(() => {
-    void localTrainingRepo.listHimoyaIds().then(setIds);
+    void trainingRepo.listHimoyaIds().then(setIds);
+    void trainingRepo.listProfiles().then(setProfiles);
   }, [sessions]);
+
+  useEffect(() => {
+    void storeMode();
+    return onStoreMode(setMode);
+  }, []);
 
   const names = useMemo(() => {
     const m: Record<string, string> = {};
+    for (const p of profiles) m[p.id] = `${p.name} (${p.badgeId})`;
     if (profile) m[profile.id] = `${profile.name} (${profile.badgeId})`;
     return m;
-  }, [profile]);
+  }, [profile, profiles]);
 
   const pending = sessions.filter((s) => s.debrief && s.debrief.status === "pending");
   const trainees = Array.from(new Set(sessions.map((s) => s.traineeId)));
@@ -52,7 +62,7 @@ export function InstructorClient() {
   return (
     <div className="space-y-8">
       <p className="flex items-start gap-2 rounded-lg border border-dashed p-3 text-xs text-muted-foreground">
-        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {t("deviceNote")}
+        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {mode === "postgres" ? t("serverNote") : t("deviceNote")}
       </p>
 
       <section>

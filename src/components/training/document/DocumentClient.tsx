@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useSessionBootstrap } from "@/hooks/useSessionBootstrap";
 import { newDocumentSession, touch } from "@/lib/training/sessionFactory";
-import { localTrainingRepo } from "@/lib/storage/training";
+import { trainingRepo } from "@/lib/storage/training";
 import { localized } from "@/data/sops/types";
 import { LAWS } from "@/data/sops/laws";
 import type { LawRef } from "@/data/sops/types";
@@ -57,7 +57,7 @@ function DocumentRunner({ scenario, initial }: { scenario: DocumentScenario; ini
     const id = window.setTimeout(() => {
       const next = touch(session, { payload: { ...payload, text } });
       setSession(next);
-      void localTrainingRepo.saveSession(next);
+      void trainingRepo.saveSession(next);
     }, 700);
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -85,7 +85,7 @@ function DocumentRunner({ scenario, initial }: { scenario: DocumentScenario; ini
         endedAt: new Date().toISOString(),
         payload: { kind: "document", text, grade },
       });
-      await localTrainingRepo.saveSession(done);
+      await trainingRepo.saveSession(done);
       setSession(done);
     } catch {
       toast.error(tc("errorGeneric"));

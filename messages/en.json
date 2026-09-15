@@ -440,6 +440,7 @@
       "allSessions": "All sessions",
       "noPending": "No debriefs awaiting confirmation.",
       "deviceNote": "MVP: only this device's data is visible. With a server, all trainees will appear.",
+      "serverNote": "Server (Postgres) connected: trainees and sessions from every tablet are visible. Offline records sync when the connection returns.",
       "trainee": "Trainee",
       "scenario": "Scenario",
       "date": "Date",

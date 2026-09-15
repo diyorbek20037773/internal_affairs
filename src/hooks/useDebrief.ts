@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { localTrainingRepo } from "@/lib/storage/training";
+import { trainingRepo } from "@/lib/storage/training";
 import type { DebriefResult, TrainingSession } from "@/lib/storage/trainingSchema";
 import { attachDebrief, confirmDebrief } from "@/lib/training/debrief";
 import { getScenario } from "@/data/scenarios";
@@ -22,7 +22,7 @@ export function useDebrief(sessionId: string, locale: string) {
 
   useEffect(() => {
     void (async () => {
-      const s = await localTrainingRepo.getSession(sessionId);
+      const s = await trainingRepo.getSession(sessionId);
       setSession(s ?? null);
       setLoaded(true);
     })();
@@ -54,11 +54,11 @@ export function useDebrief(sessionId: string, locale: string) {
         }
         const llm = (await res.json()) as Omit<DebriefResult, "status">;
         const next = attachDebrief(cur, llm);
-        await localTrainingRepo.saveSession(next);
+        await trainingRepo.saveSession(next);
         // Provisional HIMOYA-ID update — instructor confirmation finalises it.
         const scenario = getScenario(next.scenarioId);
-        const current = (await localTrainingRepo.getHimoyaId(next.traineeId)) ?? newHimoyaId(next.traineeId);
-        await localTrainingRepo.saveHimoyaId(applySessionToHimoyaId(current, next, assessedCompetencies(next, scenario?.tags ?? []), true));
+        const current = (await trainingRepo.getHimoyaId(next.traineeId)) ?? newHimoyaId(next.traineeId);
+        await trainingRepo.saveHimoyaId(applySessionToHimoyaId(current, next, assessedCompetencies(next, scenario?.tags ?? []), true));
         setSession(next);
       } catch {
         setError("generic");
@@ -82,17 +82,17 @@ export function useDebrief(sessionId: string, locale: string) {
     async (instructorId: string, note?: string) => {
       if (!session?.debrief || session.debrief.status === "confirmed") return;
       const confirmed = confirmDebrief(session, { id: instructorId, note });
-      await localTrainingRepo.saveSession(confirmed);
+      await trainingRepo.saveSession(confirmed);
 
       const scenario = getScenario(confirmed.scenarioId);
       const current =
-        (await localTrainingRepo.getHimoyaId(confirmed.traineeId)) ?? newHimoyaId(confirmed.traineeId);
+        (await trainingRepo.getHimoyaId(confirmed.traineeId)) ?? newHimoyaId(confirmed.traineeId);
       const updated = applySessionToHimoyaId(
         current,
         confirmed,
         assessedCompetencies(confirmed, scenario?.tags ?? [])
       );
-      await localTrainingRepo.saveHimoyaId(updated);
+      await trainingRepo.saveHimoyaId(updated);
       setSession(confirmed);
     },
     [session]

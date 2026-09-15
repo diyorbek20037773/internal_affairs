@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { useSessionBootstrap } from "@/hooks/useSessionBootstrap";
 import { useSpeech } from "@/hooks/useSpeech";
 import { newTirSession, touch } from "@/lib/training/sessionFactory";
-import { localTrainingRepo } from "@/lib/storage/training";
+import { trainingRepo } from "@/lib/storage/training";
 import {
   ACTOR_TEXT, applyAction, applyInstructor, classifyTalk, hitFactor, initTir, outcomeSummary, primarySuspect, setOfficer, tick,
   TIR_PRESET_PHRASES, type InstructorCmd, type TirState,
@@ -213,7 +213,7 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
       },
     });
     setSession(done);
-    void localTrainingRepo.saveSession(done);
+    void trainingRepo.saveSession(done);
     speech.stopSpeaking();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.outcome]);

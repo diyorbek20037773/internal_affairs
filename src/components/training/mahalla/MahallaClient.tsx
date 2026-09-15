@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useSessionBootstrap } from "@/hooks/useSessionBootstrap";
 import { newMahallaSession, touch } from "@/lib/training/sessionFactory";
-import { localTrainingRepo } from "@/lib/storage/training";
+import { trainingRepo } from "@/lib/storage/training";
 import { localized } from "@/data/sops/types";
 import type { MahallaGrade, MahallaScenario } from "@/data/scenarios/types";
 import type { MahallaPayload, TrainingSession } from "@/lib/storage/trainingSchema";
@@ -49,7 +49,7 @@ function MahallaRunner({ scenario, initial }: { scenario: MahallaScenario; initi
     const id = window.setTimeout(() => {
       const next = touch(session, { payload: { ...payload, picked, plans } });
       setSession(next);
-      void localTrainingRepo.saveSession(next);
+      void trainingRepo.saveSession(next);
     }, 600);
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -96,7 +96,7 @@ function MahallaRunner({ scenario, initial }: { scenario: MahallaScenario; initi
         endedAt: new Date().toISOString(),
         payload: { kind: "mahalla", picked, plans, grade },
       });
-      await localTrainingRepo.saveSession(done);
+      await trainingRepo.saveSession(done);
       setSession(done);
       router.push(`/simulyator/debrif/${done.id}`);
     } catch {

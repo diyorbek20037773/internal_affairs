@@ -440,6 +440,7 @@
       "allSessions": "Barcha mashg'ulotlar",
       "noPending": "Tasdiq kutayotgan debrif yo'q.",
       "deviceNote": "MVP: faqat shu qurilmadagi ma'lumotlar ko'rinadi. Server bilan ulanganda barcha o'quvchilar bo'ladi.",
+      "serverNote": "Server (Postgres) ulangan: barcha planshetlardagi o'quvchilar va mashg'ulotlar ko'rinadi. Oflayn yozuvlar ulanish qaytganda sinxronlanadi.",
       "trainee": "O'quvchi",
       "scenario": "Ssenariy",
       "date": "Sana",

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DecisionOption, DecisionScenario } from "@/data/scenarios/types";
 import type { DecisionPayload, TrainingSession } from "@/lib/storage/trainingSchema";
-import { localTrainingRepo } from "@/lib/storage/training";
+import { trainingRepo } from "@/lib/storage/training";
 import { touch } from "@/lib/training/sessionFactory";
 import { choose, currentNode, timeout } from "@/lib/training/decisionEngine";
 
@@ -44,7 +44,7 @@ export function useDecisionSim(scenario: DecisionScenario, initial: TrainingSess
 
   const persist = useCallback(async (s: TrainingSession) => {
     setSession(s);
-    await localTrainingRepo.saveSession(s);
+    await trainingRepo.saveSession(s);
   }, []);
 
   const applyTimeout = useCallback(() => {

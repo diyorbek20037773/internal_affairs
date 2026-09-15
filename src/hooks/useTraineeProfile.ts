@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { localTrainingRepo, TRAINING_KEYS } from "@/lib/storage/training";
+import { trainingRepo, TRAINING_KEYS } from "@/lib/storage/training";
 import type { TraineeProfile } from "@/lib/storage/trainingSchema";
 import { uid } from "@/lib/utils";
 
@@ -10,7 +10,7 @@ export function useTraineeProfile() {
   const [loaded, setLoaded] = useState(false);
 
   const refresh = useCallback(async () => {
-    setProfile(await localTrainingRepo.getProfile());
+    setProfile(await trainingRepo.getProfile());
     setLoaded(true);
   }, []);
 
@@ -34,7 +34,7 @@ export function useTraineeProfile() {
         district: patch.district,
         role: patch.role,
       };
-      await localTrainingRepo.saveProfile(next);
+      await trainingRepo.saveProfile(next);
       setProfile(next);
       return next;
     },

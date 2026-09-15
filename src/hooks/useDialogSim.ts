@@ -9,7 +9,7 @@ import type {
   DialogTurnAssessment,
 } from "@/data/scenarios/types";
 import type { DialogPayload, TrainingSession } from "@/lib/storage/trainingSchema";
-import { localTrainingRepo } from "@/lib/storage/training";
+import { trainingRepo } from "@/lib/storage/training";
 import { touch } from "@/lib/training/sessionFactory";
 
 interface DialogApiResponse {
@@ -36,7 +36,7 @@ export function useDialogSim(scenario: DialogScenario, initial: TrainingSession,
 
   const persist = useCallback(async (s: TrainingSession) => {
     setSession(s);
-    await localTrainingRepo.saveSession(s);
+    await trainingRepo.saveSession(s);
   }, []);
 
   const send = useCallback(

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useTraineeProfile } from "@/hooks/useTraineeProfile";
 import { useTrainingSessions } from "@/hooks/useTrainingSessions";
-import { localTrainingRepo } from "@/lib/storage/training";
+import { trainingRepo } from "@/lib/storage/training";
 import { recommendNext, scenarioHref, type MentorRecommendation } from "@/lib/training/mentor";
 import { localized } from "@/data/sops/types";
 import type { HimoyaId } from "@/lib/storage/trainingSchema";
@@ -32,7 +32,7 @@ export function MentorCard() {
 
   useEffect(() => {
     if (!profile) return;
-    void localTrainingRepo.getHimoyaId(profile.id).then(setHimoyaId);
+    void trainingRepo.getHimoyaId(profile.id).then(setHimoyaId);
   }, [profile, sessions]);
 
   useEffect(() => {

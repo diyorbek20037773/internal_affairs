@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { localTrainingRepo } from "@/lib/storage/training";
+import { trainingRepo } from "@/lib/storage/training";
 import type { TraineeProfile, TrainingSession } from "@/lib/storage/trainingSchema";
 import { useTraineeProfile } from "./useTraineeProfile";
 
@@ -31,7 +31,7 @@ export function useSessionBootstrap({
     started.current = true;
     (async () => {
       if (sessionId) {
-        const existing = await localTrainingRepo.getSession(sessionId);
+        const existing = await trainingRepo.getSession(sessionId);
         if (existing && existing.scenarioId === scenarioId) {
           setSession(existing);
           setReady(true);
@@ -39,7 +39,7 @@ export function useSessionBootstrap({
         }
       }
       const fresh = create(profile.id, exam);
-      await localTrainingRepo.saveSession(fresh);
+      await trainingRepo.saveSession(fresh);
       setSession(fresh);
       setReady(true);
     })();

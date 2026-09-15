@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useTraineeProfile } from "@/hooks/useTraineeProfile";
 import { useTrainingSessions } from "@/hooks/useTrainingSessions";
-import { localTrainingRepo } from "@/lib/storage/training";
+import { trainingRepo } from "@/lib/storage/training";
 import { SessionsFileSchema, type HimoyaId } from "@/lib/storage/trainingSchema";
 import { HimoyaIdCard } from "./profile/HimoyaIdCard";
 import { AmaliyXizmatCard } from "./profile/AmaliyXizmatCard";
@@ -22,7 +22,7 @@ export function SessionsClient() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const loadHimoyaId = () => {
-    if (profile) void localTrainingRepo.getHimoyaId(profile.id).then(setHimoyaId);
+    if (profile) void trainingRepo.getHimoyaId(profile.id).then(setHimoyaId);
   };
   useEffect(loadHimoyaId, [profile, sessions]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -42,7 +42,7 @@ export function SessionsClient() {
     try {
       const parsed = SessionsFileSchema.safeParse(JSON.parse(await file.text()));
       if (!parsed.success) throw new Error("invalid");
-      for (const s of parsed.data.items) await localTrainingRepo.saveSession(s);
+      for (const s of parsed.data.items) await trainingRepo.saveSession(s);
       await refresh();
       toast.success(`${parsed.data.items.length} ✓`);
     } catch {

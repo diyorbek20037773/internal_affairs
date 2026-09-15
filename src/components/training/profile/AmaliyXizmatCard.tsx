@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { localCasesRepo } from "@/lib/storage/cases";
-import { localTrainingRepo } from "@/lib/storage/training";
+import { trainingRepo } from "@/lib/storage/training";
 import { applyKpiToHimoyaId, newHimoyaId } from "@/lib/training/competency";
 import type { TraineeProfile } from "@/lib/storage/trainingSchema";
 
@@ -52,8 +52,8 @@ export function AmaliyXizmatCard({
     if (!Number.isFinite(v) || v < 0 || v > 100) return;
     setSaving(true);
     try {
-      const cur = (await localTrainingRepo.getHimoyaId(profile.id)) ?? newHimoyaId(profile.id);
-      await localTrainingRepo.saveHimoyaId(applyKpiToHimoyaId(cur, v));
+      const cur = (await trainingRepo.getHimoyaId(profile.id)) ?? newHimoyaId(profile.id);
+      await trainingRepo.saveHimoyaId(applyKpiToHimoyaId(cur, v));
       setKpi("");
       toast.success(t("saved"));
       onUpdated?.();
