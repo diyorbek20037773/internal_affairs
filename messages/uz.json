@@ -623,7 +623,8 @@
         "compliance": "Itoat",
         "hint": "Instruktor ssenariyni jonli boshqaradi: keskinlashtirish, yangi shaxs kiritish, pauza, ALL STOP. Ikkinchi oyna/planshet — shu brauzer profilida."
       },
-      "quality": "Grafika sifati (HQ/LQ)"
+      "quality": "Grafika sifati (HQ/LQ)",
+      "loading": "Real muhit yuklanmoqda (panorama, personajlar)..."
     }
   }
 }

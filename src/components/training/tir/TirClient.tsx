@@ -25,6 +25,7 @@ import type { TirAction, TirHitZone, TirScenario } from "@/data/scenarios/types"
 import type { TrainingSession } from "@/lib/storage/trainingSchema";
 import { ProfileGate } from "../profile/ProfileGate";
 import { TirVideoLayer } from "./TirVideoLayer";
+import { AssetLoading } from "./AssetLoading";
 import { cn } from "@/lib/utils";
 
 const TirScene = dynamic(() => import("./TirScene").then((m) => m.TirScene), { ssr: false });
@@ -239,6 +240,7 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
       >
         <TirScene scenario={scenario} state={state} wide={wide} onShoot={onShoot} quality={quality} />
         <TirVideoLayer scenario={scenario} state={primarySuspect(state)?.state} muted={!voice} />
+        <AssetLoading />
 
         {/* muzzle flash / shock vignette */}
         <div className={cn("pointer-events-none absolute inset-0 bg-white transition-opacity", flash ? "opacity-60" : "opacity-0")} />
