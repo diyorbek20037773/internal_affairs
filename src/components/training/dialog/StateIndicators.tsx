@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
  * Trust/cooperation numbers are intentionally hidden until the debrief.
  */
 /** One-line version shown above the chat on tablets/phones (< lg). */
-export function StateStrip({ state, last }: { state: DialogHiddenState; last?: DialogTurnAssessment }) {
+export function StateStrip({ state, last, turns, maxTurns }: { state: DialogHiddenState; last?: DialogTurnAssessment; turns?: number; maxTurns?: number }) {
   const t = useTranslations("sim.dialog");
   const tensionColor =
     state.tension >= 70 ? "bg-destructive" : state.tension >= 40 ? "bg-accent" : "bg-success";
@@ -25,7 +25,14 @@ export function StateStrip({ state, last }: { state: DialogHiddenState; last?: D
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           <span>{t("tension")}</span>
-          <span>{t(`phases.${state.phase}`)}</span>
+          <span className="flex items-center gap-2">
+            <span className="truncate">{t(`phases.${state.phase}`)}</span>
+            {maxTurns !== undefined && (
+              <span className={cn("font-mono tabular-nums", turns !== undefined && maxTurns - turns <= 2 && "text-destructive")} data-testid="turns-portrait">
+                {t("turns")} {turns ?? 0}/{maxTurns}
+              </span>
+            )}
+          </span>
         </div>
         <Progress value={state.tension} indicatorClassName={cn("transition-all duration-700", tensionColor)} className="h-2" />
       </div>

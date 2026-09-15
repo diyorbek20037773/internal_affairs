@@ -10,7 +10,7 @@
     "check:tir": "tsx --tsconfig tsconfig.json scripts/tir-engine.check.ts",
     "check:tir:fps": "tsx --tsconfig tsconfig.json scripts/tir-fps.check.ts",
     "assets": "node scripts/fetch-assets.mjs",
-    "prebuild": "node scripts/fetch-assets.mjs",
+    "prebuild": "node scripts/build-sw.mjs && node scripts/fetch-assets.mjs",
     "e2e:qa": "node e2e/qa.js",
     "e2e:tir": "node e2e/tir.js",
     "e2e:fps": "node e2e/fps.js",

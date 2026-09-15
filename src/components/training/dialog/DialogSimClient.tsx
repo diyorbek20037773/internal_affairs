@@ -142,7 +142,7 @@ function DialogRunner({ scenario, initial }: { scenario: DialogScenario; initial
           </Button>
         </div>
 
-        <StateStrip state={sim.state} last={sim.lastAssessment} />
+        <StateStrip state={sim.state} last={sim.lastAssessment} turns={sim.officerTurns} maxTurns={scenario.maxTurns} />
 
         <ScrollArea className="min-h-0 flex-1">
           <div className="space-y-3 p-4">
