@@ -20,7 +20,7 @@ export const COMPETENCY_LABELS: Record<Competency, LocalizedText> = {
   vaziyat_tahlili: { uz: "Vaziyat tahlili", ru: "Анализ ситуации", en: "Situation analysis" },
   muloqot: { uz: "Muloqot", ru: "Коммуникация", en: "Communication" },
   deeskalatsiya: { uz: "Deeskalatsiya", ru: "Деэскалация", en: "De-escalation" },
-  profiling: { uz: "Profiling", ru: "Профайлинг", en: "Profiling" },
+  profiling: { uz: "Profayling", ru: "Профайлинг", en: "Profiling" },
   raqamli: { uz: "Raqamli ko'nikma", ru: "Цифровые навыки", en: "Digital skills" },
   hujjatlashtirish: { uz: "Hujjatlashtirish", ru: "Документирование", en: "Documentation" },
   natijadorlik: { uz: "Natijadorlik (KPI)", ru: "Результативность (KPI)", en: "Effectiveness (KPI)" },
@@ -35,7 +35,7 @@ export const COMPETENCY_DEFINITIONS_UZ: Record<Competency, string> = {
   muloqot:
     "Aniq, hurmatli, tushunarli gapirish; o'zini tanishtirish; ochiq savollar; ohang nazorati.",
   deeskalatsiya:
-    "Tarangligni pasaytirish: faol tinglash, empatiya, vaqt/masofa berish, kuch ishlatmaslik.",
+    "Taranglikni pasaytirish: faol tinglash, empatiya, vaqt/masofa berish, kuch ishlatmaslik.",
   profiling:
     "Fuqaroning holati, motivi, yashirin faktlarini savollar orqali ochish; xavf belgilarini payqash.",
   raqamli:

@@ -14,7 +14,7 @@
 
 * `embed=1` запоминается в `sessionStorage` — внутренние переходы (ссылки, `router.push`) остаются без «хрома». `embed=0` выключает.
 * Локаль в пути: `/uz`, `/ru`, `/en`.
-* Нужные страницы: `/` (панель), `/simulyator/tir`, `/simulyator/dialog`, `/simulyator/qaror`, `/mashgulotlarim`, `/profil`, `/instruktor`.
+* Нужные страницы: `/` (панель), `/simulyator/tir`, `/simulyator/muloqot`, `/simulyator/qaror`, `/mashgulotlarim`, `/profil`, `/instruktor`.
 
 ## 2. Безопасность (iframe)
 

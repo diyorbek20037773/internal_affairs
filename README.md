@@ -6,7 +6,7 @@
 
 📱 **PWA:** planshetda «Bosh ekranga qo'shish» — HIMOYA-360 ilova sifatida ochiladi (manifest + service worker, statik assetlar keshlanadi).
 
-🌐 **Jonli:** https://internalaffairs-production.up.railway.app · 🗣 uz / ru / en · 📱 planshet brauzerida ishlaydi (Android, 4G) · ✅ E2E QA (Playwright, real Gemini): 21/21
+🌐 **Jonli:** https://internalaffairs-production.up.railway.app · 🗣 uz / ru / en · 📱 planshet brauzerida ishlaydi (Android, 4G) · ✅ E2E: `e2e/` (Playwright, jonli Gemini bilan) — `npm run e2e:qa` 21 tekshiruv, `e2e:tir`, `e2e:fps`
 
 ## Trenajyorlar (HIMOYA-360)
 
@@ -36,7 +36,7 @@ Ssenariylar — `data/scenarios/` da qo'lda yozilgan TS data (runtime'da LLM yar
 - **FPS boshqaruv (Counter-Strike uslubi, loyihaga moslangan)** — `src/components/training/tir/player/FpsControls.tsx`: birinchi shaxs xodim — **WASD** (kameraga nisbatan), **Shift** yugurish, **C/Ctrl** cho'kkalash, **Space** sakrash, sichqoncha bilan qarash (**Pointer Lock**, pitch ±85°, **Esc** — chiqish); gravitatsiya, yer, chegara doirasi (`scenario.bounds.radius`, 6 m), to'siq bloki va aktyor tanalari bilan to'qnashuv (`tirEngine.clampOfficer`, kutubxonasiz). `weapons/Viewmodel.tsx` — xizmat tapanchasi viewmodel (primitivlar, sway/bob/recoil/reload), `weapons/ShotRaycaster.tsx` — **ekran markazidan raycast** (`userData.actorId` + zona), `src/lib/training/weaponConfig.ts` — yarim avtomat, **15/30 o'q**, R — qayta zaryad 1.8 s, recoil, zona koeffitsiyentlari (bosh 1.0 / tana 0.65 / oyoq-qo'l 0.35 → `hp`). Dvigatel: `TirState.officer {x,z,crouch}` — aktyorlar xodimga qarab **silliq buriladi va quvadi**, masofa/tashlanish/mashina xodimning real joyiga nisbatan; to'siq ortida cho'kkalash = himoya (tegish ehtimoli 0.25); **salomatlik 100** (har tegish −100/officerHitsToFail). O'yin holatlari: MENU → PLAYING → PAUSED → PLAYER_DEAD / ROUND_WON / ROUND_LOST, **Qayta boshlash** = shu ssenariyda yangi sessiya. HUD: crosshair, hit-marker, salomatlik, `15 / 30`, WebAudio ovozlar (o't, quruq bosish, zaryad, qadam, jarohat). Rejim: `?controls=fps|fixed` (sensorli qurilma → `fixed` — planshetdagi eski bosish rejimi saqlanadi), `?lock=0` — pointer lock'siz (kiosk/E2E). Tugmalar: F qurol, H g'ilof, T elektroshok, B yordam, R zaryad, Q to'siq / X chekinish (faqat statik).
 - **Video-pak** (VirTra'ning asl usuli — real aktyorlar): `docs/tir-video-pack.md` — fayl tuzilmasi, suratga olish qo'llanmasi; ssenariyga `video.clips` qo'shilsa dvigatel holatga mos klipni ko'rsatadi.
 - `/api/sim/{dialog,debrief,mahalla-grade,document-check,mentor,exam-summary}`, `/api/stt` (Gemini audio STT — o'zbekcha mikrofon), `/api/tts` — barchasi `no_keys_configured` (500) / `ai_unavailable` (503) / `bad_ai_output` (502) kontraktida.
-- Auth yo'q (MVP): lokal profil `role: trainee|instructor`. Har yozuvda `traineeId` bor.
+- **Hisoblar.** Ikki rejim: (1) *qurilma rejimi* (`DATABASE_URL` yo'q) — profil planshetda, instruktor roli markaz kodi (`INSTRUCTOR_CODE`) bilan ochiladi; (2) *server rejimi* — xizmat ID + PIN (`/api/auth/*`, scrypt, httpOnly cookie, 5 xato → 1 daqiqa blok), instruktor roli `INSTRUCTOR_BADGES` ro'yxatidan. Har yozuvda `traineeId` bor; o'quvchi faqat o'z yozuvlarini, instruktor hammasini ko'radi.
 
 ---
 
@@ -76,6 +76,12 @@ npm run dev                 # http://localhost:3000
 | `GEMINI_MODEL` | Ixtiyoriy. Default: `gemini-2.5-flash`. |
 | `NEXT_PUBLIC_DEFAULT_LOCALE` | Ixtiyoriy. Default: `uz`. |
 | `NEXT_PUBLIC_SITE_URL` | Ixtiyoriy. Sayt URL — OpenGraph/Telegram preview uchun. |
+| `DATABASE_URL` | Ixtiyoriy. Postgres — profil, mashg'ulotlar, HIMOYA-ID barcha planshetlar uchun bitta joyda (`/api/store/*`, sxema avtomatik). Yo'q bo'lsa — hammasi planshetda (localStorage), oflayn ishlaydi. |
+| `DATABASE_SSL` | Ixtiyoriy. `false` — SSL'siz ulanish (lokal Postgres). |
+| `AUTH_SECRET` | `DATABASE_URL` bilan birga **majburiy** (production): sessiya cookie imzosi. Uzun tasodifiy satr. |
+| `INSTRUCTOR_BADGES` | Server rejimi: instruktor roli beriladigan xizmat ID'lar (`SH-0001,SH-0002`). |
+| `INSTRUCTOR_CODE` | Qurilma rejimi: profilda «Instruktor» rolini ochadigan markaz kodi. Bo'sh bo'lsa rol erkin (demo). |
+| `NEXT_PUBLIC_EMBED_ORIGINS` | E-O'quv ilovasi iframe'da ochsa — ruxsat etilgan origin'lar (vergul bilan). WebView uchun kerak emas. |
 
 > ⚠️ Haqiqiy kalitlar hech qachon gitga qo'shilmaydi (`.env` gitignore'da). Faqat `.env.example` repoda.
 
@@ -83,7 +89,35 @@ npm run dev                 # http://localhost:3000
 
 1. GitHub reponi Railway'ga ulang (deploy-on-push).
 2. Railway → **Variables**: `GEMINI_API_KEYS` (bir nechta kalit; yaroqsiz kalit avtomatik o'tkazib yuboriladi), ixtiyoriy `GEMINI_MODEL`, `NEXT_PUBLIC_SITE_URL` (OpenGraph/link preview uchun).
-3. Build: `npm run build` · Start: `npm run start` (Railway `$PORT` ni avtomatik bog'laydi). Nixpacks avtomatik aniqlaydi.
+3. Build: `npm run build` · Start: `npm run start` (Railway `$PORT` ni avtomatik bog'laydi). Nixpacks avtomatik aniqlaydi. `prebuild` 3D assetlarni (RPM avatarlar, Poly Haven HDRI/teksturalar) internetdan yuklaydi — build tarmoqqa chiqa olishi kerak.
+4. Bir nechta planshet uchun: Railway **Postgres** plagini → `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `AUTH_SECRET`, `INSTRUCTOR_BADGES`. Bitta planshet/demo uchun shart emas.
+
+## Ma'lumotlar, oflayn va zaxira
+
+- **Qurilma rejimi:** hamma narsa planshetning localStorage'ida (`h360:*` kalitlari). «Mashg'ulotlarim» → **JSON eksport/import** — zaxira va boshqa qurilmaga ko'chirish. Eski build yozgan noma'lum yozuvlar o'chirilmaydi, chetga olib qo'yiladi.
+- **Server rejimi:** har yozuv avval planshetga, keyin serverga (write-through). 4G uzilsa mashg'ulot davom etadi, ulanish qaytganda «Mashg'ulotlarim» ochilganda sinxronlanadi. To'qnashuvda `updatedAt` bo'yicha yangisi g'olib. O'quvchi o'z debrifini tasdiqlay olmaydi — tasdiq faqat instruktor sessiyasidan qabul qilinadi.
+- **Zaxira:** Railway Postgres snapshot yoki `pg_dump`. Jadval: `h360_profiles`, `h360_sessions`, `h360_himoya_ids`, `h360_auth` (jsonb).
+- AI so'rovlari (dialog, debrif, hujjat tekshiruvi, STT/TTS) Gemini'ga yuboriladi; kalitlar faqat serverda. Shaxsiy ma'lumotlarni ssenariy matniga kiritmaslik tavsiya etiladi.
+
+## Planshetda o'rnatish (Android, Chrome)
+
+1. Chrome'da saytni oching → menyu → **«Bosh ekranga qo'shish»** — HIMOYA-360 alohida ilova sifatida ochiladi (PWA, to'liq ekran).
+2. Birinchi ochilishda profilni to'ldiring (server rejimida — xizmat ID + PIN bilan kiring).
+3. Mikrofon ruxsatini bering — AI-Muloqotda ovoz bilan gapirish uchun (`/api/stt`).
+4. TIR poligoni planshetda **statik rejim**da ishlaydi (nishonga bosish); 3D sifat avtomatik tanlanadi (LQ — 1k panorama, post-effektsiz). Birinchi yuklanish ~10–15 MB.
+5. Ko'p planshet + instruktor kabineti bitta joyda — server rejimi (`DATABASE_URL`).
+
+## Jihozlar (halol ro'yxat)
+
+| Jihoz | Holat |
+|---|---|
+| Planshet / kompyuter brauzeri | **Ishlaydi** — asosiy rejim, qo'shimcha jihoz kerak emas. |
+| Ikkinchi monitor / ikkinchi oyna — instruktor stansiyasi (TIR) | **Ishlaydi** — shu kompyuterda ikkinchi oyna (`BroadcastChannel`); alohida planshetdan — server rejimi kerak (rejada). |
+| 3 ekranli devor (48:9) | «3 ekran» tugmasi keng FOV beradi; **haqiqiy 3 proyektorli devor** — videokarta 3 chiqishni bitta keng ekran qilib bersa ishlaydi (Windows «Span»/NVIDIA Surround). Maxsus sozlash yo'q. |
+| Lazerli o'quv tapanchasi (USB HID / gamepad) | **Adapter bor** — `docs/tir-input-devices.md`: tugmani bog'lash, otish → markazdan raycast. Muayyan model bilan sinash markazda. |
+| Elektroshok kamari | **Adapter bor** — `docs/tir-shock-belt.md` (Web Serial / Web Bluetooth) + `h360:shock` hodisasi. Muayyan qurilma protokoli bilan moslash kerak. |
+| Real aktyorli video-paketlar | Dasturiy tomoni tayyor (`TirVideoLayer`, `docs/tir-video-pack.md`); **kontent suratga olinishi kerak**. |
+| VR (WebXR) | Rejada. |
 
 ## Arxitektura
 
@@ -111,10 +145,10 @@ messages/{uz,ru,en}.json      # tarjimalar
 ## Keyingi bosqich (roadmap)
 
 - Haqiqiy huquqiy PDF/DOCX + vektor RAG (Qdrant/pgvector) — `/api/legal` da `// RAG hook` qoldirilgan.
-- Postgres persistensiyasi (hozir `CasesRepo` interfeys orqali localStorage).
-- O'zbek tili uchun kuchliroq STT/TTS (hozir brauzer Web Speech API).
-- Auth (JWT + RBAC), "Mahalla Yettiligi", "Xavfsiz Shahar" modullari.
+- Instruktor kabineti: guruh/oqim, sana/ssenariy bo'yicha filtr, debrif va HIMOYA-ID PDF eksporti, imtihon xulosasini instruktor tasdiqlashi.
+- Instruktor stansiyasi alohida planshetdan (server orqali), VR (WebXR) rejimi.
+- «Mening Inspektorim» xizmat tizimlari bilan integratsiya (E-patrul, Shakl 17, Raqamli mahalla) — hozir bosh sahifada integratsiya xaritasi.
 
 ---
 
-O'zbekiston Respublikasi Ichki ishlar vazirligi — HIMOYA-360 v2.0 (MVP)
+O'zbekiston Respublikasi Ichki ishlar vazirligi — HIMOYA-360 v2.1

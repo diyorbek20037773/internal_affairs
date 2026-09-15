@@ -139,14 +139,41 @@ export const LAWS = {
   },
   mjtkConsideration: {
     code: "Ma'muriy javobgarlik to'g'risidagi kodeks",
-    article: "289-modda",
-    title: "Ishni ko'rib chiqish muddati (~15 kun)",
-    note: "Modda raqamini lex.uz'dan tasdiqlang; muddat 15 kun.",
+    article: "288-modda",
+    title: "Ishlarni ko'rib chiqish muddatlari (15 kun)",
+    note: "Modda raqamini lex.uz'dan tasdiqlang; umumiy muddat 15 kun.",
     url: `${LEX}/docs/-97664`,
     verified: false,
   },
 
   // ---- Qonunlar va reglamentlar ----
+  mjtkDrunkDriving: {
+    code: "Ma'muriy javobgarlik to'g'risidagi kodeks",
+    article: "131-modda",
+    title: "Transport vositasini mast holatda boshqarish",
+    url: `${LEX}/docs/-97664`,
+    verified: true,
+  },
+  mjtkMedicalRefusal: {
+    code: "Ma'muriy javobgarlik to'g'risidagi kodeks",
+    article: "136-modda",
+    title: "Mastlikni aniqlash uchun tibbiy ko'rikdan o'tishdan bosh tortish",
+    url: `${LEX}/docs/-97664`,
+    verified: true,
+  },
+  mjtkPassportRegime: {
+    code: "Ma'muriy javobgarlik to'g'risidagi kodeks",
+    article: "223-modda",
+    title: "Pasport tizimi qoidalarini buzish",
+    url: `${LEX}/docs/-97664`,
+    verified: true,
+  },
+  lawAppeals: {
+    code: "«Jismoniy va yuridik shaxslarning murojaatlari to'g'risida»gi Qonun (O'RQ-445)",
+    title: "Murojaatlarni ko'rib chiqish tartibi va muddatlari",
+    url: `${LEX}/docs/-3336171`,
+    verified: true,
+  },
   lawPolice: {
     code: "«Ichki ishlar organlari to'g'risida»gi Qonun",
     title: "Majburiyatlar (16-modda), Huquqlar (17-modda)",

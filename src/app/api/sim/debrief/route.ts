@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { aiGuard } from "@/lib/aiGuard";
 import { z } from "zod";
 import type { Schema } from "@google/genai";
 import { generateJson } from "@/lib/gemini/client";
@@ -32,6 +33,8 @@ const BodySchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const blocked = await aiGuard(req, { cost: 3 });
+  if (blocked) return blocked;
   let body: z.infer<typeof BodySchema>;
   try {
     body = BodySchema.parse(await req.json());

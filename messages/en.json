@@ -40,7 +40,8 @@
     "goHome": "Home",
     "toDebrief": "Smart Debriefing",
     "abandonSession": "Stop the session",
-    "abandonConfirm": "Stop this session? It will be saved as “Stopped” and will have no debriefing."
+    "abandonConfirm": "Stop this session? It will be saved as “Stopped” and will have no debriefing.",
+    "rateLimited": "Too many requests — try again in 30 seconds."
   },
   "modules": {
     "title": "Integration with service systems",
@@ -697,7 +698,6 @@
       "allStopHint": "Make all weapons safe. Report to your instructor for debrief.",
       "hintRange": "Marksmanship: F — draw, shoot the plates. R — reload. Timer starts at the first shot. Hit Factor = hits / second.",
       "instructor": "Instructor (ghost mode)",
-      "hintKeys": "",
       "ins": {
         "escalate": "Escalate",
         "deescalate": "De-escalate",

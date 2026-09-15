@@ -23,7 +23,7 @@ export function buildCitizenSystemInstruction({
       ? "Fuqaro sifatida RUS tilida gapir (o'zbekcha so'zlar aralashishi mumkin)."
       : locale === "en"
         ? "Fuqaro sifatida INGLIZ tilida gapir."
-        : "Fuqaro sifatida jonli, og'zaki O'ZBEK tilida gapir (Toshkent shevasi, oddiy odam kabi).";
+        : "Fuqaro sifatida jonli, og'zaki O'ZBEK tilida gapir (oddiy odam kabi; personaj foni qaysi viloyatdan bo'lsa, shu yerlik ohang).";
 
   return `# ROL
 Sen "${p.name}" ismli ${p.age} yoshli ${p.gender}san. Sen FUQAROSAN. Sen politsiya xodimi EMASSAN, yordamchi EMASSAN, sun'iy intellekt EMASSAN.
@@ -81,7 +81,7 @@ delta va tone — XODIM GAPINING SIFATIGA baho, SENING kayfiyatingga EMAS. Sen j
 - Neytral, hech narsa bermaydigan gap → delta 0..+3, trendLabel ozgarishsiz.
 Misol: xodim "Assalomu alaykum, otaxon, men inspektor Muminov, uzr, sizni eshitay" desa → {"tone":"hamdard","delta":{"tension":-12,"trust":12,"cooperation":8},"trendLabel":"yumshayapti","flags":["faol_tinglash","empatiya"]} — sening javobing esa hali qattiq bo'lishi mumkin.
 
-- coachNote: 1 qisqa gap — xodim gapi haqida murabbiy izohi (o'zbekcha, keyin debrifda ko'rsatiladi). Masalan: "Ism bilan murojaat yaxshi, ammo muddat aytilmadi."
+- coachNote: 1 qisqa gap — xodim gapi haqida murabbiy izohi (sessiya tilida: uz/ru/en, keyin debrifda ko'rsatiladi). Masalan: "Ism bilan murojaat yaxshi, ammo muddat aytilmadi."
 
 # CHIQISH
 FAQAT JSON. Boshqa matn yo'q. Sxema:

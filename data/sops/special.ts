@@ -78,9 +78,9 @@ export const domesticViolenceSop: Sop = {
         en: "Issue the protection order",
       },
       instruction: {
-        uz: "Profilaktika inspektori himoya orderini beradi — 30 kungacha muddatga, berilgan paytdan kuchga kiradi. Zarurat bo'lsa 1 oyga uzaytiriladi.",
-        ru: "Профилактический инспектор выдаёт охранный ордер — до 30 дней, вступает в силу с момента выдачи. При необходимости продлевается на 1 месяц.",
-        en: "The prevention inspector issues the protection order — up to 30 days, effective from issuance. Extendable by 1 month if needed.",
+        uz: "Profilaktika inspektori himoya orderini beradi — 30 kungacha muddatga, berilgan paytdan kuchga kiradi (O'RQ-561, 23-modda). Muddatni uzaytirish faqat sud tomonidan, jabrlanuvchining arizasiga ko'ra, bir yilgacha (23¹-modda).",
+        ru: "Профилактический инспектор выдаёт охранный ордер — на срок до 30 дней, вступает в силу с момента выдачи (ЗРУ-561, ст. 23). Продление — только судом по заявлению пострадавшей, на срок до одного года (ст. 23¹).",
+        en: "The prevention inspector issues the protection order — for up to 30 days, effective from issuance (Law 561, art. 23). Extension is by court only, on the victim's application, for up to one year (art. 23¹).",
       },
       checklist: [
         { id: "dv.order.issue", label: { uz: "Himoya orderini rasmiylashtirish", ru: "Оформить охранный ордер", en: "Issue the protection order" }, required: true },
@@ -298,7 +298,7 @@ export const adminOffenseSop: Sop = {
       order: 1,
       title: { uz: "Huquqbuzarlikni aniqlash", ru: "Выявление правонарушения", en: "Identify the offense" },
       instruction: {
-        uz: "Huquqbuzarlik holatini aniqlang va hujjatlashtiring. Commonly: mayda bezorilik (183), bola tarbiyasi majburiyati (47), jamoat joyida spirtli ichimlik (187), himoya orderi buzilishi (206¹).",
+        uz: "Huquqbuzarlik holatini aniqlang va hujjatlashtiring. Ko'pincha: mayda bezorilik (183), bola tarbiyasi majburiyati (47), jamoat joyida spirtli ichimlik (187), himoya orderi buzilishi (206¹).",
         ru: "Установите и задокументируйте правонарушение. Часто: мелкое хулиганство (183), обязанности по воспитанию (47), распитие в общественном месте (187), нарушение ордера (206¹).",
         en: "Identify and document the offense. Common: petty hooliganism (183), upbringing duties (47), public drinking (187), order breach (206¹).",
       },

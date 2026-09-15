@@ -95,7 +95,9 @@ function DialogRunner({ scenario, initial }: { scenario: DialogScenario; initial
             ? tc("badOutput")
             : sim.error === "too_long"
               ? t("tooLong")
-              : tc("errorGeneric")
+              : sim.error === "rate_limited"
+                ? tc("rateLimited")
+                : tc("errorGeneric")
     );
     sim.clearError();
     // eslint-disable-next-line react-hooks/exhaustive-deps

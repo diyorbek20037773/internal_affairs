@@ -40,7 +40,8 @@
     "goHome": "Bosh sahifa",
     "toDebrief": "Smart Debrifing",
     "abandonSession": "Mashg'ulotni to'xtatish",
-    "abandonConfirm": "Mashg'ulotni to'xtatmoqchimisiz? U «To'xtatilgan» deb saqlanadi va debrifsiz qoladi."
+    "abandonConfirm": "Mashg'ulotni to'xtatmoqchimisiz? U «To'xtatilgan» deb saqlanadi va debrifsiz qoladi.",
+    "rateLimited": "Juda ko'p so'rov — 30 soniyadan keyin qayta urinib ko'ring."
   },
   "modules": {
     "title": "Xizmat tizimlari bilan integratsiya",
@@ -697,7 +698,6 @@
       "allStopHint": "Qurolni xavfsiz holatga keltiring. Instruktor debrifingiga o'ting.",
       "hintRange": "Marksmanship: F — qurol, plastinalarga oting. R — qayta zaryad. Taymer birinchi o'qdan. Hit Factor = tegish / soniya.",
       "instructor": "Instruktor (ghost mode)",
-      "hintKeys": "",
       "ins": {
         "escalate": "Keskinlashtir",
         "deescalate": "Yumshat",

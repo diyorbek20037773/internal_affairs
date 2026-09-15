@@ -33,7 +33,7 @@
 - AI: Gemini (`@google/genai`), пул ключей с ротацией и failover; `generateJson()` — JSON mode + zod + 1 repair-retry. Контракт ошибок: `no_keys_configured` 500 / `ai_unavailable` 503 / `bad_ai_output` 502.
 - API: `/api/chat`, `/api/legal`, `/api/tts`, `/api/stt`, `/api/sim/{dialog,debrief,mahalla-grade,document-check,mentor,exam-summary}`, `/api/health`.
 - Хранение: `TrainingRepo` (async интерфейс) — локальный адаптер (localStorage `h360:*`) и серверный (Postgres, `/api/store/*`), гибрид: пишем локально всегда, на сервер — если доступен. `CasesRepo` (`mi:cases:v1`) — дела модуля «Мой инспектор».
-- Идентификация: профиль (ФИО, жетон SH-xxxx, звание, участок, роль trainee|instructor). Полноценный auth — отдельный этап.
+- Идентификация: профиль (ФИО, жетон SH-xxxx, звание, участок, роль trainee|instructor). Auth: служебный ID + PIN (реализовано, режим сервера).
 - 3D: Three.js / r3f, движок `src/lib/training/tirEngine.ts` (детерминированный), ассеты RPM + Poly Haven скачиваются на `prebuild`.
 
 ## 5. Интеграции (следующие этапы)

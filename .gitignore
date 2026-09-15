@@ -42,3 +42,5 @@ yarn-error.log*
 /public/hdri/
 /public/tex/
 .next-dev
+e2e/.out/
+/.next-*/

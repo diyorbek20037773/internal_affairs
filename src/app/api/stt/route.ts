@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { aiGuard } from "@/lib/aiGuard";
 import { z } from "zod";
 import { withKeyFailover } from "@/lib/gemini/keyPool";
 import { GEMINI_MODEL } from "@/lib/gemini/config";
@@ -26,6 +27,8 @@ const LANG: Record<string, string> = {
 };
 
 export async function POST(req: NextRequest) {
+  const blocked = await aiGuard(req, { cost: 1 });
+  if (blocked) return blocked;
   let body: z.infer<typeof BodySchema>;
   try {
     body = BodySchema.parse(await req.json());

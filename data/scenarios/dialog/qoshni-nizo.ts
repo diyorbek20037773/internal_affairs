@@ -13,7 +13,7 @@ export const qoshniNizo: DialogScenario = {
   difficulty: 1,
   tags: ["muloqot", "huquqiy_qaror", "vaziyat_tahlili"],
   estimatedMinutes: 8,
-  laws: ["lawPrevention", "regInspector", "mjtkOrderBreach"],
+  laws: ["lawPrevention", "regInspector", "lawAppeals"],
   version: "1.0",
   setting: {
     uz: "Mahalla ko'chasi, kunduzi. Siz Rustam akaning darvozasi oldidasiz. Qo'shnisi (Bahodir) hovlisida, eshitib turibdi.",

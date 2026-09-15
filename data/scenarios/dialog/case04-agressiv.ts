@@ -14,7 +14,7 @@ export const case04Agressiv: DialogScenario = {
   difficulty: 2,
   tags: ["muloqot", "deeskalatsiya", "profiling", "huquqiy_qaror"],
   estimatedMinutes: 10,
-  laws: ["lawPolice", "lawPrevention", "regInspector"],
+  laws: ["lawPolice", "lawPrevention", "regInspector", "lawAppeals"],
   version: "1.0",
   setting: {
     uz: "IIO tayanch punkti, ish kuni, soat 10:30. Xonada siz va fuqaro.",
@@ -47,7 +47,7 @@ export const case04Agressiv: DialogScenario = {
     secretFacts: [
       "Qo'shnisi — mahalla raisining qarindoshi, shuning uchun 'hech kim tegmaydi' deb o'ylaydi.",
       "Kecha tunda yana shovqin bo'lgan, shifokor chaqirishga to'g'ri kelgan (bosim ko'tarilgan).",
-      "Murojaat raqami yonida — 2024-yil 15-iyun, №1187.",
+      "Murojaat raqami yonida — uch oy oldingi sana, №1187.",
     ],
   },
   initialState: {

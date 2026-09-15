@@ -13,7 +13,7 @@ export const migrantIshchi: DialogScenario = {
   difficulty: 2,
   tags: ["muloqot", "profiling", "huquqiy_qaror", "hujjatlashtirish"],
   estimatedMinutes: 9,
-  laws: ["mjtkProtocol", "lawPolice", "regInspector"],
+  laws: ["mjtkProtocol", "lawPolice", "regInspector", "mjtkPassportRegime"],
   version: "1.0",
   setting: {
     uz: "Qurilish maydoni yonidagi ko'cha, tushlik vaqti. Yigit qo'lida non, sizni ko'rib to'xtab qoldi.",
@@ -43,7 +43,7 @@ export const migrantIshchi: DialogScenario = {
       "Ovqatini yeyishga ruxsat, shoshmaslik",
     ],
     secretFacts: [
-      "Pasporti ish beruvchi (prorab Farhod aka) sedjiga qulflangan — 2 oydan beri bermayapti.",
+      "Pasporti ish beruvchi (prorab Farhod aka) seyfiga qulflangan — 2 oydan beri bermayapti.",
       "Ish beruvchi maoshning yarmini 'ro'yxat uchun' deb ushlab qolgan.",
       "Brigadada yana 6 kishi shu holatda.",
     ],

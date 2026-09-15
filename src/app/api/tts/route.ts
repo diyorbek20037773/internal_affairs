@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { aiGuard } from "@/lib/aiGuard";
 import { z } from "zod";
 import { withKeyFailover } from "@/lib/gemini/keyPool";
 
@@ -50,6 +51,8 @@ function rateFromMime(mime: string | undefined): number {
 }
 
 export async function POST(req: NextRequest) {
+  const blocked = await aiGuard(req, { cost: 1 });
+  if (blocked) return blocked;
   let body: z.infer<typeof BodySchema>;
   try {
     body = BodySchema.parse(await req.json());
