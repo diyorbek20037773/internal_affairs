@@ -8,6 +8,7 @@ import type {
   TirOutcome,
   TirScenario,
 } from "@/data/scenarios/types";
+import { PISTOL, ZONE_DAMAGE } from "./weaponConfig";
 
 /**
  * TIR v2 — multi-actor immersive range engine (VirTra V-300 style).
@@ -26,9 +27,20 @@ export interface TirActor extends TirActorDef {
   hp: number;
 }
 
+/** First-person officer body on the platform (metres; looks down -Z at start). */
+export interface OfficerPos {
+  x: number;
+  z: number;
+  crouch: boolean;
+}
+
 export interface TirState {
   t: number;
   actors: TirActor[];
+  officer: OfficerPos;
+  /** 0-100; each hit taken removes 100 / rules.officerHitsToFail. */
+  health: number;
+  ammo: { mag: number; reserve: number; reloadLeft: number };
   weaponDrawn: boolean;
   inCover: boolean;
   backupCalled: boolean;
@@ -52,7 +64,57 @@ export interface TirState {
 }
 
 const clamp = (n: number, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, n));
-const dist = (a: { x: number; z: number }) => Math.hypot(a.x, a.z);
+const dist = (a: { x: number; z: number }, o: { x: number; z: number }) => Math.hypot(a.x - o.x, a.z - o.z);
+
+/* ------------------------------------------------------------------------ */
+/* Officer body / collision (FPS mode)                                       */
+/* ------------------------------------------------------------------------ */
+
+/** Concrete cover block on the platform (see Environments.CoverWall). */
+export const COVER_AABB = { minX: 1.1, maxX: 1.7, minZ: -1.4, maxZ: 0.2 } as const;
+const PLAYER_RADIUS = 0.3;
+const DEFAULT_BOUNDS = 6;
+
+/** Crouching right behind the cover block counts as being in cover. */
+export function inCoverZone(x: number, z: number): boolean {
+  return x >= COVER_AABB.minX - 0.9 && x <= COVER_AABB.maxX + 0.2 && z >= COVER_AABB.minZ - 0.3 && z <= COVER_AABB.maxZ + 1.0;
+}
+
+/** Push the officer out of the bounds circle, the cover block and actor bodies. Pure, no physics lib. */
+export function clampOfficer(x: number, z: number, s: TirScenario, actors: readonly TirActor[]): { x: number; z: number } {
+  const R = s.bounds?.radius ?? DEFAULT_BOUNDS;
+  // bounds circle
+  const d0 = Math.hypot(x, z);
+  if (d0 > R) { x *= R / d0; z *= R / d0; }
+  // cover AABB (inflated by player radius)
+  const minX = COVER_AABB.minX - PLAYER_RADIUS, maxX = COVER_AABB.maxX + PLAYER_RADIUS;
+  const minZ = COVER_AABB.minZ - PLAYER_RADIUS, maxZ = COVER_AABB.maxZ + PLAYER_RADIUS;
+  if (x > minX && x < maxX && z > minZ && z < maxZ) {
+    const push = [x - minX, maxX - x, z - minZ, maxZ - z];
+    const i = push.indexOf(Math.min(...push));
+    if (i === 0) x = minX; else if (i === 1) x = maxX; else if (i === 2) z = minZ; else z = maxZ;
+  }
+  // actor bodies
+  for (const a of actors) {
+    if (a.hidden || a.state === "down" || a.state === "fled") continue;
+    const r = (a.kind === "vehicle" ? 2.2 : a.kind === "plate" ? 0.3 : 0.5) + PLAYER_RADIUS;
+    const dx = x - a.x, dz = z - a.z;
+    const d = Math.hypot(dx, dz);
+    if (d < r) {
+      if (d < 1e-4) { x = a.x + r; continue; }
+      x = a.x + (dx / d) * r; z = a.z + (dz / d) * r;
+    }
+  }
+  return { x, z };
+}
+
+/** Client → engine: where the first-person officer is now. Not logged. */
+export function setOfficer(st: TirState, s: TirScenario, x: number, z: number, crouch: boolean): TirState {
+  const c = clampOfficer(x, z, s, st.actors);
+  const inCover = crouch && inCoverZone(c.x, c.z);
+  if (st.officer.x === c.x && st.officer.z === c.z && st.officer.crouch === crouch && st.inCover === inCover) return st;
+  return { ...st, officer: { x: c.x, z: c.z, crouch }, inCover };
+}
 
 /** No visible unresolved hostile AND nothing hidden waiting to be spawned. */
 const allHostilesResolved = (st: TirState) =>
@@ -97,7 +159,8 @@ export function initTir(s: TirScenario): TirState {
     hp: 1,
   }));
   let st: TirState = {
-    t: 0, actors, weaponDrawn: false, inCover: false, backupCalled: false, backupEta: null, backupArrived: false,
+    t: 0, actors, officer: { x: 0, z: 0, crouch: false }, health: 100, ammo: { mag: PISTOL.magazine, reserve: PISTOL.reserve, reloadLeft: 0 },
+    weaponDrawn: false, inCover: false, backupCalled: false, backupEta: null, backupArrived: false,
     lastTalkAt: null, talkCount: 0, shotsFired: 0, hits: 0, officerHits: 0, lastShotAt: null, firstShotAt: null, score: 0,
     outcome: null, events: [], currentLine: null, lineSeq: 0, shockSeq: 0, scriptDone: [], paused: false,
   };
@@ -109,14 +172,14 @@ export function initTir(s: TirScenario): TirState {
 
 export function primarySuspect(st: TirState): TirActor | undefined {
   const hostile = st.actors.filter((a) => !a.hidden && (a.role === "suspect" || a.role === "vehicle") && !RESOLVED.has(a.state));
-  hostile.sort((a, b) => dist(a) - dist(b));
+  hostile.sort((a, b) => dist(a, st.officer) - dist(b, st.officer));
   return hostile[0] ?? st.actors.find((a) => a.role === "suspect" || a.role === "vehicle");
 }
 
 function snapshot(st: TirState) {
   const p = primarySuspect(st);
   return {
-    distance: p ? Math.round(dist(p) * 10) / 10 : 0,
+    distance: p ? Math.round(dist(p, st.officer) * 10) / 10 : 0,
     agitation: p ? Math.round(p.agitation) : 0,
     compliance: p ? Math.round(p.compliance) : 0,
   };
@@ -145,8 +208,9 @@ function setActorState(st: TirState, id: string, next: TirActorState, text?: str
   return say(out, id, next);
 }
 
-function shock(st: TirState, text: string): TirState {
-  const out: TirState = { ...st, officerHits: st.officerHits + 1, shockSeq: st.shockSeq + 1 };
+function shock(st: TirState, s: TirScenario, text: string): TirState {
+  const dmg = Math.ceil(100 / Math.max(1, s.rules.officerHitsToFail));
+  const out: TirState = { ...st, officerHits: st.officerHits + 1, shockSeq: st.shockSeq + 1, health: Math.max(0, st.health - dmg) };
   return pushEvent(out, { kind: "shock", text });
 }
 
@@ -175,7 +239,7 @@ export function applyAction(
   let text = "";
   const p = primarySuspect(st);
   const a = p?.state ?? "idle";
-  const d = p ? dist(p) : 99;
+  const d = p ? dist(p, st.officer) : 99;
   const threatVisible = !!p && p.weapon !== "none";
   const sinceTalk = st.lastTalkAt == null ? 99 : st.t - st.lastTalkAt;
   const talkEff = sinceTalk < 2.5 ? 0.35 : sinceTalk < 5 ? 0.7 : 1;
@@ -258,8 +322,17 @@ export function applyAction(
       }
       break;
     }
+    case "reload": {
+      if (n.ammo.reloadLeft > 0 || n.ammo.reserve <= 0 || n.ammo.mag >= PISTOL.magazine) return noop(st);
+      n.ammo = { ...n.ammo, reloadLeft: PISTOL.reloadSec };
+      text = "Magazin almashtirilmoqda";
+      break;
+    }
     case "shoot": {
       if (!n.weaponDrawn) return noop(st);
+      if (n.ammo.reloadLeft > 0) return { state: st, legality: 3, proportionality: 3, text: "" };
+      if (n.ammo.mag <= 0) return { state: st, legality: 3, proportionality: 3, text: "Magazin bo'sh — R (qayta zaryad)" };
+      n.ammo = { ...n.ammo, mag: n.ammo.mag - 1 };
       const zone: TirHitZone = detail?.hit ?? "miss";
       const target = detail?.actorId ? n.actors.find((x) => x.id === detail.actorId) : undefined;
       const split = st.lastShotAt == null ? undefined : Math.round((st.t - st.lastShotAt) * 100) / 100;
@@ -284,7 +357,7 @@ export function applyAction(
       if (!target || zone === "miss") {
         // Missing near bystanders is still a decision. Was there a lawful reason to fire at all?
         const lawful =
-          !!p && (p.role === "vehicle" ? p.state === "charging" : shootLegality(p, s).legality >= 2);
+          !!p && (p.role === "vehicle" ? p.state === "charging" : shootLegality(p, s, st.officer).legality >= 2);
         L = lawful ? 2 : 0;
         P = lawful ? 2 : 0;
         text = lawful ? "O'q uzildi — tegmadi" : "O'q uzildi xavf shartlarisiz — tegmadi";
@@ -307,7 +380,7 @@ export function applyAction(
       // Vehicle
       if (target.role === "vehicle") {
         const charging = target.state === "charging";
-        const close = dist(target) <= s.rules.vehicleThreatDistance;
+        const close = dist(target, st.officer) <= s.rules.vehicleThreatDistance;
         if (zone === "tire") {
           if (charging) { L = 3; P = 3; text = "Balonga o'q — oxirgi chora, mashina to'xtadi"; n.hits++; n = setActorState(n, target.id, "stopped", "Mashina balonlari yorildi — to'xtadi"); n.outcome = "vehicle_stopped"; }
           else if (target.state === "revving") { L = 1; P = 1; text = "Balonga o'q — mashina hali harakatlanmagan (muddatidan oldin)"; n.hits++; n = setActorState(n, target.id, "stopped"); n.outcome = "unlawful_force"; }
@@ -324,11 +397,15 @@ export function applyAction(
       }
 
       // Suspect human
-      const leg = shootLegality(target, s);
+      const leg = shootLegality(target, s, st.officer);
       L = leg.legality; P = leg.proportionality;
       n.hits++;
       text = `${leg.text} (${target.name}, ${zone})`;
-      const stays = zone === "limb" && Math.random() < 0.35; // limb hit may not stop
+      // hit zones: head 1.0 / torso 0.6 / limb 0.35 of hp — a limb hit rarely stops an attacker
+      const dmg = PISTOL.damage * (zone === "head" || zone === "torso" || zone === "limb" ? ZONE_DAMAGE[zone] : 0.6);
+      const hpLeft = Math.max(0, target.hp - dmg);
+      n = updateActor(n, target.id, { hp: hpLeft });
+      const stays = hpLeft > 0.001;
       if (!stays) {
         n = setActorState(n, target.id, "down", `${target.name} o'qdan yerga tushdi`);
         // hostage released
@@ -362,8 +439,8 @@ export function applyAction(
 }
 
 /** Legality of shooting THIS suspect right now. */
-function shootLegality(a: TirActor, s: TirScenario): { legality: Score03; proportionality: Score03; text: string } {
-  const d = dist(a);
+function shootLegality(a: TirActor, s: TirScenario, o: OfficerPos): { legality: Score03; proportionality: Score03; text: string } {
+  const d = dist(a, o);
   if (a.weapon === "gun") {
     if (a.state === "aiming") return { legality: 3, proportionality: 3, text: "O'q — o'qotar qurol xodimga/fuqaroga qaratilgan" };
     if (a.state === "weapon_raised") return { legality: 3, proportionality: 3, text: "O'q — o'qotar qurol ko'tarilgan" };
@@ -406,6 +483,17 @@ export function tick(st: TirState, s: TirScenario, dt: number): TirState {
     }
   });
 
+  // Reload
+  if (n.ammo.reloadLeft > 0) {
+    const left = Math.max(0, n.ammo.reloadLeft - dt);
+    if (left === 0) {
+      const need = PISTOL.magazine - n.ammo.mag;
+      const take = Math.min(need, n.ammo.reserve);
+      n = { ...n, ammo: { mag: n.ammo.mag + take, reserve: n.ammo.reserve - take, reloadLeft: 0 } };
+      n = pushEvent(n, { kind: "action", action: "reload", text: `Magazin almashtirildi (${n.ammo.mag}/${n.ammo.reserve})`, legality: 3, proportionality: 3 });
+    } else n = { ...n, ammo: { ...n.ammo, reloadLeft: left } };
+  }
+
   // Backup
   if (n.backupCalled && n.backupEta != null && !n.backupArrived) {
     n.backupEta = Math.max(0, n.backupEta - dt);
@@ -420,16 +508,22 @@ export function tick(st: TirState, s: TirScenario, dt: number): TirState {
   for (const a0 of n.actors) {
     if (a0.hidden || RESOLVED.has(a0.state)) continue;
     let a = { ...a0 };
-    const d = dist(a);
+    const o = n.officer;
+    const d = dist(a, o);
     const since = n.t - a.stateSince;
+    /** Step toward the officer by `metres`, never closer than `stop`. */
+    const stepTo = (metres: number, stop: number) => {
+      if (d <= stop || d < 1e-3) return;
+      const step = Math.min(metres, d - stop);
+      a.x += ((o.x - a.x) / d) * step;
+      a.z += ((o.z - a.z) / d) * step;
+    };
 
     if (a.kind === "human" && a.role === "suspect") {
       if ((a.state === "shouting" || a.state === "approaching" || a.state === "weapon_raised") && sinceTalk > 6) a.agitation = clamp(a.agitation + r.silenceDrift * dt);
       if (n.weaponDrawn && !HUMAN_THREAT.has(a.state) && a.weapon !== "gun") a.agitation = clamp(a.agitation + 1.5 * dt);
       const speed = a.speed ?? 0.45;
-      const moveTowards = (v: number) => {
-        if (d > r.minDistance) { const k = Math.max(0, 1 - (v * dt) / d); a.x *= k; a.z *= k; }
-      };
+      const moveTowards = (v: number) => stepTo(v * dt, r.minDistance);
       let next: TirActorState | null = null;
       switch (a.state) {
         case "shouting":
@@ -460,20 +554,25 @@ export function tick(st: TirState, s: TirScenario, dt: number): TirState {
             a.aimTimer = a.keepsFiring ? aimSec - 2.2 : 0;
             const hitChance = n.inCover ? 0.25 : 0.65;
             n = { ...n, actors: n.actors.map((x) => (x.id === a.id ? a : x)) };
-            if (Math.random() < hitChance) n = shock(n, `${a.name} xodimga o'q uzdi — TEGDI (elektroshok)`);
+            if (Math.random() < hitChance) n = shock(n, s, `${a.name} xodimga o'q uzdi — TEGDI (elektroshok)`);
             else n = pushEvent(n, { kind: "actor", actorId: a.id, text: `${a.name} xodimga o'q uzdi — o'tib ketdi` });
             if (!a.keepsFiring) next = "weapon_raised";
-            if (n.officerHits >= r.officerHitsToFail) n.outcome = "officer_down";
+            if (n.officerHits >= r.officerHitsToFail || n.health <= 0) n.outcome = "officer_down";
             a = n.actors.find((x) => x.id === a.id)!;
           }
           if (a.compliance >= r.complyCompliance + 15) next = "dropping";
           break;
         }
         case "lunging":
-          moveTowards(3.2);
+          stepTo(3.2 * dt, 0.3);
           if (d <= 0.5) {
-            if (n.inCover) { a.agitation = clamp(a.agitation - 20); a.z = -2; a.x = 0; next = "weapon_raised"; n = pushEvent(n, { kind: "system", text: `${a.name} to'siqqa urildi — xodim to'siq ortida` }); }
-            else { n = shock(n, `${a.name} xodimga yetib keldi — jarohat (elektroshok)`); n.outcome = "officer_injured"; }
+            if (n.inCover) {
+              a.agitation = clamp(a.agitation - 20);
+              const ux = d > 0.05 ? (a.x - o.x) / d : 0, uz = d > 0.05 ? (a.z - o.z) / d : -1;
+              a.x = o.x + ux * 2; a.z = o.z + uz * 2;
+              next = "weapon_raised";
+              n = pushEvent(n, { kind: "system", text: `${a.name} to'siqqa urildi — xodim to'siq ortida` });
+            } else { n = shock(n, s, `${a.name} xodimga yetib keldi — jarohat (elektroshok)`); n.outcome = "officer_injured"; }
           }
           break;
         case "dropping":
@@ -491,12 +590,11 @@ export function tick(st: TirState, s: TirScenario, dt: number): TirState {
           break;
         case "charging": {
           const v = a.speed ?? 6;
-          const k = Math.max(0, 1 - (v * dt) / Math.max(d, 0.01));
-          a.x *= k; a.z *= k;
+          stepTo(v * dt, 0);
           n = { ...n, actors: n.actors.map((x) => (x.id === a.id ? a : x)) };
           if (d <= 1.2) {
             if (n.inCover) { n = pushEvent(n, { kind: "system", text: "Mashina to'siq yonidan o'tib ketdi — xodim to'siq ortida" }); n = setActorState(n, a.id, "fled"); n.outcome = "timeout"; }
-            else { n = shock(n, "Mashina xodimga urildi (elektroshok)"); n.outcome = "officer_down"; }
+            else { n = shock(n, s, "Mashina xodimga urildi (elektroshok)"); n.outcome = "officer_down"; }
           }
           break;
         }

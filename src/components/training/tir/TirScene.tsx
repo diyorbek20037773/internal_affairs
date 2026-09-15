@@ -1,21 +1,49 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, type MutableRefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Bloom, EffectComposer, Noise, SMAA, Vignette } from "@react-three/postprocessing";
 import { BlendFunction } from "postprocessing";
 import type { TirHitZone, TirScenario } from "@/data/scenarios/types";
-import type { TirActor, TirState } from "@/lib/training/tirEngine";
+import { clampOfficer, type TirActor, type TirState } from "@/lib/training/tirEngine";
+import type { WeaponConfig } from "@/lib/training/weaponConfig";
 import { Plate, Vehicle } from "./Actor";
 import { SmartHuman as Human } from "./RealHuman";
 import { Environment } from "./Environments";
+import { FpsControls } from "./player/FpsControls";
+import type { PlayerState } from "./player/playerTypes";
+import { Viewmodel } from "./weapons/Viewmodel";
+import { ShotRaycaster } from "./weapons/ShotRaycaster";
+
+export const TIR_CANVAS_CLASS = "tir-canvas";
+
+export interface FpsProps {
+  /** Movement/look allowed (PLAYING). */
+  playing: boolean;
+  /** Pointer is locked, or locking is unavailable (headless/iframe) — clicks fire. */
+  canFireFromClick: boolean;
+  /** Request pointer lock on canvas click (false when lock is unavailable or disabled). */
+  allowLock: boolean;
+  weapon: WeaponConfig;
+  canFire: boolean;
+  reloading: boolean;
+  shotSeq: number;
+  playerRef: MutableRefObject<PlayerState>;
+  onMove: (x: number, z: number, crouch: boolean) => void;
+  onLockChange: (locked: boolean) => void;
+  onLockError: () => void;
+  onStep: (sprint: boolean) => void;
+  onDryFire: () => void;
+}
 
 /**
- * The 3-wall range view (multi-actor). Officer camera at eye height on the
- * platform, actors on the scene plane. `wide` opens the FOV for the 48:9
- * three-screen wall. While the weapon is drawn, any click fires: actor meshes
- * report (actorId, zone); the backdrop reports a miss.
+ * The 3-wall range view (multi-actor). Two control modes:
+ *  - "fixed": camera fixed at eye height, auto-looks at the nearest threat
+ *    (tablet / touch); clicking an actor mesh fires.
+ *  - "fps": first-person officer (WASD + pointer lock); shots are a camera-
+ *    centre raycast, actors turn toward and chase the moving officer.
+ * `wide` opens the FOV for the 48:9 three-screen wall.
  */
 export function TirScene({
   scenario,
@@ -23,38 +51,77 @@ export function TirScene({
   wide,
   onShoot,
   quality = "high",
+  controls = "fixed",
+  fps,
 }: {
   scenario: TirScenario;
   state: TirState;
   wide: boolean;
   onShoot: (actorId: string | null, zone: TirHitZone) => void;
   quality?: "high" | "low";
+  controls?: "fps" | "fixed";
+  fps?: FpsProps;
 }) {
   const armed = state.weaponDrawn && !state.outcome && !state.paused;
-  const primary = nearestHostile(state.actors);
+  const isFps = controls === "fps" && !!fps;
+  const clickToShoot = armed && !isFps;
+  const primary = nearestHostile(state.actors, state.officer);
   const lookZ = primary ? Math.max(2, Math.hypot(primary.x, primary.z)) : 8;
   const lookX = primary ? primary.x * 0.5 : 0;
+  const officer = state.officer;
 
   return (
     <Canvas
+      className={TIR_CANVAS_CLASS}
       shadows={quality === "high" ? { type: THREE.PCFSoftShadowMap } : true}
       dpr={quality === "high" ? [1, 1.75] : [1, 1]}
       gl={{ antialias: quality !== "high", toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.9, powerPreference: "high-performance" }}
-      camera={{ position: [0, 1.6, 0], fov: wide ? 86 : 55, near: 0.1, far: 200 }}
-      style={{ cursor: armed ? "crosshair" : "default" }}
+      camera={{ position: [0, 1.6, 0], fov: wide ? 86 : 55, near: 0.08, far: 200 }}
+      style={{ cursor: isFps ? "none" : armed ? "crosshair" : "default" }}
       onCreated={({ camera }) => camera.lookAt(0, 1.35, -6)}
     >
-      <CameraRig inCover={state.inCover} lookX={lookX} lookZ={lookZ} intense={!!primary && (primary.state === "lunging" || primary.state === "charging" || primary.state === "aiming")} shockSeq={state.shockSeq} />
+      {isFps && fps ? (
+        <>
+          <FpsControls
+            enabled={fps.playing}
+            lockSelector={fps.allowLock ? `.${TIR_CANVAS_CLASS} canvas` : ".__no-pointer-lock__"}
+            clamp={(x, z) => clampOfficer(x, z, scenario, state.actors)}
+            onMove={fps.onMove}
+            onLockChange={fps.onLockChange}
+            onLockError={fps.onLockError}
+            onStep={fps.onStep}
+            shockSeq={state.shockSeq}
+            recoilRef={recoilRef}
+            playerRef={fps.playerRef}
+          />
+          <Viewmodel visible={state.weaponDrawn && !state.outcome} weapon={fps.weapon.id} shotSeq={fps.shotSeq} reloading={state.ammo.reloadLeft > 0} playerRef={fps.playerRef} />
+          <ShotRaycaster
+            armed={armed && fps.playing}
+            clickFires={fps.canFireFromClick}
+            canFire={fps.canFire}
+            weapon={fps.weapon}
+            onShoot={(id, zone) => onShoot(id, zone)}
+            onDryFire={fps.onDryFire}
+            onLockTimeout={fps.onLockError}
+            recoilRef={recoilRef}
+          />
+        </>
+      ) : (
+        <CameraRig inCover={state.inCover} lookX={lookX} lookZ={lookZ} intense={!!primary && (primary.state === "lunging" || primary.state === "charging" || primary.state === "aiming")} shockSeq={state.shockSeq} />
+      )}
       <Environment kind={scenario.environment} quality={quality} />
 
       {state.actors.filter((a) => !a.hidden).map((a) =>
         a.kind === "vehicle" ? (
-          <Vehicle key={a.id} x={a.x} z={a.z} state={a.state} onShot={(z) => armed && onShoot(a.id, z)} />
+          <Vehicle key={a.id} actorId={a.id} officer={officer} x={a.x} z={a.z} state={a.state} onShot={clickToShoot ? (z) => onShoot(a.id, z) : undefined} />
         ) : a.kind === "plate" ? (
-          <Plate key={a.id} x={a.x} z={a.z} state={a.state} label={a.name} onShot={(z) => armed && onShoot(a.id, z)} />
+          <Plate key={a.id} actorId={a.id} x={a.x} z={a.z} state={a.state} label={a.name} onShot={clickToShoot ? (z) => onShoot(a.id, z) : undefined} />
         ) : (
           <Human
             key={a.id}
+            actorId={a.id}
+            officer={officer}
+            hp={a.hp}
             x={a.x}
             z={a.z}
             state={a.state}
@@ -64,13 +131,13 @@ export function TirScene({
             shirt={a.shirt}
             gender={a.gender}
             seed={a.id.split("").reduce((h, c) => h * 31 + c.charCodeAt(0), 7)}
-            onShot={(z) => armed && onShoot(a.id, z)}
+            onShot={clickToShoot ? (z) => onShoot(a.id, z) : undefined}
           />
         )
       )}
 
-      {scenario.partner && <Human x={-3.4} z={-4.4} state="idle" role="police" weapon="gun" seed={11} />}
-      {state.backupArrived && <Human x={-4.6} z={-5.2} state="idle" role="police" weapon="gun" seed={17} />}
+      {scenario.partner && <Human x={-3.4} z={-4.4} state="idle" role="police" weapon="gun" seed={11} officer={officer} />}
+      {state.backupArrived && <Human x={-4.6} z={-5.2} state="idle" role="police" weapon="gun" seed={17} officer={officer} />}
 
       {quality === "high" && (
         <EffectComposer multisampling={0}>
@@ -81,12 +148,12 @@ export function TirScene({
         </EffectComposer>
       )}
 
-      {/* miss backdrop */}
-      <mesh position={[0, 10, -40]} onPointerDown={() => armed && onShoot(null, "miss")}>
+      {/* miss backdrop (fixed mode: click = miss; fps: raycast target = miss) */}
+      <mesh position={[0, 10, -40]} onPointerDown={() => clickToShoot && onShoot(null, "miss")}>
         <planeGeometry args={[300, 100]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -10]} onPointerDown={() => armed && onShoot(null, "miss")}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -10]} onPointerDown={() => clickToShoot && onShoot(null, "miss")}>
         <planeGeometry args={[120, 120]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
@@ -94,11 +161,14 @@ export function TirScene({
   );
 }
 
-function nearestHostile(actors: TirActor[]): TirActor | undefined {
+// Module-level recoil accumulator shared by the raycaster and the controller (one range per page).
+const recoilRef: MutableRefObject<number> = { current: 0 };
+
+function nearestHostile(actors: TirActor[], o: { x: number; z: number }): TirActor | undefined {
   const resolved = new Set(["kneeling", "down", "calm", "fleeing", "hands_up", "stopped", "fled", "hit"]);
   return actors
     .filter((a) => !a.hidden && (a.role === "suspect" || a.role === "vehicle") && !resolved.has(a.state))
-    .sort((a, b) => Math.hypot(a.x, a.z) - Math.hypot(b.x, b.z))[0];
+    .sort((a, b) => Math.hypot(a.x - o.x, a.z - o.z) - Math.hypot(b.x - o.x, b.z - o.z))[0];
 }
 
 function CameraRig({ inCover, lookX, lookZ, intense, shockSeq }: { inCover: boolean; lookX: number; lookZ: number; intense: boolean; shockSeq: number }) {

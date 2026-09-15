@@ -293,7 +293,7 @@ export type Scenario = DialogScenario | DecisionScenario | MahallaScenario | Doc
 
 export const TIR_ACTIONS = [
   "talk_calm", "talk_command", "talk_threat",
-  "draw", "holster", "taser", "shoot", "backup", "retreat", "cover",
+  "draw", "holster", "taser", "shoot", "backup", "retreat", "cover", "reload",
 ] as const;
 export type TirAction = (typeof TIR_ACTIONS)[number];
 
@@ -374,6 +374,8 @@ export interface TirScenario extends ScenarioBase {
   };
   briefing: LocalizedText;
   rubricHints: Partial<Record<Competency, string>>;
+  /** Walkable area for the first-person officer (metres, centred on the platform). Default radius 6. */
+  bounds?: { radius: number };
   /**
    * Optional filmed-video pack (VirTra-style). When a clip exists for the
    * primary actor's current state it is shown full-bleed over the 3D scene.

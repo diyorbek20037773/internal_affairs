@@ -59,6 +59,10 @@ const check = (name: string, ok: boolean, note = "") => { ok ? pass++ : fail++; 
   check("building: gunman spawned and aiming by t=6", !g1.hidden && g1.state === "aiming", g1.state);
   let r = applyAction(st, tirBino, "shoot", { hit: "torso", actorId: "g1" });
   check("building: shooting AIMING gunman → lawful L3", r.legality === 3 && r.proportionality === 3, r.text);
+  // hp zones: one torso hit (0.65) does not stop him — fire until the threat stops
+  check("building: first torso hit → gunman still up (hp 0.35)", r.state.actors.find((a) => a.id === "g1")!.state !== "down" && /to'xtamadi/.test(r.text), r.text);
+  r = applyAction(r.state, tirBino, "shoot", { hit: "torso", actorId: "g1" });
+  check("building: second torso hit → down", r.state.actors.find((a) => a.id === "g1")!.state === "down", r.text);
   let s2 = r.state;
   for (let i = 0; i < 90; i++) s2 = tick(s2, tirBino, 0.1); // t=15 → cop spawned
   const cop = s2.actors.find((a) => a.id === "cop")!;

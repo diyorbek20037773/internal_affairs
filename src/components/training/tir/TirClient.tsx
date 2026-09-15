@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import {
   ArrowRight, Crosshair, Maximize2, Mic, MonitorPlay, Radio, Shield, ShieldOff, Zap, MoveLeft, Volume2, VolumeX,
   Play, MessageCircle, AlertTriangle, CheckCircle2, Timer, Trophy, Pause, Square, Flame, ExternalLink, ChevronDown, ChevronUp,
+  RotateCcw, Gamepad2, MousePointer2, Heart, Skull,
 } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { Card } from "@/components/ui/card";
@@ -17,20 +18,26 @@ import { useSpeech } from "@/hooks/useSpeech";
 import { newTirSession, touch } from "@/lib/training/sessionFactory";
 import { localTrainingRepo } from "@/lib/storage/training";
 import {
-  ACTOR_TEXT, applyAction, applyInstructor, classifyTalk, hitFactor, initTir, outcomeSummary, primarySuspect, tick,
+  ACTOR_TEXT, applyAction, applyInstructor, classifyTalk, hitFactor, initTir, outcomeSummary, primarySuspect, setOfficer, tick,
   TIR_PRESET_PHRASES, type InstructorCmd, type TirState,
 } from "@/lib/training/tirEngine";
+import { PISTOL } from "@/lib/training/weaponConfig";
 import { localized } from "@/data/sops/types";
 import type { TirAction, TirHitZone, TirScenario } from "@/data/scenarios/types";
 import type { TrainingSession } from "@/lib/storage/trainingSchema";
 import { ProfileGate } from "../profile/ProfileGate";
 import { TirVideoLayer } from "./TirVideoLayer";
 import { AssetLoading } from "./AssetLoading";
+import { sfx } from "./tirAudio";
+import { initialPlayer, type PlayerState, type TirGameState } from "./player/playerTypes";
+import type { FpsProps } from "./TirScene";
 import { cn } from "@/lib/utils";
 
 const TirScene = dynamic(() => import("./TirScene").then((m) => m.TirScene), { ssr: false });
 
 const TICK_MS = 100;
+type ControlMode = "fps" | "fixed";
+const isTouch = () => typeof window !== "undefined" && (navigator.maxTouchPoints > 0 || /Android|iPhone|iPad/i.test(navigator.userAgent));
 export const tirChannelName = (sessionId: string) => `h360-tir-${sessionId}`;
 
 export function TirClient({
@@ -71,6 +78,19 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
     if (q === "low" || q === "high") return q;
     return /Android|iPhone|iPad/i.test(navigator.userAgent) ? "low" : "high";
   });
+  const [controls, setControls] = useState<ControlMode>(() => {
+    if (typeof window === "undefined") return "fixed";
+    const q = new URLSearchParams(window.location.search).get("controls");
+    if (q === "fps" || q === "fixed") return q;
+    return isTouch() ? "fixed" : "fps";
+  });
+  const [locked, setLocked] = useState(false);
+  // ?lock=0 — no pointer capture (embedded/kiosk/E2E): keyboard moves, clicks fire from the centre.
+  const [lockFailed, setLockFailed] = useState<boolean>(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("lock") === "0");
+  const [shotSeq, setShotSeq] = useState(0);
+  const [hitMark, setHitMark] = useState(false);
+  const [hurtFx, setHurtFx] = useState(false);
+  const playerRef = useRef<PlayerState>(initialPlayer());
   const [flash, setFlash] = useState(false);
   const [shockFx, setShockFx] = useState(false);
   const [allStop, setAllStop] = useState(false);
@@ -79,11 +99,18 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
   const [lastFeedback, setLastFeedback] = useState<{ text: string; L: number; P: number } | null>(null);
   const stateRef = useRef(state);
   stateRef.current = state;
+  const controlsRef = useRef<ControlMode>("fixed");
+  const officerRef = useRef({ x: 0, z: 0, crouch: false });
   const wrapRef = useRef<HTMLDivElement>(null);
   const spokenSeq = useRef(-1);
   const shockSeen = useRef(0);
   const savedOutcome = useRef(false);
   const channel = useRef<BroadcastChannel | null>(null);
+
+  // Debug/telemetry hook for E2E and the instructor station (read-only).
+  useEffect(() => {
+    (window as unknown as { __h360tir?: unknown }).__h360tir = { officer: state.officer, health: state.health, ammo: state.ammo, shots: state.shotsFired, hits: state.hits, outcome: state.outcome, locked, controls, t: state.t };
+  }, [state, locked, controls]);
 
   // Instructor station channel (second window / tablet in the same browser profile).
   useEffect(() => {
@@ -109,15 +136,17 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
     let last = performance.now();
     const id = window.setInterval(() => {
       const now = performance.now();
-      let elapsed = Math.min(1000, now - last);
-      last = now;
-      let s = stateRef.current;
-      while (elapsed >= TICK_MS && !s.outcome) {
-        s = tick(s, scenario, TICK_MS / 1000);
-        elapsed -= TICK_MS;
-      }
-      last -= elapsed; // carry the remainder
-      setState(s);
+      const elapsed = Math.min(1000, now - last);
+      const steps = Math.floor(elapsed / TICK_MS);
+      last = now - (elapsed - steps * TICK_MS); // carry the remainder
+      if (steps === 0) return;
+      // Functional update so a concurrent officer-position update is never overwritten.
+      setState((cur) => {
+        const o = officerRef.current;
+        let s = controlsRef.current === "fps" ? setOfficer(cur, scenario, o.x, o.z, o.crouch) : cur;
+        for (let i = 0; i < steps && !s.outcome; i++) s = tick(s, scenario, TICK_MS / 1000);
+        return s;
+      });
     }, TICK_MS);
     return () => window.clearInterval(id);
   }, [started, state.outcome, scenario]);
@@ -138,6 +167,9 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
     window.setTimeout(() => setShockFx(false), 700);
     try { navigator.vibrate?.([200, 80, 300]); } catch {}
     buzz(70, 0.6);
+    sfx.hurt();
+    setHurtFx(true);
+    window.setTimeout(() => setHurtFx(false), 450);
     window.dispatchEvent(new CustomEvent("h360:shock", { detail: { sessionId: session.id, t: state.t } }));
   }, [state.shockSeq, state.t, session.id]);
 
@@ -173,13 +205,13 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
 
   const act = useCallback(
     (action: TirAction, detail?: { hit?: TirHitZone; actorId?: string; phrase?: string }) => {
-      const cur = stateRef.current;
+      const o = officerRef.current;
+      const cur = controlsRef.current === "fps" ? setOfficer(stateRef.current, scenario, o.x, o.z, o.crouch) : stateRef.current;
       if (!started || cur.outcome || cur.paused) return;
       const r = applyAction(cur, scenario, action, detail);
-      if (r.state !== cur) {
-        setState(r.state);
-        if (r.text) setLastFeedback({ text: r.text, L: r.legality, P: r.proportionality });
-      }
+      if (r.state !== cur) setState(r.state);
+      if (r.text) setLastFeedback({ text: r.text, L: r.legality, P: r.proportionality });
+      return r;
     },
     [started, scenario]
   );
@@ -192,10 +224,52 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
   };
 
   const onShoot = (actorId: string | null, zone: TirHitZone) => {
+    const cur = stateRef.current;
+    if (!cur.weaponDrawn || cur.ammo.reloadLeft > 0) return;
+    if (cur.ammo.mag <= 0) { sfx.dry(); setLastFeedback({ text: "Magazin bo'sh — R (qayta zaryad)", L: 3, P: 3 }); return; }
     setFlash(true);
-    window.setTimeout(() => setFlash(false), 90);
-    buzz(120, 0.35, "square");
-    act("shoot", { hit: zone, actorId: actorId ?? undefined });
+    window.setTimeout(() => setFlash(false), 70);
+    setShotSeq((n) => n + 1);
+    sfx.shot();
+    const r = act("shoot", { hit: zone, actorId: actorId ?? undefined });
+    if (r && r.state.hits > cur.hits) {
+      sfx.hit();
+      setHitMark(true);
+      window.setTimeout(() => setHitMark(false), 140);
+    }
+  };
+
+  const doReload = () => {
+    const cur = stateRef.current;
+    if (cur.ammo.reloadLeft > 0 || cur.ammo.reserve <= 0 || cur.ammo.mag >= PISTOL.magazine) return;
+    sfx.reload();
+    act("reload");
+  };
+
+  const doDraw = () => { const r = act("draw"); if (r && r.state !== stateRef.current) sfx.draw(); };
+
+  // FPS bridge (all callbacks stable; hot data lives in refs).
+  const fpsMove = useCallback((x: number, z: number, crouch: boolean) => {
+    officerRef.current = { x, z, crouch };
+    setState((cur) => setOfficer(cur, scenario, x, z, crouch));
+  }, [scenario]);
+  const fpsLock = useCallback((v: boolean) => setLocked(v), []);
+  const fpsLockError = useCallback(() => setLockFailed(true), []);
+  const fpsStep = useCallback((sprint: boolean) => sfx.step(sprint), []);
+  const fpsDry = useCallback(() => { sfx.dry(); setLastFeedback({ text: "Magazin bo'sh — R (qayta zaryad)", L: 3, P: 3 }); }, []);
+
+  const restart = () => {
+    speech.stopSpeaking();
+    savedOutcome.current = false;
+    spokenSeq.current = -1;
+    shockSeen.current = 0;
+    playerRef.current = initialPlayer();
+    officerRef.current = { x: 0, z: 0, crouch: false };
+    setLastFeedback(null);
+    setAllStop(false);
+    setStarted(false);
+    setState(initTir(scenario));
+    setSession(newTirSession(scenario, { traineeId: session.traineeId, examId: session.examId, examStageIndex: session.examStageIndex }));
   };
 
   const instructor = (cmd: InstructorCmd) => setState((cur) => applyInstructor(cur, scenario, cmd));
@@ -210,21 +284,46 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement)?.tagName === "INPUT") return;
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
       const k = e.key.toLowerCase();
       const idx = Number(e.key) - 1;
+      const fpsMode = controlsRef.current === "fps";
       if (idx >= 0 && idx < TIR_PRESET_PHRASES.length) act(TIR_PRESET_PHRASES[idx].action, { phrase: TIR_PRESET_PHRASES[idx].uz });
-      else if (k === "d") act("draw");
+      else if (k === "f") { const r = act("draw"); if (r && r.text) sfx.draw(); }
       else if (k === "h") act("holster");
-      else if (k === "t") act("taser");
+      else if (k === "t") { const r = act("taser"); if (r && r.text) sfx.taser(); }
       else if (k === "b") act("backup");
-      else if (k === "r") act("retreat");
-      else if (k === "c") act("cover");
+      else if (k === "r") { const cur = stateRef.current; if (cur.ammo.reloadLeft === 0 && cur.ammo.reserve > 0 && cur.ammo.mag < PISTOL.magazine) sfx.reload(); act("reload"); }
+      else if (k === "x" && !fpsMode) act("retreat");
+      else if (k === "q" && !fpsMode) act("cover");
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [act]);
 
+  controlsRef.current = controls;
   const outcome = state.outcome ? outcomeSummary(state.outcome) : null;
+  const fpsMode = controls === "fps";
+  const playing = started && !state.outcome && !state.paused;
+  const gameState: TirGameState = !started ? "MENU" : state.paused ? "PAUSED" : !state.outcome ? "PLAYING"
+    : state.outcome === "officer_down" || state.outcome === "officer_injured" ? "PLAYER_DEAD"
+    : outcome?.tone === "good" ? "ROUND_WON" : "ROUND_LOST";
+  const reloading = state.ammo.reloadLeft > 0;
+  const fpsProps: FpsProps = {
+    playing,
+    canFireFromClick: locked || lockFailed,
+    allowLock: !lockFailed,
+    weapon: PISTOL,
+    canFire: state.ammo.mag > 0 && !reloading,
+    reloading,
+    shotSeq,
+    playerRef,
+    onMove: fpsMove,
+    onLockChange: fpsLock,
+    onLockError: fpsLockError,
+    onStep: fpsStep,
+    onDryFire: fpsDry,
+  };
   const remaining = Math.max(0, Math.ceil(scenario.rules.durationSec - state.t));
   const primary = primarySuspect(state);
   const shots = state.events.filter((e) => e.kind === "action" && e.action === "shoot");
@@ -238,7 +337,7 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
         ref={wrapRef}
         className={cn("relative w-full overflow-hidden rounded-xl border bg-black shadow-elevated", wide ? "aspect-[48/9]" : "aspect-video")}
       >
-        <TirScene scenario={scenario} state={state} wide={wide} onShoot={onShoot} quality={quality} />
+        <TirScene scenario={scenario} state={state} wide={wide} onShoot={onShoot} quality={quality} controls={controls} fps={fpsMode ? fpsProps : undefined} />
         <TirVideoLayer scenario={scenario} state={primarySuspect(state)?.state} muted={!voice} />
         <AssetLoading />
 
@@ -253,9 +352,38 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
           </div>
         )}
 
-        {state.weaponDrawn && !state.outcome && (
+        <div className={cn("pointer-events-none absolute inset-0 transition-opacity duration-200", hurtFx ? "opacity-100" : "opacity-0")} style={{ background: "radial-gradient(ellipse at center, rgba(220,38,38,0) 55%, rgba(220,38,38,0.55) 100%)" }} />
+        {state.weaponDrawn && !state.outcome && !fpsMode && (
           <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white/80">
             <Crosshair className="h-10 w-10 drop-shadow" />
+          </div>
+        )}
+        {fpsMode && playing && (
+          <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" aria-hidden>
+            {state.weaponDrawn ? (
+              <div className={cn("relative h-8 w-8 transition-transform", hitMark ? "scale-125" : "scale-100")}>
+                <span className="absolute left-1/2 top-0 h-2.5 w-0.5 -translate-x-1/2 bg-white shadow-[0_0_2px_#000]" />
+                <span className="absolute bottom-0 left-1/2 h-2.5 w-0.5 -translate-x-1/2 bg-white shadow-[0_0_2px_#000]" />
+                <span className="absolute left-0 top-1/2 h-0.5 w-2.5 -translate-y-1/2 bg-white shadow-[0_0_2px_#000]" />
+                <span className="absolute right-0 top-1/2 h-0.5 w-2.5 -translate-y-1/2 bg-white shadow-[0_0_2px_#000]" />
+                {hitMark && (
+                  <>
+                    <span className="absolute left-1/2 top-1/2 h-0.5 w-5 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-destructive" />
+                    <span className="absolute left-1/2 top-1/2 h-0.5 w-5 -translate-x-1/2 -translate-y-1/2 -rotate-45 bg-destructive" />
+                  </>
+                )}
+              </div>
+            ) : (
+              <span className="block h-1.5 w-1.5 rounded-full bg-white/80 shadow-[0_0_2px_#000]" />
+            )}
+          </div>
+        )}
+        {fpsMode && playing && !locked && !lockFailed && (
+          <div className="pointer-events-none absolute inset-x-0 top-[58%] flex justify-center px-4">
+            <p className="rounded-lg bg-black/70 px-4 py-2 text-center text-sm text-white backdrop-blur">
+              <MousePointer2 className="mr-1 inline h-4 w-4" /> {t("controls.lockHint")}
+              <span className="mt-1 block font-mono text-[11px] text-white/70">{t("controls.keys")}</span>
+            </p>
           </div>
         )}
 
@@ -302,6 +430,7 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
             )}
             <div className="flex flex-wrap justify-end gap-1">
               <Badge variant="outline" className="border-white/30 text-white">{state.weaponDrawn ? t("armed") : t("holstered")}</Badge>
+              {!marks && <Badge variant="outline" className={cn("border-white/30 font-mono", state.health <= 40 ? "text-destructive" : "text-white")}><Heart className="mr-1 h-3 w-3" />{state.health}</Badge>}
               {state.inCover && <Badge variant="outline" className="border-white/30 text-white">{t("cover")}</Badge>}
               {state.officerHits > 0 && <Badge variant="destructive"><Zap className="mr-1 h-3 w-3" />{state.officerHits}</Badge>}
               {state.paused && <Badge variant="accent">{t("paused")}</Badge>}
@@ -324,12 +453,26 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
           </div>
         )}
 
-        <div className="absolute right-3 bottom-3 flex gap-1">
-          <Button size="sm" variant="secondary" className="h-8 bg-black/60 px-2 font-mono text-[10px] text-white hover:bg-black/80" onClick={() => setQuality((q) => (q === "high" ? "low" : "high"))} title={t("quality")}>{quality === "high" ? "HQ" : "LQ"}</Button>
-          <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={() => setWide((v) => !v)} title={t("wide")}><MonitorPlay className="h-4 w-4" /></Button>
-          <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={() => { if (!voice) speech.stopSpeaking(); setVoice((v) => !v); }} title={t("voice")}>{voice ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}</Button>
-          <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={toggleFullscreen} title={t("fullscreen")}><Maximize2 className="h-4 w-4" /></Button>
-        </div>
+        {started && !state.outcome && (
+          <div className="pointer-events-none absolute bottom-3 left-3 flex items-end gap-3 text-white">
+            {!marks && (
+              <div className="w-36 rounded-lg bg-black/60 p-2 backdrop-blur">
+                <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-white/70"><span>{t("controls.health")}</span><span className="font-mono text-white">{state.health}</span></div>
+                <div className="mt-1 h-1.5 w-full overflow-hidden rounded bg-white/15">
+                  <div className={cn("h-full transition-all", state.health > 60 ? "bg-success" : state.health > 30 ? "bg-accent" : "bg-destructive")} style={{ width: `${state.health}%` }} />
+                </div>
+              </div>
+            )}
+            <div className="rounded-lg bg-black/60 px-3 py-2 backdrop-blur">
+              <p className="text-[10px] uppercase tracking-wider text-white/70">{PISTOL.name}</p>
+              <p className="font-mono text-lg leading-tight">
+                <b className={cn(state.ammo.mag === 0 && "text-destructive")}>{state.ammo.mag}</b> <span className="text-white/50">/ {state.ammo.reserve}</span>
+                {reloading && <span className="ml-2 animate-pulse text-xs text-accent">{t("controls.reloading")}</span>}
+              </p>
+            </div>
+          </div>
+        )}
+
 
         {!started && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/70 p-6 text-white">
@@ -337,6 +480,7 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
               <p className="text-xs font-semibold uppercase tracking-wider text-white/60">{t("briefing")}</p>
               <p className="mt-2 text-lg leading-relaxed">{localized(scenario.briefing, locale)}</p>
               <p className="mt-3 text-sm text-white/70">{marks ? t("hintRange") : t("hint")}</p>
+              {fpsMode && <p className="mt-2 font-mono text-xs text-accent">{t("controls.keys")}</p>}
               <Button size="xl" className="mt-6" onClick={() => setStarted(true)}><Play className="h-5 w-5" /> {t("start")}</Button>
             </div>
           </div>
@@ -356,19 +500,35 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
         {outcome && !allStop && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/75 p-6 text-white">
             <div className="max-w-xl text-center">
-              {outcome.tone === "good" ? <CheckCircle2 className="mx-auto h-12 w-12 text-success" /> : <AlertTriangle className={cn("mx-auto h-12 w-12", outcome.tone === "bad" ? "text-destructive" : "text-accent")} />}
-              <p className="mt-3 text-xl font-bold">{outcome.uz}</p>
+              {gameState === "PLAYER_DEAD" ? <Skull className="mx-auto h-12 w-12 text-destructive" /> : outcome.tone === "good" ? <CheckCircle2 className="mx-auto h-12 w-12 text-success" /> : <AlertTriangle className={cn("mx-auto h-12 w-12", outcome.tone === "bad" ? "text-destructive" : "text-accent")} />}
+              <p className={cn("mt-2 text-xs font-black uppercase tracking-[0.3em]", gameState === "ROUND_WON" ? "text-success" : "text-destructive")}>
+                {gameState === "PLAYER_DEAD" ? t("controls.dead") : gameState === "ROUND_WON" ? t("controls.won") : t("controls.lost")}
+              </p>
+              <p className="mt-2 text-xl font-bold">{outcome.uz}</p>
               <p className="mt-2 font-mono text-sm text-white/70">
                 {t("time")}: {marks ? `${rangeTime.toFixed(2)}s` : `${Math.round(state.t)}s`} · {t("shots")}: {state.shotsFired} · {t("hits")}: {state.hits} · Hit Factor: {hf.toFixed(3)}
                 {state.officerHits > 0 && <> · <Zap className="inline h-3 w-3" /> {state.officerHits}</>}
               </p>
               {marks && <p className="mt-1 flex items-center justify-center gap-1 text-accent"><Trophy className="h-4 w-4" /> Score {state.score}/{state.actors.length}</p>}
-              <Button size="lg" className="mt-5" onClick={() => router.push(`/simulyator/debrif/${session.id}`)}>
-                Smart Debrifing <ArrowRight className="h-4 w-4" />
-              </Button>
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
+                <Button size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20" onClick={restart}>
+                  <RotateCcw className="h-4 w-4" /> {t("controls.restart")}
+                </Button>
+                <Button size="lg" onClick={() => router.push(`/simulyator/debrif/${session.id}`)}>
+                  Smart Debrifing <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         )}
+
+        <div className="absolute right-3 bottom-3 flex gap-1">
+          <Button size="sm" variant="secondary" className="h-8 bg-black/60 px-2 font-mono text-[10px] text-white hover:bg-black/80" onClick={() => setControls((c) => (c === "fps" ? "fixed" : "fps"))} title={t("controls.toggle")}>{fpsMode ? <Gamepad2 className="mr-1 h-3.5 w-3.5" /> : <MousePointer2 className="mr-1 h-3.5 w-3.5" />}{fpsMode ? t("controls.fps") : t("controls.fixed")}</Button>
+          <Button size="sm" variant="secondary" className="h-8 bg-black/60 px-2 font-mono text-[10px] text-white hover:bg-black/80" onClick={() => setQuality((q) => (q === "high" ? "low" : "high"))} title={t("quality")}>{quality === "high" ? "HQ" : "LQ"}</Button>
+          <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={() => setWide((v) => !v)} title={t("wide")}><MonitorPlay className="h-4 w-4" /></Button>
+          <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={() => { if (!voice) speech.stopSpeaking(); setVoice((v) => !v); }} title={t("voice")}>{voice ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}</Button>
+          <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={toggleFullscreen} title={t("fullscreen")}><Maximize2 className="h-4 w-4" /></Button>
+        </div>
       </div>
 
       {/* Controls */}
@@ -394,14 +554,22 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
         <Card className="p-3">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("actionsTitle")}</p>
           <div className="grid grid-cols-3 gap-1.5">
-            <ActBtn icon={state.weaponDrawn ? <ShieldOff className="h-4 w-4" /> : <Shield className="h-4 w-4" />} label={state.weaponDrawn ? t("act.holster") : t("act.draw")} hint="D/H" onClick={() => act(state.weaponDrawn ? "holster" : "draw")} disabled={!started || !!state.outcome} variant={state.weaponDrawn ? "secondary" : "outline"} />
-            <ActBtn icon={<Zap className="h-4 w-4" />} label={t("act.taser")} hint="T" onClick={() => act("taser")} disabled={!started || !!state.outcome || marks} variant="outline" />
+            <ActBtn icon={state.weaponDrawn ? <ShieldOff className="h-4 w-4" /> : <Shield className="h-4 w-4" />} label={state.weaponDrawn ? t("act.holster") : t("act.draw")} hint="F/H" onClick={() => (state.weaponDrawn ? act("holster") : doDraw())} disabled={!started || !!state.outcome} variant={state.weaponDrawn ? "secondary" : "outline"} />
+            <ActBtn icon={<Zap className="h-4 w-4" />} label={t("act.taser")} hint="T" onClick={() => { const r = act("taser"); if (r && r.text) sfx.taser(); }} disabled={!started || !!state.outcome || marks} variant="outline" />
             <ActBtn icon={<Radio className="h-4 w-4" />} label={t("act.backup")} hint="B" onClick={() => act("backup")} disabled={!started || !!state.outcome || state.backupCalled || marks} variant="outline" />
-            <ActBtn icon={<MoveLeft className="h-4 w-4" />} label={t("act.retreat")} hint="R" onClick={() => act("retreat")} disabled={!started || !!state.outcome || marks} variant="outline" />
-            <ActBtn icon={<Shield className="h-4 w-4" />} label={t("act.cover")} hint="C" onClick={() => act("cover")} disabled={!started || !!state.outcome || marks} variant={state.inCover ? "secondary" : "outline"} />
-            <ActBtn icon={<Crosshair className="h-4 w-4" />} label={t("act.shoot")} hint={t("click")} onClick={() => undefined} disabled variant="ghost" />
+            <ActBtn icon={<RotateCcw className="h-4 w-4" />} label={`${t("act.reload")} ${state.ammo.mag}/${state.ammo.reserve}`} hint="R" onClick={doReload} disabled={!started || !!state.outcome || reloading || state.ammo.reserve <= 0 || state.ammo.mag >= PISTOL.magazine} variant="outline" />
+            {fpsMode ? (
+              <ActBtn icon={<Gamepad2 className="h-4 w-4" />} label={t("act.move")} hint="WASD · C" onClick={() => undefined} disabled variant="ghost" />
+            ) : (
+              <ActBtn icon={<MoveLeft className="h-4 w-4" />} label={t("act.retreat")} hint="X" onClick={() => act("retreat")} disabled={!started || !!state.outcome || marks} variant="outline" />
+            )}
+            {fpsMode ? (
+              <ActBtn icon={<Crosshair className="h-4 w-4" />} label={t("act.shoot")} hint={t("click")} onClick={() => undefined} disabled variant="ghost" />
+            ) : (
+              <ActBtn icon={<Shield className="h-4 w-4" />} label={t("act.cover")} hint="Q" onClick={() => act("cover")} disabled={!started || !!state.outcome || marks} variant={state.inCover ? "secondary" : "outline"} />
+            )}
           </div>
-          <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">{t("shootHint")}</p>
+          <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">{fpsMode ? t("controls.shootHintFps") : t("shootHint")}</p>
         </Card>
       </div>
 

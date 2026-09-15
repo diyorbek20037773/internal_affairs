@@ -1,9 +1,20 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { TirActorState, TirHitZone, TirRole, TirWeapon } from "@/data/scenarios/types";
+
+export interface OfficerXZ { x: number; z: number }
+const ORIGIN: OfficerXZ = { x: 0, z: 0 };
+
+/** Shortest-arc angle lerp (radians). */
+export function lerpAngle(a: number, b: number, k: number): number {
+  let d = b - a;
+  while (d > Math.PI) d -= Math.PI * 2;
+  while (d < -Math.PI) d += Math.PI * 2;
+  return a + d * k;
+}
 
 /**
  * Procedural low-poly humanoid used for every human role (suspect, bystander,
@@ -21,6 +32,9 @@ export function Human({
   shirt,
   pants,
   skin = "#d9a679",
+  officer = ORIGIN,
+  actorId,
+  hp = 1,
 }: {
   x: number;
   z: number;
@@ -32,8 +46,17 @@ export function Human({
   shirt?: string;
   pants?: string;
   skin?: string;
+  /** Where the officer stands — actors face and chase this point. */
+  officer?: OfficerXZ;
+  /** Engine actor id for camera-centre raycast hits. */
+  actorId?: string;
+  hp?: number;
 }) {
   const root = useRef<THREE.Group>(null);
+  const hurt = useRef({ hp, t: 0 });
+  useEffect(() => {
+    if (root.current) root.current.userData.actorId = actorId;
+  }, [actorId]);
   const body = useRef<THREE.Group>(null);
   const armR = useRef<THREE.Group>(null);
   const armL = useRef<THREE.Group>(null);
@@ -57,8 +80,12 @@ export function Human({
     v.z = lerp(v.z, z, 4);
     g.position.x = v.x;
     g.position.z = v.z;
-    // face the officer (origin)
-    g.rotation.y = Math.atan2(-v.x, -v.z) + Math.PI;
+    // face the officer (smooth turn)
+    const yawGoal = Math.atan2(officer.x - v.x, officer.z - v.z) + Math.PI;
+    g.rotation.y = lerpAngle(g.rotation.y, yawGoal, Math.min(1, 5 * dt));
+    if (hp < hurt.current.hp) hurt.current.t = 0.25;
+    hurt.current.hp = hp;
+    hurt.current.t = Math.max(0, hurt.current.t - dt);
 
     const moving = state === "approaching" || state === "lunging" || state === "walking" || state === "fleeing";
     const speed = state === "lunging" ? 14 : state === "walking" || state === "fleeing" ? 9 : 5;
@@ -152,18 +179,18 @@ export function Human({
       </mesh>
       <group ref={body}>
         <group ref={legL} position={[-0.12, 0.9, 0]}>
-          <mesh position={[0, -0.45, 0]} onPointerDown={hit("limb")}>
+          <mesh position={[0, -0.45, 0]} onPointerDown={hit("limb")} userData={{ zone: "limb" }}>
             <capsuleGeometry args={[0.09, 0.7, 4, 8]} />
             <meshStandardMaterial color={pantsColor} />
           </mesh>
         </group>
         <group ref={legR} position={[0.12, 0.9, 0]}>
-          <mesh position={[0, -0.45, 0]} onPointerDown={hit("limb")}>
+          <mesh position={[0, -0.45, 0]} onPointerDown={hit("limb")} userData={{ zone: "limb" }}>
             <capsuleGeometry args={[0.09, 0.7, 4, 8]} />
             <meshStandardMaterial color={pantsColor} />
           </mesh>
         </group>
-        <mesh position={[0, 1.25, 0]} onPointerDown={hit("torso")}>
+        <mesh position={[0, 1.25, 0]} onPointerDown={hit("torso")} userData={{ zone: "torso" }}>
           <capsuleGeometry args={[0.2, 0.5, 4, 12]} />
           <meshStandardMaterial color={shirtColor} />
         </mesh>
@@ -180,7 +207,7 @@ export function Human({
             </mesh>
           </>
         )}
-        <mesh position={[0, 1.78, 0]} onPointerDown={hit("head")}>
+        <mesh position={[0, 1.78, 0]} onPointerDown={hit("head")} userData={{ zone: "head" }}>
           <sphereGeometry args={[0.13, 16, 16]} />
           <meshStandardMaterial color={skin} />
         </mesh>
@@ -196,7 +223,7 @@ export function Human({
           </mesh>
         )}
         <group ref={armL} position={[-0.3, 1.5, 0]}>
-          <mesh position={[0, -0.3, 0]} onPointerDown={hit("limb")}>
+          <mesh position={[0, -0.3, 0]} onPointerDown={hit("limb")} userData={{ zone: "limb" }}>
             <capsuleGeometry args={[0.065, 0.5, 4, 8]} />
             <meshStandardMaterial color={shirtColor} />
           </mesh>
@@ -206,7 +233,7 @@ export function Human({
           </mesh>
         </group>
         <group ref={armR} position={[0.3, 1.5, 0]}>
-          <mesh position={[0, -0.3, 0]} onPointerDown={hit("limb")}>
+          <mesh position={[0, -0.3, 0]} onPointerDown={hit("limb")} userData={{ zone: "limb" }}>
             <capsuleGeometry args={[0.065, 0.5, 4, 8]} />
             <meshStandardMaterial color={shirtColor} />
           </mesh>
@@ -228,15 +255,22 @@ export function Vehicle({
   state,
   onShot,
   color = "#c8ccd2",
+  officer = ORIGIN,
+  actorId,
 }: {
   x: number;
   z: number;
   state: TirActorState;
   onShot?: (zone: TirHitZone) => void;
   color?: string;
+  officer?: OfficerXZ;
+  actorId?: string;
 }) {
   const root = useRef<THREE.Group>(null);
   const wheels = useRef<THREE.Mesh[]>([]);
+  useEffect(() => {
+    if (root.current) root.current.userData.actorId = actorId;
+  }, [actorId]);
   const sm = useRef({ x, z, tilt: 0 });
   useFrame((s, dt) => {
     const g = root.current;
@@ -247,6 +281,8 @@ export function Vehicle({
     v.z = lerp(v.z, z, 6);
     g.position.x = v.x;
     g.position.z = v.z;
+    // nose (+Z) toward the officer; a parked car keeps its heading
+    if (state !== "parked" && state !== "stopped") g.rotation.y = lerpAngle(g.rotation.y, Math.atan2(officer.x - v.x, officer.z - v.z), Math.min(1, 2.5 * dt));
     const t = s.clock.elapsedTime;
     const rev = state === "revving" ? Math.sin(t * 40) * 0.01 : 0;
     g.position.y = rev;
@@ -258,7 +294,7 @@ export function Vehicle({
   });
   const hit = (zone: TirHitZone) => (e: { stopPropagation: () => void }) => { e.stopPropagation(); onShot?.(zone); };
   const wheel = (i: number, px: number, pz: number) => (
-    <mesh key={i} ref={(m) => { if (m) wheels.current[i] = m; }} position={[px, 0.32, pz]} rotation={[0, 0, Math.PI / 2]} onPointerDown={hit("tire")}>
+    <mesh key={i} ref={(m) => { if (m) wheels.current[i] = m; }} position={[px, 0.32, pz]} rotation={[0, 0, Math.PI / 2]} onPointerDown={hit("tire")} userData={{ zone: "tire" }}>
       <cylinderGeometry args={[0.32, 0.32, 0.22, 16]} />
       <meshStandardMaterial color="#111" roughness={0.9} />
     </mesh>
@@ -266,22 +302,22 @@ export function Vehicle({
   return (
     <group ref={root} position={[x, 0, z]}>
       {/* body */}
-      <mesh position={[0, 0.65, 0]} onPointerDown={hit("body")} castShadow>
+      <mesh position={[0, 0.65, 0]} onPointerDown={hit("body")} userData={{ zone: "body" }} castShadow>
         <boxGeometry args={[1.8, 0.6, 4.3]} />
         <meshPhysicalMaterial color={color} metalness={0.6} roughness={0.25} clearcoat={1} clearcoatRoughness={0.08} />
       </mesh>
       {/* cabin */}
-      <mesh position={[0, 1.2, -0.2]} onPointerDown={hit("body")} castShadow>
+      <mesh position={[0, 1.2, -0.2]} onPointerDown={hit("body")} userData={{ zone: "body" }} castShadow>
         <boxGeometry args={[1.6, 0.55, 2.2]} />
         <meshPhysicalMaterial color={color} metalness={0.6} roughness={0.25} clearcoat={1} clearcoatRoughness={0.08} />
       </mesh>
       {/* windshield (facing officer, +Z) */}
-      <mesh position={[0, 1.2, 0.92]} onPointerDown={hit("driver")}>
+      <mesh position={[0, 1.2, 0.92]} onPointerDown={hit("driver")} userData={{ zone: "driver" }}>
         <boxGeometry args={[1.5, 0.5, 0.05]} />
         <meshStandardMaterial color="#7fb2e6" transparent opacity={0.55} />
       </mesh>
       {/* driver silhouette behind windshield */}
-      <mesh position={[-0.4, 1.15, 0.5]} onPointerDown={hit("driver")}>
+      <mesh position={[-0.4, 1.15, 0.5]} onPointerDown={hit("driver")} userData={{ zone: "driver" }}>
         <sphereGeometry args={[0.14, 12, 12]} />
         <meshStandardMaterial color="#d9a679" />
       </mesh>
@@ -306,8 +342,12 @@ export function Vehicle({
 }
 
 /** Steel plate on a stand (marksmanship). Falls when hit. */
-export function Plate({ x, z, state, onShot, label }: { x: number; z: number; state: TirActorState; onShot?: (zone: TirHitZone) => void; label: string }) {
+export function Plate({ x, z, state, onShot, label, actorId }: { x: number; z: number; state: TirActorState; onShot?: (zone: TirHitZone) => void; label: string; actorId?: string }) {
   const ref = useRef<THREE.Group>(null);
+  const root = useRef<THREE.Group>(null);
+  useEffect(() => {
+    if (root.current) root.current.userData.actorId = actorId;
+  }, [actorId]);
   const sm = useRef(0);
   useFrame((_, dt) => {
     const target = state === "hit" ? 1 : 0;
@@ -315,13 +355,14 @@ export function Plate({ x, z, state, onShot, label }: { x: number; z: number; st
     if (ref.current) ref.current.rotation.x = -sm.current * (Math.PI / 2);
   });
   return (
-    <group position={[x, 0, z]}>
-      <mesh position={[0, 0.55, 0]}>
+    <group ref={root} position={[x, 0, z]}>
+      <mesh position={[0, 0.55, 0]} userData={{ zone: "miss" }}>
         <boxGeometry args={[0.06, 1.1, 0.06]} />
         <meshStandardMaterial color="#333" />
       </mesh>
       <group ref={ref} position={[0, 1.1, 0]}>
-        <mesh position={[0, 0.2, 0]} onPointerDown={(e) => { e.stopPropagation(); onShot?.("plate"); }}>
+        {/* steel disc faces the officer (+Z); the group tips it flat when hit */}
+        <mesh position={[0, 0.2, 0]} rotation={[Math.PI / 2, 0, 0]} onPointerDown={(e) => { e.stopPropagation(); onShot?.("plate"); }} userData={{ zone: "plate" }}>
           <cylinderGeometry args={[0.2, 0.2, 0.03, 24]} />
           <meshStandardMaterial color={state === "hit" ? "#9ca3af" : "#e5e7eb"} metalness={0.7} roughness={0.3} />
         </mesh>

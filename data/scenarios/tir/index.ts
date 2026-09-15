@@ -225,7 +225,7 @@ export const tirPlateRack: TirScenario = {
   code: "TIR-M1",
   environment: "range",
   title: { uz: "Marksmanship — plastina to'plami", ru: "Стрельба — стойка с пластинами", en: "Marksmanship — plate rack" },
-  brief: { uz: "6 plastina, 10 m. Vaqt birinchi o'qdan boshlanadi. Score, Hit Factor (tegish/soniya), split vaqtlar. Qurolni chiqarib (D) plastinalarga bosing.", ru: "6 пластин, 10 м. Таймер от первого выстрела. Score, Hit Factor, сплиты.", en: "6 plates at 10 m. Timer from first shot. Score, hit factor, splits." },
+  brief: { uz: "6 plastina, 10 m. Vaqt birinchi o'qdan boshlanadi. Score, Hit Factor (tegish/soniya), split vaqtlar. Qurolni chiqarib (F) plastinalarga oting.", ru: "6 пластин, 10 м. Таймер от первого выстрела. Score, Hit Factor, сплиты.", en: "6 plates at 10 m. Timer from first shot. Score, hit factor, splits." },
   briefing: { uz: "Instruktor: «Plate rack, 6 plastina, 10 metr. Qurolni chiqaring. Tayyor bo'lsangiz — birinchi o'q taymerni boshlaydi.»" },
   difficulty: 1,
   tags: ["natijadorlik", "raqamli"],

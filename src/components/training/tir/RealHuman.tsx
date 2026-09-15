@@ -6,7 +6,7 @@ import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { SkeletonUtils } from "three-stdlib";
 import type { TirActorState, TirHitZone, TirRole, TirWeapon } from "@/data/scenarios/types";
-import { Human as ProceduralHuman } from "./Actor";
+import { Human as ProceduralHuman, lerpAngle, type OfficerXZ } from "./Actor";
 
 /**
  * Realistic human: Ready Player Me body (Wolf3D_Avatar, PBR skin/cloth
@@ -37,7 +37,15 @@ export interface HumanProps {
   gender?: "m" | "f";
   /** Deterministic per-actor variation (height, idle offset). */
   seed?: number;
+  /** Where the officer stands — the actor faces this point. */
+  officer?: OfficerXZ;
+  /** Engine actor id for the camera-centre raycast. */
+  actorId?: string;
+  /** Remaining hp (0-1); a drop flashes the body red. */
+  hp?: number;
 }
+
+const ORIGIN: OfficerXZ = { x: 0, z: 0 };
 
 export function SmartHuman(props: HumanProps) {
   return (
@@ -81,7 +89,7 @@ function findBone(root: THREE.Object3D, name: string): THREE.Bone | undefined {
   return found;
 }
 
-function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender = "m", seed = 0 }: HumanProps) {
+function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender = "m", seed = 0, officer = ORIGIN, actorId, hp = 1 }: HumanProps) {
   const avatar = useGLTF(AVATAR[gender]);
   const clipSet = CLIPS[gender];
   const clipGltfs = {
@@ -91,7 +99,7 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
   const group = useRef<THREE.Group>(null);
   const weaponRef = useRef<THREE.Group>(null);
 
-  const { scene, mixer, actions, bones, height } = useMemo(() => {
+  const { scene, mixer, actions, bones, height, mats } = useMemo(() => {
     const scene = SkeletonUtils.clone(avatar.scene) as THREE.Group;
     scene.traverse((o) => {
       const m = o as THREE.Mesh;
@@ -110,6 +118,8 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
       const clip = clipGltfs[k].animations[0];
       if (clip) actions[k] = mixer.clipAction(clip);
     });
+    const mats: THREE.MeshStandardMaterial[] = [];
+    scene.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh) mats.push(m.material as THREE.MeshStandardMaterial); });
     const bones = {
       hips: findBone(scene, "Hips"), spine: findBone(scene, "Spine1"), head: findBone(scene, "Head"),
       rArm: findBone(scene, "RightArm"), rFore: findBone(scene, "RightForeArm"), rHand: findBone(scene, "RightHand"),
@@ -118,9 +128,26 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
     };
     // subtle per-actor height variation so a crowd doesn't look cloned
     const height = 0.96 + (((seed * 9301 + 49297) % 233280) / 233280) * 0.1;
-    return { scene, mixer, actions, bones, height };
+    return { scene, mixer, actions, bones, height, mats };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [avatar, gender]);
+
+  // Raycast identity: actor id + zone-by-height on the root group.
+  useEffect(() => {
+    const g = group.current;
+    if (!g) return;
+    g.userData.actorId = actorId;
+    g.userData.zoneOf = (p: THREE.Vector3): TirHitZone => {
+      const localY = (p.y - g.position.y) / height;
+      if (stateRef.current === "down") return "torso";
+      if (localY > 1.5) return "head";
+      if (localY > 0.85) return "torso";
+      return "limb";
+    };
+  }, [actorId, height]);
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const hurt = useRef({ hp, t: 0 });
 
   // Weapon → right hand bone.
   useEffect(() => {
@@ -164,7 +191,19 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
     v.z = lerp(v.z, z, 4);
     g.position.x = v.x;
     g.position.z = v.z;
-    g.rotation.y = Math.atan2(-v.x, -v.z) + Math.PI;
+    // face the officer wherever they walk (smooth turn, faster when hostile)
+    const yawGoal = Math.atan2(officer.x - v.x, officer.z - v.z) + Math.PI;
+    const turn = state === "lunging" || state === "aiming" ? 9 : 4;
+    g.rotation.y = lerpAngle(g.rotation.y, yawGoal, Math.min(1, turn * dt));
+
+    // hit reaction: short red flash
+    if (hp < hurt.current.hp) hurt.current.t = 0.3;
+    hurt.current.hp = hp;
+    if (hurt.current.t > 0 || mats[0]?.emissiveIntensity) {
+      hurt.current.t = Math.max(0, hurt.current.t - dt);
+      const k = hurt.current.t / 0.3;
+      for (const m of mats) { m.emissive.setRGB(1, 0.05, 0.05); m.emissiveIntensity = k * 0.8; }
+    }
 
     mixer.update(dt);
 
@@ -180,7 +219,7 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
     g.position.y = -v.kneel * 0.5 - v.crouch * 0.35 - v.down * 0.1;
     g.updateWorldMatrix(true, true);
 
-    const toOfficer = tmp.tgt.set(-v.x, 0, -v.z).normalize();
+    const toOfficer = tmp.tgt.set(officer.x - v.x, 0, officer.z - v.z).normalize();
     const jitter = (agitation / 100) * 0.05;
     const t = s.clock.elapsedTime;
 
@@ -223,6 +262,8 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
 
   const zoneFromPoint = (p: THREE.Vector3): TirHitZone => {
     const g = group.current;
+    const fn = g?.userData.zoneOf as ((q: THREE.Vector3) => TirHitZone) | undefined;
+    if (fn) return fn(p);
     const localY = (g ? p.y - g.position.y : p.y) / height;
     if (state === "down") return "torso";
     if (localY > 1.5) return "head";

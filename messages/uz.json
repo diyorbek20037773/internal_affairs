@@ -564,7 +564,7 @@
     "tir": {
       "briefing": "Navbatchi xabari",
       "start": "Poligonni boshlash",
-      "hint": "Muloqot — birinchi. Qurol — oxirgi chora. Nishonga olish: qurol chiqarilgach ekranga bosing. Klaviatura: 1–5 iboralar, D qurol, H g'ilof, T elektroshok, B yordam, R chekinish, C to'siq.",
+      "hint": "Muloqot — birinchi. Qurol — oxirgi chora. Klaviatura: 1–5 iboralar, F qurol, H g'ilof, T elektroshok, B yordam, R qayta zaryad, X chekinish, Q to'siq.",
       "distance": "Masofa",
       "time": "Vaqt",
       "backup": "Yordam",
@@ -589,7 +589,9 @@
         "backup": "Yordam chaqir",
         "retreat": "Chekin (+2 m)",
         "cover": "To'siq",
-        "shoot": "Ot"
+        "shoot": "Ot",
+        "reload": "Qayta zaryad",
+        "move": "Yurish"
       },
       "actor": {
         "shouting": "Baqirmoqda",
@@ -607,7 +609,7 @@
       "paused": "PAUZA",
       "scenarioComplete": "Ssenariy yakunlandi",
       "allStopHint": "Qurolni xavfsiz holatga keltiring. Instruktor debrifingiga o'ting.",
-      "hintRange": "Marksmanship: D — qurol, plastinalarga bosing. Taymer birinchi o'qdan. Hit Factor = tegish / soniya.",
+      "hintRange": "Marksmanship: F — qurol, plastinalarga oting. R — qayta zaryad. Taymer birinchi o'qdan. Hit Factor = tegish / soniya.",
       "instructor": "Instruktor (ghost mode)",
       "hintKeys": "",
       "ins": {
@@ -624,7 +626,21 @@
         "hint": "Instruktor ssenariyni jonli boshqaradi: keskinlashtirish, yangi shaxs kiritish, pauza, ALL STOP. Ikkinchi oyna/planshet — shu brauzer profilida."
       },
       "quality": "Grafika sifati (HQ/LQ)",
-      "loading": "Real muhit yuklanmoqda (panorama, personajlar)..."
+      "loading": "Real muhit yuklanmoqda (panorama, personajlar)...",
+      "controls": {
+        "fps": "FPS",
+        "fixed": "Statik",
+        "toggle": "Boshqaruv rejimi: FPS (WASD + sichqoncha) / Statik (planshet)",
+        "lockHint": "Sahnaga bosing — sichqoncha qulflanadi (Esc — chiqish)",
+        "keys": "WASD — yurish · Shift — yugurish · C — cho'kkalash · Space — sakrash · F — qurol · R — zaryad · Esc",
+        "health": "Salomatlik",
+        "reloading": "zaryadlanmoqda…",
+        "restart": "Qayta boshlash",
+        "dead": "Xodim safdan chiqdi",
+        "won": "Vaziyat hal qilindi",
+        "lost": "Mashg'ulot muvaffaqiyatsiz",
+        "shootHintFps": "Ot: F — qurol, ekran markazidagi nishonga sichqoncha chap tugmasi. Yarim avtomat: har bosish — bir o'q. R — magazin (15/30). To'siq ortida C bilan cho'kkalang — himoya hisoblanadi. Xavf shartlari bo'lmaganda o'q — qonunsiz kuch."
+      }
     }
   }
 }
