@@ -112,7 +112,7 @@ npm run dev                 # http://localhost:3000
 | Jihoz | Holat |
 |---|---|
 | Planshet / kompyuter brauzeri | **Ishlaydi** — asosiy rejim, qo'shimcha jihoz kerak emas. |
-| Ikkinchi monitor / ikkinchi oyna — instruktor stansiyasi (TIR) | **Ishlaydi** — shu kompyuterda ikkinchi oyna (`BroadcastChannel`); alohida planshetdan — server rejimi kerak (rejada). |
+| Ikkinchi monitor / ikkinchi oyna / alohida planshet — instruktor stansiyasi (TIR) | **Ishlaydi** — shu kompyuterda ikkinchi oyna (`BroadcastChannel`) **va** alohida planshetdan server relay orqali (`/api/tir/station`, 1 s so'rov): `/simulyator/tir/instruktor` sahifasida «Jonli poligonlar» ro'yxati. Auth yoqilgan bo'lsa — faqat instruktor. |
 | 3 ekranli devor (48:9) | «3 ekran» tugmasi keng FOV beradi; **haqiqiy 3 proyektorli devor** — videokarta 3 chiqishni bitta keng ekran qilib bersa ishlaydi (Windows «Span»/NVIDIA Surround). Maxsus sozlash yo'q. |
 | Lazerli o'quv tapanchasi (USB HID / gamepad) | **Adapter bor** — `docs/tir-input-devices.md`: tugmani bog'lash, otish → markazdan raycast. Muayyan model bilan sinash markazda. |
 | Elektroshok kamari | **Adapter bor** — `docs/tir-shock-belt.md` (Web Serial / Web Bluetooth) + `h360:shock` hodisasi. Muayyan qurilma protokoli bilan moslash kerak. |
@@ -145,8 +145,8 @@ messages/{uz,ru,en}.json      # tarjimalar
 ## Keyingi bosqich (roadmap)
 
 - Haqiqiy huquqiy PDF/DOCX + vektor RAG (Qdrant/pgvector) — `/api/legal` da `// RAG hook` qoldirilgan.
-- Instruktor kabineti: guruh/oqim, sana/ssenariy bo'yicha filtr, debrif va HIMOYA-ID PDF eksporti, imtihon xulosasini instruktor tasdiqlashi.
-- Instruktor stansiyasi alohida planshetdan (server orqali), VR (WebXR) rejimi.
+- Instruktor kabineti: PDF eksportni server tomonda (brauzer print o'rniga) generatsiya qilish; guruhlarni alohida ma'lumot sifatida yuritish (hozir — hudud).
+- Instruktor stansiyasi relayi bir instansiya xotirasida — ko'p instansiyali Railway uchun Postgres/Redis'ga ko'chirish.
 - «Mening Inspektorim» xizmat tizimlari bilan integratsiya (E-patrul, Shakl 17, Raqamli mahalla) — hozir bosh sahifada integratsiya xaritasi.
 
 ---

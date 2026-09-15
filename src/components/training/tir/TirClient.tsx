@@ -36,6 +36,7 @@ import { detectQuality } from "./quality";
 import { InputDevicesPanel } from "./InputDevicesPanel";
 import { inputHub, onTirInput } from "@/lib/tir/input";
 import { shockHub } from "@/lib/tir/shock";
+import { openStationLink, type StationLink } from "@/lib/tir/stationLink";
 import { XR_EVENT, XR_STATE_EVENT, xrSupported, type XrCmd } from "./xr/XrRig";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -70,7 +71,7 @@ const TirScene: typeof TirSceneInner = (props) => {
 const TICK_MS = 100;
 type ControlMode = "fps" | "fixed";
 const isTouch = () => typeof window !== "undefined" && (navigator.maxTouchPoints > 0 || /Android|iPhone|iPad/i.test(navigator.userAgent));
-export const tirChannelName = (sessionId: string) => `h360-tir-${sessionId}`;
+export { tirChannelName } from "@/lib/tir/stationLink";
 
 export function TirClient({
   scenario,
@@ -157,28 +158,33 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
   const spokenSeq = useRef(-1);
   const shockSeen = useRef(0);
   const savedOutcome = useRef(false);
-  const channel = useRef<BroadcastChannel | null>(null);
+  const channel = useRef<StationLink | null>(null);
 
   // Debug/telemetry hook for E2E and the instructor station (read-only).
   useEffect(() => {
     (window as unknown as { __h360tir?: unknown }).__h360tir = { officer: state.officer, health: state.health, ammo: state.ammo, shots: state.shotsFired, hits: state.hits, outcome: state.outcome, locked, controls, t: state.t };
   }, [state, locked, controls]);
 
-  // Instructor station channel (second window / tablet in the same browser profile).
+  // Instructor station link: BroadcastChannel (same browser) + server relay (another tablet/PC).
   useEffect(() => {
-    if (typeof BroadcastChannel === "undefined") return;
-    const ch = new BroadcastChannel(tirChannelName(session.id));
-    channel.current = ch;
-    ch.onmessage = (ev: MessageEvent<{ type: "cmd"; cmd: InstructorCmd } | { type: "hello" }>) => {
-      const msg = ev.data;
-      if (msg?.type === "cmd") setState((cur) => applyInstructor(cur, scenario, msg.cmd));
-      if (ev.data?.type === "hello") ch.postMessage({ type: "state", state: stateRef.current, scenarioId: scenario.id, started });
-    };
-    return () => ch.close();
+    const link = openStationLink({
+      sessionId: session.id,
+      role: "range",
+      scenarioId: scenario.id,
+      traineeId: session.traineeId,
+      onMessage: (msg) => {
+        if (msg.type === "cmd") setState((cur) => applyInstructor(cur, scenario, msg.cmd as InstructorCmd));
+        if (msg.type === "hello") link.send({ type: "state", state: stateRef.current, scenarioId: scenario.id, started: startedRef.current });
+      },
+    });
+    channel.current = link;
+    return () => { link.close(); channel.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.id, scenario]);
+  const startedRef = useRef(false);
+  startedRef.current = started;
   useEffect(() => {
-    channel.current?.postMessage({ type: "state", state, scenarioId: scenario.id, started });
+    channel.current?.send({ type: "state", state, scenarioId: scenario.id, started });
   }, [state, started, scenario.id]);
 
   // Engine loop — wall-clock driven so slow renderers (tablets, CPU GL) don't
@@ -249,8 +255,6 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
   // Leaving mid-scenario (back button, tab closed) → the session is not left "in progress" forever.
   const sessionRef = useRef(session);
   sessionRef.current = session;
-  const startedRef = useRef(started);
-  startedRef.current = started;
   useEffect(() => {
     const finish = () => {
       const s = sessionRef.current;

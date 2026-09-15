@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card } from "@/components/ui/card";
 import { InstructorStation } from "@/components/training/tir/InstructorStation";
+import { LiveRanges } from "@/components/training/tir/LiveRanges";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,8 @@ export default async function TirInstructorPage({
       {searchParams.session && searchParams.scenario ? (
         <InstructorStation sessionId={searchParams.session} scenarioId={searchParams.scenario} />
       ) : (
+        <>
+        <LiveRanges />
         <Card className="p-6">
           <p className="font-semibold">{t("ins.emptyTitle")}</p>
           <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm text-muted-foreground">
@@ -28,6 +31,7 @@ export default async function TirInstructorPage({
             <li>{t("ins.emptyStep3")}</li>
           </ol>
         </Card>
+        </>
       )}
     </div>
   );

@@ -764,7 +764,12 @@
         "emptyTitle": "Instruktor stansiyasi hali ulanmagan",
         "emptyStep1": "Asosiy ekranda TIR ssenariysini oching.",
         "emptyStep2": "Pastdagi «Instruktor (ghost mode)» kartasida «Instruktor stansiyasi» tugmasini bosing.",
-        "emptyStep3": "Ochilgan oynani ikkinchi monitorga o'tkazing — shu yerdan keskinlashtirish, personaj kiritish, pauza va ALL STOP boshqariladi."
+        "emptyStep3": "Ochilgan oynani ikkinchi monitorga o'tkazing — shu yerdan keskinlashtirish, personaj kiritish, pauza va ALL STOP boshqariladi.",
+        "viaServer": "server orqali",
+        "live": "Jonli poligonlar (boshqa qurilmalar)",
+        "liveEmpty": "Hozir faol poligon yo'q. O'quvchi planshetida ssenariy boshlangach, u shu yerda paydo bo'ladi.",
+        "stationBusy": "stansiya ulangan",
+        "open": "Ochish"
       },
       "quality": "Grafika sifati (HQ/LQ)",
       "loading": "Real muhit yuklanmoqda (panorama, personajlar)...",

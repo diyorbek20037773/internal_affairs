@@ -764,7 +764,12 @@
         "emptyTitle": "The instructor station is not connected yet",
         "emptyStep1": "Open a TIR scenario on the main screen.",
         "emptyStep2": "In the “Instructor (ghost mode)” card at the bottom press “Instructor station”.",
-        "emptyStep3": "Move the new window to the second monitor — escalation, spawning actors, pause and ALL STOP are controlled from there."
+        "emptyStep3": "Move the new window to the second monitor — escalation, spawning actors, pause and ALL STOP are controlled from there.",
+        "viaServer": "via server",
+        "live": "Live ranges (other devices)",
+        "liveEmpty": "No active range right now. Once a scenario starts on a trainee tablet it shows up here.",
+        "stationBusy": "station connected",
+        "open": "Open"
       },
       "quality": "Graphics quality (HQ/LQ)",
       "loading": "Loading the real environment (panorama, characters)...",

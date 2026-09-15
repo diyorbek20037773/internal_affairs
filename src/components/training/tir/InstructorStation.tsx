@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { getTirScenario } from "@/data/scenarios";
 import { localized } from "@/data/sops/types";
 import { ACTOR_TEXT, primarySuspect, type InstructorCmd, type TirState } from "@/lib/training/tirEngine";
-import { tirChannelName } from "./TirClient";
+import { openStationLink, type StationLink } from "@/lib/tir/stationLink";
 import { cn } from "@/lib/utils";
 
 /**
@@ -22,23 +22,27 @@ export function InstructorStation({ sessionId, scenarioId }: { sessionId: string
   const locale = useLocale();
   const scenario = getTirScenario(scenarioId);
   const [state, setState] = useState<TirState | null>(null);
-  const [connected, setConnected] = useState(false);
-  const ch = useRef<BroadcastChannel | null>(null);
+  const [connected, setConnected] = useState<false | "local" | "server">(false);
+  const ch = useRef<StationLink | null>(null);
+  const lastSeen = useRef(0);
 
   useEffect(() => {
-    if (typeof BroadcastChannel === "undefined") return;
-    const c = new BroadcastChannel(tirChannelName(sessionId));
-    ch.current = c;
-    c.onmessage = (ev: MessageEvent<{ type: "state"; state: TirState }>) => {
-      if (ev.data?.type === "state") { setState(ev.data.state); setConnected(true); }
-    };
-    c.postMessage({ type: "hello" });
-    const ping = window.setInterval(() => { if (!connected) c.postMessage({ type: "hello" }); }, 2000);
-    return () => { window.clearInterval(ping); c.close(); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const link = openStationLink({
+      sessionId,
+      role: "station",
+      onMessage: (msg, via) => {
+        if (msg.type === "state") { setState(msg.state as TirState); setConnected(via); lastSeen.current = Date.now(); }
+      },
+    });
+    ch.current = link;
+    link.send({ type: "hello" });
+    const ping = window.setInterval(() => {
+      if (Date.now() - lastSeen.current > 6000) { setConnected(false); link.send({ type: "hello" }); }
+    }, 2000);
+    return () => { window.clearInterval(ping); link.close(); ch.current = null; };
   }, [sessionId]);
 
-  const send = (cmd: InstructorCmd) => ch.current?.postMessage({ type: "cmd", cmd });
+  const send = (cmd: InstructorCmd) => ch.current?.send({ type: "cmd", cmd });
   if (!scenario) return <Card className="p-6 text-sm text-muted-foreground">—</Card>;
   const primary = state ? primarySuspect(state) : undefined;
 
@@ -49,7 +53,7 @@ export function InstructorStation({ sessionId, scenarioId }: { sessionId: string
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{scenario.code} · {t("instructor")}</p>
           <p className="font-semibold">{localized(scenario.title, locale)}</p>
         </div>
-        <Badge variant={connected ? "success" : "outline"}>{connected ? t("ins.connected") : t("ins.waiting")}</Badge>
+        <Badge variant={connected ? "success" : "outline"} data-testid="station-status">{connected ? `${t("ins.connected")}${connected === "server" ? " · " + t("ins.viaServer") : ""}` : t("ins.waiting")}</Badge>
       </Card>
 
       {state && (
