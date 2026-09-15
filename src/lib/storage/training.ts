@@ -9,6 +9,7 @@ import {
   type TrainingSession,
 } from "./trainingSchema";
 import { remoteStore, storeMode } from "./trainingRemote";
+import { embedPost } from "@/lib/embed/bridge";
 
 /**
  * HIMOYA-360 training persistence. Mirrors `CasesRepo` but async so a server
@@ -126,6 +127,8 @@ export const localTrainingRepo: TrainingRepo = {
     if (idx === -1) items.push(s);
     else items[idx] = s;
     writeSessions(items);
+    // E-O'quv host gets every completed session (debrief/instructor updates re-send it; dedupe by id+updatedAt).
+    if (s.status === "completed") embedPost({ type: "h360:session", session: s });
   },
   async removeSession(id) {
     writeSessions(readSessions().filter((s) => s.id !== id));
@@ -140,6 +143,7 @@ export const localTrainingRepo: TrainingRepo = {
     if (idx === -1) items.push(h);
     else items[idx] = h;
     writeJson(TRAINING_KEYS.himoyaId, { version: 1, items });
+    embedPost({ type: "h360:himoya-id", himoyaId: h });
   },
   async listHimoyaIds() {
     return readHimoyaIds();

@@ -213,3 +213,8 @@
     @apply text-[11px] font-semibold uppercase tracking-wider text-muted-foreground;
   }
 }
+
+/* E-O'quv embed mode (`?embed=1` / WebView): no sidebar, no topbar — the host app owns the chrome. */
+html[data-embed="1"] .h360-chrome {
+  display: none !important;
+}

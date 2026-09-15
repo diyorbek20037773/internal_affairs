@@ -7,6 +7,8 @@ import { routing } from "@/i18n/routing";
 import { Providers } from "@/components/providers";
 import { AppShell } from "@/components/layout/AppShell";
 import { PwaRegister } from "@/components/layout/PwaRegister";
+import { EmbedBridge } from "@/components/layout/EmbedBridge";
+import { EMBED_BOOT_SCRIPT } from "@/lib/embed/bridge";
 import "../globals.css";
 
 const inter = Inter({
@@ -67,11 +69,16 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
+      <head>
+        {/* E-O'quv embed: hide the shell chrome before hydration (see src/lib/embed/bridge.ts) */}
+        <script dangerouslySetInnerHTML={{ __html: EMBED_BOOT_SCRIPT }} />
+      </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <NextIntlClientProvider messages={messages}>
           <Providers>
             <AppShell>{children}</AppShell>
             <PwaRegister />
+            <EmbedBridge />
           </Providers>
         </NextIntlClientProvider>
       </body>

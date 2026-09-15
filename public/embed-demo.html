@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HIMOYA-360 · E-O'quv embed demo</title>
+<style>
+  body { margin: 0; font: 14px system-ui, sans-serif; background: #0f172a; color: #e2e8f0; display: flex; height: 100vh; }
+  aside { width: 320px; padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; border-right: 1px solid #334155; }
+  iframe { flex: 1; border: 0; background: #fff; }
+  button, input { font: inherit; padding: 6px 8px; border-radius: 6px; border: 1px solid #475569; background: #1e293b; color: inherit; }
+  button { cursor: pointer; }
+  pre { flex: 1; overflow: auto; margin: 0; font-size: 11px; background: #020617; padding: 8px; border-radius: 6px; white-space: pre-wrap; }
+  h1 { font-size: 15px; margin: 0 0 4px; }
+</style>
+</head>
+<body>
+<aside>
+  <h1>E-O'quv host (demo)</h1>
+  <input id="badge" value="SH-0473" placeholder="badgeId" />
+  <input id="name" value="Muminov Joldas Kamalovich" placeholder="name" />
+  <button id="setProfile">h360:set-profile</button>
+  <button id="goTir">h360:navigate → /simulyator/tir</button>
+  <button id="getSessions">h360:get-sessions</button>
+  <button id="logout">h360:logout</button>
+  <pre id="log" data-testid="log"></pre>
+</aside>
+<iframe id="app" data-testid="app" src="/uz?embed=1&origin=ORIGIN"></iframe>
+<script>
+  var frame = document.getElementById("app");
+  frame.src = frame.src.replace("ORIGIN", encodeURIComponent(location.origin));
+  var log = document.getElementById("log");
+  window.h360Messages = [];
+  function line(s) { log.textContent += s + "\n"; log.scrollTop = log.scrollHeight; }
+  function send(cmd) { frame.contentWindow.postMessage(cmd, location.origin); line("→ " + JSON.stringify(cmd)); }
+  window.addEventListener("message", function (e) {
+    if (e.origin !== location.origin || !e.data || typeof e.data.type !== "string") return;
+    window.h360Messages.push(e.data);
+    var d = e.data;
+    var brief = d.type === "h360:session" ? d.session.kind + " " + d.session.status + " " + d.session.id
+      : d.type === "h360:profile" ? (d.profile ? d.profile.badgeId + " " + d.profile.name : "null")
+      : JSON.stringify(d).slice(0, 160);
+    line("← " + d.type + " " + brief);
+  });
+  document.getElementById("setProfile").onclick = function () {
+    send({ type: "h360:set-profile", profile: { badgeId: document.getElementById("badge").value, name: document.getElementById("name").value, rank: "leytenant", district: "Yunusobod" } });
+  };
+  document.getElementById("goTir").onclick = function () { send({ type: "h360:navigate", path: "/simulyator/tir" }); };
+  document.getElementById("getSessions").onclick = function () { send({ type: "h360:get-sessions" }); };
+  document.getElementById("logout").onclick = function () { send({ type: "h360:logout" }); };
+</script>
+</body>
+</html>
