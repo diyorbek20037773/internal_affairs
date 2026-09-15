@@ -30,6 +30,20 @@ function base(kind: TrainingSession["kind"], scenarioId: string, version: string
   };
 }
 
+/** A session the trainee opened but never acted in (no turn, choice, shot, plan or text). */
+export function isEmptySession(s: TrainingSession): boolean {
+  if (s.status !== "in_progress") return false;
+  const p = s.payload;
+  switch (p.kind) {
+    case "dialog": return p.transcript.length <= 1;
+    case "decision": return p.path.length === 0;
+    case "mahalla": return p.picked.length === 0 && Object.values(p.plans).every((v) => !v?.trim());
+    case "document": return !p.text.trim();
+    case "tir": return p.events.length <= 1 && p.shotsFired === 0 && p.elapsedSec < 5;
+    default: return false;
+  }
+}
+
 export function newDialogSession(s: DialogScenario, b: Base): TrainingSession {
   return {
     ...base("dialog", s.id, s.version, b),

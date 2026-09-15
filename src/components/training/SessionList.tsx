@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/icon";
 import { getScenario } from "@/data/scenarios";
+import { isEmptySession } from "@/lib/training/sessionFactory";
 import { localized } from "@/data/sops/types";
 import { formatDate } from "@/lib/utils";
 import type { TrainingSession } from "@/lib/storage/trainingSchema";
@@ -52,7 +53,7 @@ export function SessionList({
   const locale = useLocale();
   const router = useRouter();
 
-  if (sessions.length === 0) {
+  if (sessions.filter((s) => !isEmptySession(s)).length === 0) {
     return (
       <Card className="flex flex-col items-center justify-center gap-2 p-12 text-center">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted shadow-[inset_0_0_0_1px_hsl(var(--border))]">
@@ -66,7 +67,7 @@ export function SessionList({
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {sessions.map((s) => {
+      {sessions.filter((s) => !isEmptySession(s)).map((s) => {
         const sc = getScenario(s.scenarioId);
         const final = s.finalScores
           ? Math.round(Object.values(s.finalScores).reduce((a, b) => a + b, 0) / 8)

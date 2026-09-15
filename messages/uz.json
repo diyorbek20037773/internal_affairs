@@ -124,7 +124,8 @@
     "setupProfile": "Boshlash uchun profilni to'ldiring",
     "setupProfileDesc": "Ism, xizmat ID (masalan SH-0473), unvon va hudud — HIMOYA-ID shu profilga bog'lanadi.",
     "statsTitle": "Mening ko'rsatkichlarim",
-    "statsSubtitle": "Mashg'ulotlar, debrifinglar va HIMOYA-ID o'rtacha bali."
+    "statsSubtitle": "Mashg'ulotlar, debrifinglar va HIMOYA-ID o'rtacha bali.",
+    "setupProfileCta": "Profilni to'ldirish"
   },
   "chat": {
     "title": "AI Inspektor",
@@ -312,7 +313,8 @@
       "setting": "Vaziyat",
       "laws": "Huquqiy asos",
       "trains": "Rivojlantiradi",
-      "inProgress": "Boshlangan"
+      "inProgress": "Boshlangan",
+      "fillProfileFirst": "Avval profilni to'ldiring"
     },
     "dialog": {
       "title": "AI-Muloqot simulyatori",
@@ -506,7 +508,8 @@
       "errServer": "Server bilan aloqa yo'q — keyinroq urinib ko'ring",
       "errBad": "Ma'lumotlar noto'g'ri",
       "roleServer": "rol serverda belgilanadi (instruktor ro'yxati)",
-      "logout": "Chiqish"
+      "logout": "Chiqish",
+      "introShort": "Xizmat ID va PIN bilan kiring — profil va natijalar barcha planshetlarda bir xil bo'ladi."
     },
     "profile": {
       "title": "Profil",
@@ -766,7 +769,9 @@
         "enter": "VR rejimiga kirish",
         "exit": "VR dan chiqish",
         "hint": "VR: kontroller tepkisi — o'q, ushlagich (grip) — qayta zaryad, chap joystik — yurish (FPS rejimi)."
-      }
+      },
+      "hintTouch": "Muloqot — birinchi. Qurol — oxirgi chora. Planshetda: pastdagi tugmalar (qurol, elektroshok, yordam, to'siq) va iboralar; qurol chiqarilgach nishonga ekranda bosing.",
+      "hintRangeTouch": "Otish mahorati: «Qurol chiqar» tugmasini bosing, plastinalarga ekranda bosing. Taymer birinchi o'qdan."
     }
   }
 }

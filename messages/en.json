@@ -124,7 +124,8 @@
     "setupProfile": "Fill in your profile to start",
     "setupProfileDesc": "Name, service ID (e.g. SH-0473), rank and district — HIMOYA-ID is bound to this profile.",
     "statsTitle": "My indicators",
-    "statsSubtitle": "Sessions, debriefs and the HIMOYA-ID average."
+    "statsSubtitle": "Sessions, debriefs and the HIMOYA-ID average.",
+    "setupProfileCta": "Fill in the profile"
   },
   "chat": {
     "title": "AI Inspector",
@@ -312,7 +313,8 @@
       "setting": "Setting",
       "laws": "Legal basis",
       "trains": "Trains",
-      "inProgress": "Started"
+      "inProgress": "Started",
+      "fillProfileFirst": "Fill in your profile first"
     },
     "dialog": {
       "title": "AI Dialogue simulator",
@@ -506,7 +508,8 @@
       "errServer": "Server unreachable — try again later",
       "errBad": "Invalid input",
       "roleServer": "role is assigned on the server (instructor list)",
-      "logout": "Sign out"
+      "logout": "Sign out",
+      "introShort": "Sign in with your badge ID and PIN — profile and results are the same on every tablet."
     },
     "profile": {
       "title": "Profile",
@@ -766,7 +769,9 @@
         "enter": "Enter VR",
         "exit": "Exit VR",
         "hint": "VR: controller trigger fires, grip reloads, left thumbstick walks (FPS mode)."
-      }
+      },
+      "hintTouch": "Talk first. Firearm is the last resort. On a tablet: use the buttons below (draw, taser, backup, cover) and the phrases; once drawn, tap the target on screen.",
+      "hintRangeTouch": "Marksmanship: tap “Draw”, then tap the plates on screen. The timer starts at the first shot."
     }
   }
 }

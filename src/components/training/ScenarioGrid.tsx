@@ -82,11 +82,17 @@ export function ScenarioGrid({ scenarios, basePath }: { scenarios: Scenario[]; b
               )}
 
               <div className="mt-4 flex items-center gap-2">
-                <Button asChild className="flex-1" disabled={!profile}>
-                  <Link href={`${basePath}/${s.id}`}>
-                    {t("start")} <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
+                {profile ? (
+                  <Button asChild className="flex-1">
+                    <Link href={`${basePath}/${s.id}`}>
+                      {t("start")} <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button asChild variant="outline" className="flex-1">
+                    <Link href="/profil">{t("fillProfileFirst")}</Link>
+                  </Button>
+                )}
                 {inProgress && (
                   <Button asChild variant="accent">
                     <Link href={sessionHref(inProgress)}>{t("resume")}</Link>

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useSessionBootstrap } from "@/hooks/useSessionBootstrap";
+import { useTraineeProfile } from "@/hooks/useTraineeProfile";
 import { useSpeech } from "@/hooks/useSpeech";
 import { newTirSession, touch } from "@/lib/training/sessionFactory";
 import { trainingRepo } from "@/lib/storage/training";
@@ -127,6 +128,8 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
   const [shockFx, setShockFx] = useState(false);
   const [allStop, setAllStop] = useState(false);
   const [instructorOpen, setInstructorOpen] = useState(false);
+  const { isInstructor } = useTraineeProfile();
+  const touchDevice = useMemo(() => isTouch(), []);
   const [devicesOpen, setDevicesOpen] = useState(false);
   // WebXR: VR button only when a headset runtime is present; state mirrors the session.
   const [xrOk, setXrOk] = useState(false);
@@ -575,7 +578,7 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
             <div className="max-w-xl text-center">
               <p className="text-xs font-semibold uppercase tracking-wider text-white/60">{t("briefing")}</p>
               <p className="mt-2 text-lg leading-relaxed">{localized(scenario.briefing, locale)}</p>
-              <p className="mt-3 text-sm text-white/70">{marks ? t("hintRange") : t("hint")}</p>
+              <p className="mt-3 text-sm text-white/70">{touchDevice ? (marks ? t("hintRangeTouch") : t("hintTouch")) : marks ? t("hintRange") : t("hint")}</p>
               {fpsMode && <p className="mt-2 font-mono text-xs text-accent">{t("controls.keys")}</p>}
               <Button size="xl" className="mt-6" onClick={() => setStarted(true)}><Play className="h-5 w-5" /> {t("start")}</Button>
             </div>
@@ -620,7 +623,7 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
 
         <div className="absolute right-3 bottom-3 flex gap-1">
           {fpsMeter > 0 && <span className={cn("flex h-8 items-center rounded-md bg-black/60 px-2 font-mono text-[10px]", fpsMeter >= 50 ? "text-success" : fpsMeter >= 30 ? "text-accent" : "text-destructive")} title="FPS">{fpsMeter} fps</span>}
-          <Button size="sm" variant="secondary" className="h-8 bg-black/60 px-2 font-mono text-[10px] text-white hover:bg-black/80" onClick={() => setControls((c) => (c === "fps" ? "fixed" : "fps"))} title={t("controls.toggle")}>{fpsMode ? <Gamepad2 className="mr-1 h-3.5 w-3.5" /> : <MousePointer2 className="mr-1 h-3.5 w-3.5" />}{fpsMode ? t("controls.fps") : t("controls.fixed")}</Button>
+          {!touchDevice && <Button size="sm" variant="secondary" className="h-8 bg-black/60 px-2 font-mono text-[10px] text-white hover:bg-black/80" onClick={() => setControls((c) => (c === "fps" ? "fixed" : "fps"))} title={t("controls.toggle")}>{fpsMode ? <Gamepad2 className="mr-1 h-3.5 w-3.5" /> : <MousePointer2 className="mr-1 h-3.5 w-3.5" />}{fpsMode ? t("controls.fps") : t("controls.fixed")}</Button>}
           <Button size="sm" variant="secondary" className="h-8 bg-black/60 px-2 font-mono text-[10px] text-white hover:bg-black/80" onClick={() => setQuality((q) => (q === "high" ? "low" : "high"))} title={t("quality")}>{quality === "high" ? "HQ" : "LQ"}</Button>
           <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={() => setDevicesOpen((v) => !v)} title={t("input.title")} data-testid="devices-toggle"><Usb className="h-4 w-4" /></Button>
           {xrOk && (
@@ -676,7 +679,8 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
 
       {devicesOpen && <InputDevicesPanel onClose={() => setDevicesOpen(false)} />}
 
-      {/* Instructor (ghost mode) */}
+      {/* Instructor (ghost mode) — instructors only */}
+      {isInstructor && (
       <Card className="p-3">
         <button className="flex w-full items-center justify-between text-left" onClick={() => setInstructorOpen((v) => !v)}>
           <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground"><Flame className="h-3.5 w-3.5 text-accent" /> {t("instructor")}</span>
@@ -700,6 +704,7 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
           </div>
         )}
       </Card>
+      )}
 
       <Card className="max-h-40 overflow-y-auto p-3 text-xs scrollbar-thin">
         <ol className="space-y-1">
