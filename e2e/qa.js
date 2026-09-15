@@ -93,10 +93,10 @@ const step = (name, ok, note = "") => {
     await page.getByRole("button", { name: "Davom etish" }).click();
     await page.waitForTimeout(400);
   };
-  await pick(/Masofani saqlayman/);
-  await pick(/Tushunaman, bu juda og'ir/);
+  await pick(/8 m masofada to'xtayman/);
+  await pick(/Tushunaman, bu og'ir/);
   await pick(/men ishonaman/);
-  await pick(/Pichoqni xavfsiz olaman/);
+  await pick(/Pichoqni dalil sifatida olaman/);
   step("Qaror: qonuniy yo'l → success", (await page.getByText("Qonuniy va mutanosib yakun").count()) > 0);
   await shot("05-qaror");
   await page.getByRole("button", { name: /Smart Debrifing/ }).click();
@@ -106,7 +106,7 @@ const step = (name, ok, note = "") => {
 
   // 4. Smart Mahalla
   await page.goto(`${B}/uz/simulyator/mahalla/mahalla-sh12`, { waitUntil: "domcontentloaded" });
-  await page.getByRole("button", { name: /7-uy: takroriy/ }).click();
+  await page.getByRole("button", { name: /9-uy: takroriy/ }).click();
   await page.getByRole("button", { name: /33-uy: hisobdagi/ }).click();
   await page.getByRole("button", { name: /Bolalar maydonchasi: kechki/ }).click();
   const tas = page.locator("textarea");

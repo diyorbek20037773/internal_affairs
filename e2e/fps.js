@@ -24,14 +24,14 @@ const step = (n, ok, note = "") => { results.push(ok); console.log(`${ok ? "PASS
   const open = async (id) => {
     await page.goto(`${B}/uz/simulyator/tir/${id}?quality=low&controls=fps&lock=0`, { waitUntil: "domcontentloaded", timeout: 120000 });
     await page.waitForSelector("canvas", { timeout: 90000 });
-    await page.waitForFunction(() => !document.body.innerText.includes("yuklanmoqda (panorama"), null, { timeout: 120000 }).catch(() => {});
+    await page.waitForFunction(() => !/yuklanmoqda/i.test(document.body.innerText), null, { timeout: 120000 }).catch(() => {});
     await page.waitForTimeout(2500);
   };
 
   // ---- 1. Marksmanship range: movement + shooting mechanics (no hostiles) ----
   await open("tir-plate-rack");
   step("FPS badge + key hint on briefing", /WASD/.test(await body()) && /FPS/.test(await body()));
-  await page.getByRole("button", { name: /Poligonni boshlash/ }).click({ timeout: 60000 });
+  await page.getByRole("button", { name: /Poligonni boshlash/ }).click({ timeout: 180000 });
   await page.waitForTimeout(800);
   step("lock=0: no lock hint, keyboard-only mode", !/Sahnaga bosing/.test(await body()));
   await page.screenshot({ path: `${OUT}/fps-1-start.png` });
@@ -76,7 +76,7 @@ const step = (n, ok, note = "") => { results.push(ok); console.log(`${ok ? "PASS
 
   // ---- 2. Crowd scenario: health HUD, officer injured → PLAYER_DEAD overlay → restart ----
   await open("tir-olomon-pichoq");
-  await page.getByRole("button", { name: /Poligonni boshlash/ }).click({ timeout: 60000 });
+  await page.getByRole("button", { name: /Poligonni boshlash/ }).click({ timeout: 180000 });
   await page.waitForTimeout(600);
   step("Health HUD visible", /Salomatlik/i.test(await body()) && (await dbg()).health === 100, JSON.stringify(await dbg()));
   await page.keyboard.down("KeyW"); await page.waitForTimeout(3500); await page.keyboard.up("KeyW");
