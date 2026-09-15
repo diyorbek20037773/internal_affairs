@@ -98,7 +98,7 @@ export function Human({
     g.position.z = v.z;
     // face the camera (officer's eyes), smooth turn
     const cam = s.camera.position;
-    const yawGoal = Math.atan2(cam.x - v.x, cam.z - v.z) + Math.PI;
+    const yawGoal = Math.atan2(cam.x - v.x, cam.z - v.z); // RPM / procedural bodies face +Z
     g.rotation.y = lerpAngle(g.rotation.y, yawGoal, Math.min(1, 5 * dt));
     if (hpNow < hurt.current.hp) hurt.current.t = 0.25;
     hurt.current.hp = hpNow;

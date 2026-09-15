@@ -296,7 +296,7 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
 
     // face the live camera (the officer's eyes) — smooth turn, faster when hostile
     const cam = s.camera.position;
-    const yawGoal = Math.atan2(cam.x - v.x, cam.z - v.z) + Math.PI;
+    const yawGoal = Math.atan2(cam.x - v.x, cam.z - v.z); // RPM / procedural bodies face +Z
     const turn = ast === "lunging" || ast === "aiming" ? 9 : 4;
     g.rotation.y = lerpAngle(g.rotation.y, yawGoal, Math.min(1, turn * dt));
 
@@ -314,8 +314,9 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
     v.down = lerp(v.down, ast === "down" ? 1 : 0, 3);
     v.kneel = lerp(v.kneel, ast === "kneeling" ? 1 : 0, 3);
     v.crouch = lerp(v.crouch, ast === "cowering" ? 1 : 0, 3);
-    g.rotation.x = v.down * (Math.PI / 2) * 0.98;
-    g.position.y = -v.kneel * 0.5 - v.crouch * 0.35 - v.down * 0.1;
+    g.rotation.x = -v.down * (Math.PI / 2) * 0.96;
+    g.rotation.z = v.down * 0.18;
+    g.position.y = -v.kneel * 0.5 - v.crouch * 0.35 + v.down * 0.12;
     g.updateWorldMatrix(true, true);
 
     const toOfficer = tmp.tgt.set(cam.x - v.x, 0, cam.z - v.z).normalize();
@@ -348,8 +349,17 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
         tmp.v.set(0.3, 0.9, 0); aimBone(bones.rArm, tmp.v); tmp.v.set(-0.3, 0.9, 0); aimBone(bones.lArm, tmp.v);
         break;
       case "cowering":
-        tmp.v.set(toOfficer.x * 0.3, 0.9, toOfficer.z * 0.3); aimBone(bones.rArm, tmp.v, 0.8); aimBone(bones.lArm, tmp.v.clone(), 0.8);
-        tmp.v.set(toOfficer.x, -0.5, toOfficer.z); aimBone(bones.spine, tmp.v, 0.35);
+        // crouched, hunched forward, elbows out, hands shielding the head
+        tmp.v.set(toOfficer.x * 0.45, 0.75, toOfficer.z * 0.45); aimBone(bones.rArm, tmp.v, 0.85); aimBone(bones.lArm, tmp.v.clone(), 0.85);
+        tmp.v.set(-toOfficer.x * 0.55, 0.8, -toOfficer.z * 0.55); aimBone(bones.rFore, tmp.v, 0.85); aimBone(bones.lFore, tmp.v.clone(), 0.85);
+        tmp.v.set(toOfficer.x * 0.45, 0.9, toOfficer.z * 0.45); aimBone(bones.spine, tmp.v, 0.4);
+        tmp.v.set(toOfficer.x * 0.6, 0.8, toOfficer.z * 0.6); aimBone(bones.head, tmp.v, 0.5);
+        break;
+      case "down":
+        // collapsed: arms loose along the body, head rolled to the side
+        tmp.v.set(0.35, -0.9, 0.1); aimBone(bones.rArm, tmp.v, 0.6);
+        tmp.v.set(-0.5, -0.8, 0.2); aimBone(bones.lArm, tmp.v, 0.6);
+        tmp.v.set(0.4, 0.9, 0); aimBone(bones.head, tmp.v, 0.5);
         break;
       case "dropping":
         tmp.v.set(toOfficer.x * 0.6, -0.8, toOfficer.z * 0.6); aimBone(bones.rArm, tmp.v, 0.8);

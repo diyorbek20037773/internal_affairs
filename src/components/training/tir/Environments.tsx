@@ -32,7 +32,8 @@ const ENVS: Record<TirEnvironment, EnvDef> = {
   street: { hdri: "modern_evening_street", groundHeight: 1.6, radius: 45, floor: { tex: "asphalt_02", size: 40, repeat: 10 }, cover: "concrete_floor_worn_001", ambient: 0.25, envIntensity: 1, bgIntensity: 1, sun: { pos: [-8, 9, 5], intensity: 0.6, color: "#ffe2c0" } },
   plaza: { hdri: "palermo_square", groundHeight: 1.7, radius: 50, floor: { tex: "floor_tiles_06", size: 40, repeat: 16 }, cover: "rough_plaster_brick", ambient: 0.2, envIntensity: 0.7, bgIntensity: 0.75, sun: { pos: [10, 14, -4], intensity: 1.8 } },
   // real office lobby (reception, glass, stairs) — the VirTra reference look
-  lobby: { hdri: "cinema_lobby", groundHeight: 1.6, radius: 16, cover: "concrete_floor_worn_001", ambient: 0.35, envIntensity: 0.9, bgIntensity: 0.95, sun: { pos: [2, 6, 3], intensity: 0.6 } },
+  // open-floor public building hall (marble, columns) — actors never stand "on" photographed furniture
+  lobby: { hdri: "entrance_hall", groundHeight: 1.7, radius: 18, floor: { tex: "floor_tiles_06", size: 18, repeat: 9 }, cover: "concrete_floor_worn_001", ambient: 0.35, envIntensity: 0.85, bgIntensity: 0.9, sun: { pos: [2, 7, 3], intensity: 0.5 } },
   hallway: { hdri: "large_corridor", groundHeight: 1.6, radius: 10, cover: "rough_plaster_brick", ambient: 0.35, envIntensity: 0.85, bgIntensity: 0.9, sun: { pos: [0, 5, 2], intensity: 0.5 } },
   range: { hdri: "abandoned_parking", groundHeight: 1.6, radius: 60, floor: { tex: "asphalt_02", size: 60, repeat: 14 }, cover: "concrete_floor_worn_001", ambient: 0.2, envIntensity: 0.8, bgIntensity: 0.85, sun: { pos: [6, 14, 8], intensity: 2.0 } },
 };
@@ -140,16 +141,9 @@ function Props({ kind }: { kind: TirEnvironment }) {
     );
   if (kind === "lobby")
     return (
-      <group>
-        <mesh position={[3.2, 0.55, -7]} castShadow>
-          <boxGeometry args={[2.6, 1.1, 0.9]} />
-          <meshStandardMaterial color="#4b5b6c" roughness={0.7} />
-        </mesh>
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-2.2, 0.01, -6]}>
-          <circleGeometry args={[0.6, 20]} />
-          <meshStandardMaterial color="#4a0a0a" roughness={0.2} transparent opacity={0.8} />
-        </mesh>
-      </group>
+      <Suspense fallback={null}>
+        <ReceptionDesk />
+      </Suspense>
     );
   if (kind === "plaza")
     return (
@@ -165,6 +159,41 @@ function Props({ kind }: { kind: TirEnvironment }) {
       </mesh>
     );
   return null;
+}
+
+/** Reception counter: stone front (PBR), lighter top slab, brushed-metal band, monitor, blood pool by the victim. */
+function ReceptionDesk() {
+  const stone = usePbr("concrete_floor_worn_001", 1.2);
+  return (
+    <group>
+      <group position={[3.2, 0, -7]}>
+        <mesh position={[0, 0.55, 0]} castShadow receiveShadow>
+          <boxGeometry args={[2.6, 1.1, 0.9]} />
+          <meshStandardMaterial {...stone} roughness={0.95} color="#8a8f96" />
+        </mesh>
+        <mesh position={[0, 1.13, 0]} castShadow>
+          <boxGeometry args={[2.8, 0.06, 1.05]} />
+          <meshStandardMaterial color="#d8d3c8" roughness={0.35} metalness={0.05} />
+        </mesh>
+        <mesh position={[0, 0.72, 0.452]}>
+          <boxGeometry args={[2.6, 0.05, 0.005]} />
+          <meshStandardMaterial color="#b8bcc4" metalness={0.9} roughness={0.25} />
+        </mesh>
+        <mesh position={[-0.6, 1.33, -0.2]} rotation={[-0.15, 0.3, 0]} castShadow>
+          <boxGeometry args={[0.5, 0.32, 0.02]} />
+          <meshStandardMaterial color="#0b0f16" roughness={0.3} />
+        </mesh>
+        <mesh position={[-0.6, 1.19, -0.15]}>
+          <cylinderGeometry args={[0.08, 0.1, 0.06, 12]} />
+          <meshStandardMaterial color="#2a2d33" roughness={0.6} />
+        </mesh>
+      </group>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-2.2, 0.011, -6]}>
+        <circleGeometry args={[0.55, 24]} />
+        <meshStandardMaterial color="#4a0a0a" roughness={0.15} transparent opacity={0.85} />
+      </mesh>
+    </group>
+  );
 }
 
 /** Market stalls: brick counter, timber posts, fabric canopy. */
