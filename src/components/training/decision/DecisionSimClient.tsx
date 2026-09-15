@@ -59,7 +59,7 @@ function DecisionRunner({ scenario, initial }: { scenario: DecisionScenario; ini
         <h3 className="mt-4 text-xl font-bold">{t(`outcome.${outcome}`)}</h3>
         <p className="mt-2 text-sm text-muted-foreground">{t("hint")}</p>
         <Button className="mt-6" size="lg" onClick={() => router.push(`/simulyator/debrif/${sim.session.id}`)}>
-          {tc("next")}: Smart Debrifing <ArrowRight className="h-4 w-4" />
+          {tc("next")}: {tc("toDebrief")} <ArrowRight className="h-4 w-4" />
         </Button>
       </Card>
     );
@@ -127,7 +127,7 @@ function DecisionRunner({ scenario, initial }: { scenario: DecisionScenario; ini
                     <Badge key={k} variant="outline" className="gap-1">
                       <Scale className="h-3 w-3" /> {l.code}
                       {l.article ? ` ${l.article}` : ""}
-                      {!l.verified && ` · ${tc("verifyShort")}`}
+
                     </Badge>
                   );
                 })}
@@ -161,11 +161,12 @@ function DecisionRunner({ scenario, initial }: { scenario: DecisionScenario; ini
             size="sm"
             className="text-muted-foreground hover:text-destructive"
             onClick={async () => {
+              if (!window.confirm(tc("abandonConfirm"))) return;
               await sim.abandon();
               router.push("/mashgulotlarim");
             }}
           >
-            <XCircle className="h-4 w-4" /> {tc("cancel")}
+            <XCircle className="h-4 w-4" /> {tc("abandonSession")}
           </Button>
         </div>
       </div>
@@ -173,7 +174,7 @@ function DecisionRunner({ scenario, initial }: { scenario: DecisionScenario; ini
       {/* Chain hints */}
       <div className="space-y-4">
         <Card className="p-4">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">QAROR ZANJIRI</p>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("chainTitle")}</p>
           <ol className="space-y-2">
             {CHAIN_PROMPTS.map((c, i) => {
               const cur = node.chainPrompt === c;

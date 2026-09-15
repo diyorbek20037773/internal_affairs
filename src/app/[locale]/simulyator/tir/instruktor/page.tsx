@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { Card } from "@/components/ui/card";
 import { InstructorStation } from "@/components/training/tir/InstructorStation";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +20,14 @@ export default async function TirInstructorPage({
       {searchParams.session && searchParams.scenario ? (
         <InstructorStation sessionId={searchParams.session} scenarioId={searchParams.scenario} />
       ) : (
-        <p className="text-sm text-muted-foreground">?session=…&scenario=…</p>
+        <Card className="p-6">
+          <p className="font-semibold">{t("ins.emptyTitle")}</p>
+          <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm text-muted-foreground">
+            <li>{t("ins.emptyStep1")}</li>
+            <li>{t("ins.emptyStep2")}</li>
+            <li>{t("ins.emptyStep3")}</li>
+          </ol>
+        </Card>
       )}
     </div>
   );

@@ -241,7 +241,7 @@ function MahallaRunner({ scenario, initial }: { scenario: MahallaScenario; initi
               )}
               {finished && (
                 <Button className="w-full" onClick={() => router.push(`/simulyator/debrif/${session.id}`)}>
-                  Smart Debrifing <ArrowRight className="h-4 w-4" />
+                  {tc("toDebrief")} <ArrowRight className="h-4 w-4" />
                 </Button>
               )}
             </Card>

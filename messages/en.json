@@ -20,7 +20,7 @@
     "verified": "Verified",
     "verifyShort": "Verify",
     "aiUnavailable": "AI is temporarily busy. Please try again shortly.",
-    "noKeys": "Gemini API keys are not configured. Contact the administrator.",
+    "noKeys": "The AI service is not configured yet — contact your administrator.",
     "errorGeneric": "An error occurred. Please try again.",
     "comingSoon": "Coming soon",
     "keysSetupHint": "GEMINI_API_KEYS not configured — the AI won't respond yet. Add key(s) in Railway → Variables.",
@@ -37,11 +37,14 @@
     "edit": "Edit",
     "pageErrorTitle": "Something went wrong on this page",
     "pageErrorDesc": "Your data is saved. Try again or go back to the home page.",
-    "goHome": "Home"
+    "goHome": "Home",
+    "toDebrief": "Smart Debriefing",
+    "abandonSession": "Stop the session",
+    "abandonConfirm": "Stop this session? It will be saved as “Stopped” and will have no debriefing."
   },
   "modules": {
-    "title": "Modules",
-    "subtitle": "Modules of the MIA \"My Inspector\" ecosystem.",
+    "title": "Integration with service systems",
+    "subtitle": "“Mening Inspektorim” / E-patrol modules. Available modules open; the rest are on the integration roadmap.",
     "epatrul": "E-patrol",
     "profilaktik_suhbat": "Prevention talk",
     "shakl17": "Form 17",
@@ -53,7 +56,9 @@
     "raqamli_mahalla": "Digital mahalla",
     "xarita": "Map",
     "yuz_qidiruv": "Face search",
-    "murojaatlar": "Appeals"
+    "murojaatlar": "Appeals",
+    "available": "Available",
+    "planned": "Integration planned"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -63,7 +68,7 @@
     "qonunchilik": "Legislation",
     "ishlarim": "My work",
     "guide": "Quick guide",
-    "simulyator": "Simulator",
+    "simulyator": "Trainers",
     "mashgulotlarim": "My sessions",
     "instruktor": "Instructor cabinet",
     "profil": "Profile",
@@ -78,9 +83,12 @@
     "subtitle": "Situation → Analysis → Communication → Decision → Action → Result.",
     "stats": {
       "todayIncidents": "Today's incidents",
-      "completed": "Completed processes",
+      "completed": "Completed",
       "protocols": "Protocols created",
-      "conversations": "AI conversations"
+      "conversations": "AI conversations",
+      "sessions": "Sessions",
+      "pendingDebriefs": "Debriefs awaiting confirmation",
+      "himoyaAvg": "HIMOYA-ID average"
     },
     "cards": {
       "inspektor": {
@@ -109,11 +117,13 @@
       }
     },
     "trainersTitle": "Trainers",
-    "trainersSubtitle": "The 4 rooms of the professional development center — on one platform.",
+    "trainersSubtitle": "The professional development centre's 6 trainers — on one platform.",
     "inspectorTitle": "My Inspector",
     "inspectorSubtitle": "AI assistant on duty — incident, SOP, legislation.",
     "setupProfile": "Fill in your profile to start",
-    "setupProfileDesc": "Name, service ID (e.g. SH-0473), rank and district — HIMOYA-ID is bound to this profile."
+    "setupProfileDesc": "Name, service ID (e.g. SH-0473), rank and district — HIMOYA-ID is bound to this profile.",
+    "statsTitle": "My indicators",
+    "statsSubtitle": "Sessions, debriefs and the HIMOYA-ID average."
   },
   "chat": {
     "title": "AI Inspector",
@@ -225,16 +235,31 @@
   },
   "guide": {
     "title": "Quick guide",
-    "subtitle": "How to use the platform.",
+    "subtitle": "How to use the platform: trainee, instructor and the “Mening Inspektorim” module.",
     "steps": {
-      "one": "Choose an incident type in \"Start incident\".",
-      "two": "The AI Inspector starts the process step by step.",
-      "three": "Check off checklist items as you complete them.",
-      "four": "Track the required documents and legal basis in the right panel.",
-      "five": "The case is saved automatically — continue from \"My work\"."
+      "one": "Under “Start incident” choose the incident type — the AI Inspector runs the process step by step.",
+      "two": "Tick checklist items as you go; required documents and legal grounds are in the right panel.",
+      "three": "The case saves automatically — continue from “My cases”. “Legislation” is the AI reference by article."
     },
     "sloganTitle": "Project motto",
-    "slogan": "A reliable AI assistant for every inspector. Every decision — grounded in legislation and approved procedures, every process — step by step."
+    "slogan": "A reliable AI assistant for every inspector. Every decision — grounded in legislation and approved procedures, every process — step by step.",
+    "traineeTitle": "For the trainee (officer)",
+    "instructorTitle": "For the instructor",
+    "moduleTitle": "“Mening Inspektorim” module",
+    "trainee": {
+      "one": "Fill in the profile: full name, badge ID, rank, district. HIMOYA-ID is bound to it.",
+      "two": "Pick a scenario under “Trainers”: AI Dialogue, Decision, Smart Mahalla, Documentation or the TIR range.",
+      "three": "Speed is not graded — legality and proportionality are. “Correctly not shooting” is also a top mark.",
+      "four": "After the session Smart Debriefing opens: what went right, where the mistake was, what to do differently.",
+      "five": "HIMOYA-ID updates provisionally; the instructor's confirmation makes it final. History and the radar are in “My sessions”.",
+      "six": "“One day of service” is the final exam: 5 stages from 09:00 to 16:30 and a verdict for the whole day."
+    },
+    "instructor": {
+      "one": "Choose the “Instructor” role in your profile (with the centre code) — the “Instructor cabinet” appears.",
+      "two": "Open pending debriefs in the cabinet, add a note and confirm — only then HIMOYA-ID is finalised.",
+      "three": "On the TIR range open the “Instructor station” in a second window: escalate, spawn actors, pause, ALL STOP.",
+      "four": "Enter the 30–90 day service result in the “Field service (KPI)” card — it feeds the effectiveness competency."
+    }
   },
   "theme": {
     "light": "Light",
@@ -249,7 +274,7 @@
   },
   "sim": {
     "hub": {
-      "title": "Simulator",
+      "title": "Trainers",
       "subtitle": "Scenario-based training: virtual citizen, decision chain, virtual district, smart debriefing.",
       "dialog": {
         "title": "AI Dialogue simulator",
@@ -350,7 +375,8 @@
         "partial": "Partially correct",
         "fail": "Failed outcome"
       },
-      "hint": "Speed is not graded — legality and proportionality are. «Correctly not shooting» is also top marks."
+      "hint": "Speed is not graded — legality and proportionality are. «Correctly not shooting» is also top marks.",
+      "chainTitle": "Decision chain"
     },
     "mahalla": {
       "title": "Smart Mahalla",
@@ -399,7 +425,12 @@
       "cycle": "MISTAKE → ANALYSIS → EXPERIENCE → MASTERY",
       "deterministic": "System score",
       "llm": "AI score",
-      "final": "Final"
+      "final": "Final",
+      "notFoundTitle": "Session not found",
+      "notFoundDesc": "The link is outdated or the session was saved on another device.",
+      "unfinishedTitle": "The session is not finished yet",
+      "unfinishedDesc": "The debriefing is prepared once the session ends. Continue the session first.",
+      "confirmedToast": "Confirmed — HIMOYA-ID updated"
     },
     "sessions": {
       "title": "My sessions",
@@ -414,7 +445,9 @@
       "open": "Open",
       "deleteConfirm": "Delete this session?",
       "export": "Export JSON",
-      "import": "Import JSON"
+      "import": "Import JSON",
+      "importOk": "{n} sessions imported",
+      "importFail": "Import failed — wrong file format"
     },
     "himoyaId": {
       "title": "HIMOYA-ID",
@@ -442,12 +475,17 @@
       "trainees": "Trainees",
       "allSessions": "All sessions",
       "noPending": "No debriefs awaiting confirmation.",
-      "deviceNote": "MVP: only this device's data is visible. With a server, all trainees will appear.",
+      "deviceNote": "Device mode: only trainees and sessions on this tablet are visible. With the server connected every tablet is in one place.",
       "serverNote": "Server (Postgres) connected: trainees and sessions from every tablet are visible. Offline records sync when the connection returns.",
       "trainee": "Trainee",
       "scenario": "Scenario",
       "date": "Date",
-      "score": "Score"
+      "score": "Score",
+      "notInstructorTitle": "Instructor cabinet",
+      "notInstructorDesc": "This section is for instructors. Choose the “Instructor” role in your profile (with the centre code).",
+      "openProfile": "Open profile",
+      "noTrainees": "No trainees yet — they appear after the first completed session.",
+      "legend": "Competencies"
     },
     "auth": {
       "intro": "Server mode: sign in with your badge ID and PIN. Profile, sessions and HIMOYA-ID are the same on every tablet. Offline data stays on the device and syncs when connected.",
@@ -471,7 +509,7 @@
     },
     "profile": {
       "title": "Profile",
-      "subtitle": "HIMOYA-ID is bound to this profile. Data is stored only on this device.",
+      "subtitle": "HIMOYA-ID is bound to this profile.",
       "name": "Full name",
       "badgeId": "Service ID",
       "rank": "Rank",
@@ -480,7 +518,12 @@
       "roleTrainee": "Trainee (officer)",
       "roleInstructor": "Instructor",
       "saved": "Profile saved",
-      "required": "Name and service ID are required"
+      "required": "Name and service ID are required",
+      "storageDevice": "Data is stored on this device. With the server connected every tablet sees the same profile.",
+      "storageServer": "The profile is stored on the server — the same on every tablet.",
+      "instructorCode": "Centre code",
+      "instructorCodeHint": "Enter the code issued by the training centre administrator to take the instructor role.",
+      "instructorCodeWrong": "Wrong code — the instructor role was not granted."
     },
     "competencies": {
       "huquqiy_qaror": "Legal decision",
@@ -514,7 +557,10 @@
       "strengths": "Strengths",
       "risks": "Risks",
       "nextWeek": "Next week plan",
-      "regenerate": "Re-analyze"
+      "regenerate": "Re-analyze",
+      "attempt": "Attempt",
+      "retake": "New attempt",
+      "history": "Attempt history"
     },
     "document": {
       "title": "Documentation",
@@ -663,7 +709,11 @@
         "commands": "Commands",
         "agitation": "Agitation",
         "compliance": "Compliance",
-        "hint": "The instructor drives the scenario live: escalate, spawn actors, pause, ALL STOP. Second window/tablet — same browser profile."
+        "hint": "The instructor drives the scenario live: escalate, spawn actors, pause, ALL STOP. Second window/tablet — same browser profile.",
+        "emptyTitle": "The instructor station is not connected yet",
+        "emptyStep1": "Open a TIR scenario on the main screen.",
+        "emptyStep2": "In the “Instructor (ghost mode)” card at the bottom press “Instructor station”.",
+        "emptyStep3": "Move the new window to the second monitor — escalation, spawning actors, pause and ALL STOP are controlled from there."
       },
       "quality": "Graphics quality (HQ/LQ)",
       "loading": "Loading the real environment (panorama, characters)...",
@@ -711,7 +761,12 @@
           "pause": "Pause"
         }
       },
-      "sceneError": "The 3D range failed to load (graphics error). Reload the page or switch to LQ."
+      "sceneError": "The 3D range failed to load (graphics error). Reload the page or switch to LQ.",
+      "xr": {
+        "enter": "Enter VR",
+        "exit": "Exit VR",
+        "hint": "VR: controller trigger fires, grip reloads, left thumbstick walks (FPS mode)."
+      }
     }
   }
 }

@@ -23,7 +23,7 @@ export function Topbar() {
     <header className="glass-panel sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border/70 px-4 shadow-xs md:px-6">
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="md:hidden" aria-label="Menu">
+          <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Menu">
             <Menu className="h-5 w-5" />
           </Button>
         </SheetTrigger>

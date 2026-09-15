@@ -44,9 +44,9 @@ export function SessionsClient() {
       if (!parsed.success) throw new Error("invalid");
       for (const s of parsed.data.items) await trainingRepo.saveSession(s);
       await refresh();
-      toast.success(`${parsed.data.items.length} ✓`);
+      toast.success(t("importOk", { n: parsed.data.items.length }));
     } catch {
-      toast.error(t("import") + " ✗");
+      toast.error(t("importFail"));
     }
   };
 

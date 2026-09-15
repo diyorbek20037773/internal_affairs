@@ -5,7 +5,7 @@ import { Topbar } from "./Topbar";
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-dvh overflow-hidden bg-muted/30">
-      <aside className="h360-chrome hidden w-72 shrink-0 border-r border-sidebar-border/70 md:block">
+      <aside className="h360-chrome hidden w-72 shrink-0 border-r border-sidebar-border/70 lg:block">
         <SidebarContent />
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">

@@ -50,11 +50,18 @@ export default async function DashboardPage({
 
       <section className="mb-8">
         <div className="mb-4">
+          <h3 className="text-lg font-bold tracking-tight">{t("statsTitle")}</h3>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t("statsSubtitle")}</p>
+        </div>
+        <DashboardStats />
+      </section>
+
+      <section className="mb-8">
+        <div className="mb-4">
           <h3 className="text-lg font-bold tracking-tight">{t("inspectorTitle")}</h3>
           <p className="mt-0.5 text-sm text-muted-foreground">{t("inspectorSubtitle")}</p>
         </div>
-        <DashboardStats />
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {CARD_KEYS.map((key) => (
             <FeatureCard
               key={key}

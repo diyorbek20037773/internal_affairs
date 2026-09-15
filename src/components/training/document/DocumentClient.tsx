@@ -161,7 +161,7 @@ function DocumentRunner({ scenario, initial }: { scenario: DocumentScenario; ini
             )}
             <p className="mt-3 border-l-2 border-accent pl-3 text-sm italic">{grade.feedback}</p>
             <Button className="mt-4" onClick={() => router.push(`/simulyator/debrif/${session.id}`)}>
-              Smart Debrifing <ArrowRight className="h-4 w-4" />
+              {tc("toDebrief")} <ArrowRight className="h-4 w-4" />
             </Button>
           </Card>
         )}

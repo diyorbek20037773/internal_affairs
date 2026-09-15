@@ -229,6 +229,7 @@ function DialogRunner({ scenario, initial }: { scenario: DialogScenario; initial
                 size="sm"
                 className="text-muted-foreground hover:text-destructive"
                 onClick={async () => {
+                  if (!window.confirm(tc("abandonConfirm"))) return;
                   await sim.abandon();
                   router.push("/mashgulotlarim");
                 }}

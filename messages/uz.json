@@ -20,7 +20,7 @@
     "verified": "Tasdiqlangan",
     "verifyShort": "Tekshiring",
     "aiUnavailable": "AI vaqtincha band. Iltimos, birozdan so'ng qayta urinib ko'ring.",
-    "noKeys": "Gemini API kalitlari sozlanmagan. Administrator bilan bog'laning.",
+    "noKeys": "AI xizmati hozircha sozlanmagan — administratorga murojaat qiling.",
     "errorGeneric": "Xatolik yuz berdi. Qayta urinib ko'ring.",
     "comingSoon": "Tez orada",
     "keysSetupHint": "GEMINI_API_KEYS sozlanmagan — AI hozircha javob bermaydi. Railway → Variables bo'limiga kalit(lar) qo'shing.",
@@ -37,11 +37,14 @@
     "edit": "Tahrirlash",
     "pageErrorTitle": "Sahifada xatolik yuz berdi",
     "pageErrorDesc": "Ma'lumotlaringiz saqlangan. Qayta urinib ko'ring yoki bosh sahifaga qayting.",
-    "goHome": "Bosh sahifa"
+    "goHome": "Bosh sahifa",
+    "toDebrief": "Smart Debrifing",
+    "abandonSession": "Mashg'ulotni to'xtatish",
+    "abandonConfirm": "Mashg'ulotni to'xtatmoqchimisiz? U «To'xtatilgan» deb saqlanadi va debrifsiz qoladi."
   },
   "modules": {
-    "title": "Modullar",
-    "subtitle": "IIV \"Mening Inspektorim\" ekotizimi modullari.",
+    "title": "Xizmat tizimlari bilan integratsiya",
+    "subtitle": "«Mening Inspektorim» / E-patrul modullari. Tayyor modullar ochiladi, qolganlari integratsiya rejasida.",
     "epatrul": "E-patrul",
     "profilaktik_suhbat": "Profilaktik suhbat",
     "shakl17": "Shakl 17",
@@ -53,7 +56,9 @@
     "raqamli_mahalla": "Raqamli mahalla",
     "xarita": "Xarita",
     "yuz_qidiruv": "Yuz orqali qidirish",
-    "murojaatlar": "Murojaatlar"
+    "murojaatlar": "Murojaatlar",
+    "available": "Mavjud",
+    "planned": "Integratsiya rejasida"
   },
   "nav": {
     "dashboard": "Bosh sahifa",
@@ -63,7 +68,7 @@
     "qonunchilik": "Qonunchilik",
     "ishlarim": "Mening ishlarim",
     "guide": "Tezkor qo'llanma",
-    "simulyator": "Simulyator",
+    "simulyator": "Trenajyorlar",
     "mashgulotlarim": "Mashg'ulotlarim",
     "instruktor": "Instruktor kabineti",
     "profil": "Profil",
@@ -78,9 +83,12 @@
     "subtitle": "Vaziyat → Tahlil → Muloqot → Qaror → Harakat → Natija. Har bir mashg'ulot — real xizmat holati, har bir xato — tajriba.",
     "stats": {
       "todayIncidents": "Bugungi hodisalar",
-      "completed": "Bajarilgan jarayonlar",
+      "completed": "Yakunlangan",
       "protocols": "Yaratilgan bayonnomalar",
-      "conversations": "AI bilan suhbatlar"
+      "conversations": "AI bilan suhbatlar",
+      "sessions": "Mashg'ulotlar",
+      "pendingDebriefs": "Tasdiq kutayotgan debrif",
+      "himoyaAvg": "HIMOYA-ID o'rtacha"
     },
     "cards": {
       "inspektor": {
@@ -109,11 +117,13 @@
       }
     },
     "trainersTitle": "Trenajyorlar",
-    "trainersSubtitle": "Kasbiy rivojlanish markazining 4 xonasi — bitta platformada.",
+    "trainersSubtitle": "Kasbiy rivojlanish markazining 6 trenajyori — bitta platformada.",
     "inspectorTitle": "Mening Inspektorim",
     "inspectorSubtitle": "Xizmat jarayonidagi AI yordamchi — hodisa, SOP, qonunchilik.",
     "setupProfile": "Boshlash uchun profilni to'ldiring",
-    "setupProfileDesc": "Ism, xizmat ID (masalan SH-0473), unvon va hudud — HIMOYA-ID shu profilga bog'lanadi."
+    "setupProfileDesc": "Ism, xizmat ID (masalan SH-0473), unvon va hudud — HIMOYA-ID shu profilga bog'lanadi.",
+    "statsTitle": "Mening ko'rsatkichlarim",
+    "statsSubtitle": "Mashg'ulotlar, debrifinglar va HIMOYA-ID o'rtacha bali."
   },
   "chat": {
     "title": "AI Inspektor",
@@ -225,16 +235,31 @@
   },
   "guide": {
     "title": "Tezkor qo'llanma",
-    "subtitle": "Platformadan qanday foydalanish kerak.",
+    "subtitle": "Platformadan qanday foydalanish: o'quvchi, instruktor va «Mening Inspektorim» moduli.",
     "steps": {
-      "one": "\"Hodisa boshlash\" bo'limidan hodisa turini tanlang.",
-      "two": "AI Inspektor jarayonni bosqichma-bosqich boshlaydi.",
-      "three": "Checklist bandlarini bajarilgan sari belgilang.",
-      "four": "Kerakli hujjatlar va qonun asoslarini o'ng paneldan kuzating.",
-      "five": "Ish avtomatik saqlanadi — \"Mening ishlarim\"dan davom ettiring."
+      "one": "«Hodisa boshlash» bo'limidan hodisa turini tanlang — AI Inspektor jarayonni bosqichma-bosqich boshlaydi.",
+      "two": "Checklist bandlarini bajarilgan sari belgilang; kerakli hujjatlar va qonun asoslari o'ng panelda.",
+      "three": "Ish avtomatik saqlanadi — «Mening ishlarim»dan davom ettiring. «Qonunchilik» — modda bo'yicha AI ma'lumotnoma."
     },
     "sloganTitle": "Loyiha shiori",
-    "slogan": "Har bir inspektor uchun ishonchli AI yordamchi. Har bir qaror — qonunchilik va tasdiqlangan tartiblar asosida, har bir jarayon — bosqichma-bosqich."
+    "slogan": "Har bir inspektor uchun ishonchli AI yordamchi. Har bir qaror — qonunchilik va tasdiqlangan tartiblar asosida, har bir jarayon — bosqichma-bosqich.",
+    "traineeTitle": "O'quvchi (xodim) uchun",
+    "instructorTitle": "Instruktor uchun",
+    "moduleTitle": "«Mening Inspektorim» moduli",
+    "trainee": {
+      "one": "Profilni to'ldiring: F.I.Sh., xizmat ID, unvon, hudud. HIMOYA-ID shu profilga bog'lanadi.",
+      "two": "«Trenajyorlar» bo'limidan ssenariyni tanlang: AI-Muloqot, Qaror, Smart Mahalla, Hujjatlashtirish yoki TIR poligoni.",
+      "three": "Mashg'ulot davomida baholanadigan narsa tezlik emas — qonuniylik va mutanosiblik. «To'g'ri otmaslik» ham a'lo baho.",
+      "four": "Mashg'ulot tugagach Smart Debrifing ochiladi: nima to'g'ri bo'ldi, qayerda xato, keyingi safar nima boshqacha.",
+      "five": "HIMOYA-ID dastlabki ball bilan yangilanadi; instruktor tasdiqlagach yakuniy bo'ladi. «Mashg'ulotlarim»da tarix va radar.",
+      "six": "«Bir kunlik xizmat» — yakuniy imtihon: 09:00 dan 16:30 gacha 5 bosqich, oxirida butun kun bo'yicha xulosa."
+    },
+    "instructor": {
+      "one": "Profilda «Instruktor» rolini tanlang (markaz kodi bilan) — «Instruktor kabineti» ochiladi.",
+      "two": "Kabinetda tasdiq kutayotgan debriflarni oching, izoh yozing va tasdiqlang — shundan keyin HIMOYA-ID yakuniy yangilanadi.",
+      "three": "TIR poligonida «Instruktor stansiyasi»ni ikkinchi oynada oching: keskinlashtirish, personaj kiritish, pauza, ALL STOP.",
+      "four": "«Amaliy xizmat (KPI)» kartasida 30–90 kunlik xizmat natijasini kiriting — natijadorlik kompetensiyasiga qo'shiladi."
+    }
   },
   "theme": {
     "light": "Yorug'",
@@ -249,7 +274,7 @@
   },
   "sim": {
     "hub": {
-      "title": "Simulyator",
+      "title": "Trenajyorlar",
       "subtitle": "Ssenariyli o'qitish: virtual fuqaro, qaror zanjiri, virtual mahalla, smart debrifing.",
       "dialog": {
         "title": "AI-Muloqot simulyatori",
@@ -350,7 +375,8 @@
         "partial": "Qisman to'g'ri",
         "fail": "Muvaffaqiyatsiz yakun"
       },
-      "hint": "Baholanadigan narsa tezlik emas — qarorning qonuniyligi va mutanosibligi. «To'g'ri otmaslik» ham a'lo baho."
+      "hint": "Baholanadigan narsa tezlik emas — qarorning qonuniyligi va mutanosibligi. «To'g'ri otmaslik» ham a'lo baho.",
+      "chainTitle": "Qaror zanjiri"
     },
     "mahalla": {
       "title": "Smart Mahalla",
@@ -399,7 +425,12 @@
       "cycle": "XATO → TAHLIL → TAJRIBA → MAHORAT",
       "deterministic": "Tizim bahosi",
       "llm": "AI bahosi",
-      "final": "Yakuniy"
+      "final": "Yakuniy",
+      "notFoundTitle": "Mashg'ulot topilmadi",
+      "notFoundDesc": "Havola eskirgan yoki mashg'ulot boshqa qurilmada saqlangan.",
+      "unfinishedTitle": "Mashg'ulot hali yakunlanmagan",
+      "unfinishedDesc": "Debrifing mashg'ulot tugagach tayyorlanadi. Avval mashg'ulotni davom ettiring.",
+      "confirmedToast": "Tasdiqlandi — HIMOYA-ID yangilandi"
     },
     "sessions": {
       "title": "Mashg'ulotlarim",
@@ -414,7 +445,9 @@
       "open": "Ochish",
       "deleteConfirm": "Ushbu mashg'ulotni o'chirmoqchimisiz?",
       "export": "JSON eksport",
-      "import": "JSON import"
+      "import": "JSON import",
+      "importOk": "{n} ta mashg'ulot import qilindi",
+      "importFail": "Import qilinmadi — fayl formati noto'g'ri"
     },
     "himoyaId": {
       "title": "HIMOYA-ID",
@@ -442,12 +475,17 @@
       "trainees": "O'quvchilar",
       "allSessions": "Barcha mashg'ulotlar",
       "noPending": "Tasdiq kutayotgan debrif yo'q.",
-      "deviceNote": "MVP: faqat shu qurilmadagi ma'lumotlar ko'rinadi. Server bilan ulanganda barcha o'quvchilar bo'ladi.",
+      "deviceNote": "Bu qurilma rejimi: faqat shu planshetdagi o'quvchilar va mashg'ulotlar ko'rinadi. Server ulanganda barcha planshetlar bir joyda bo'ladi.",
       "serverNote": "Server (Postgres) ulangan: barcha planshetlardagi o'quvchilar va mashg'ulotlar ko'rinadi. Oflayn yozuvlar ulanish qaytganda sinxronlanadi.",
       "trainee": "O'quvchi",
       "scenario": "Ssenariy",
       "date": "Sana",
-      "score": "Ball"
+      "score": "Ball",
+      "notInstructorTitle": "Instruktor kabineti",
+      "notInstructorDesc": "Bu bo'lim instruktorlar uchun. Profilda «Instruktor» rolini tanlang (markaz kodi bilan).",
+      "openProfile": "Profilni ochish",
+      "noTrainees": "Hali o'quvchilar yo'q — birinchi mashg'ulot yakunlangach shu yerda ko'rinadi.",
+      "legend": "Kompetensiyalar"
     },
     "auth": {
       "intro": "Server rejimi: xizmat ID va PIN bilan kiring. Profil, mashg'ulotlar va HIMOYA-ID barcha planshetlarda bir xil bo'ladi. Oflayn bo'lsa ma'lumot qurilmada saqlanib, ulanishda sinxronlanadi.",
@@ -471,7 +509,7 @@
     },
     "profile": {
       "title": "Profil",
-      "subtitle": "HIMOYA-ID shu profilga bog'lanadi. Ma'lumotlar faqat shu qurilmada saqlanadi.",
+      "subtitle": "HIMOYA-ID shu profilga bog'lanadi.",
       "name": "F.I.Sh.",
       "badgeId": "Xizmat ID",
       "rank": "Unvon",
@@ -480,7 +518,12 @@
       "roleTrainee": "O'quvchi (xodim)",
       "roleInstructor": "Instruktor",
       "saved": "Profil saqlandi",
-      "required": "Ism va xizmat ID majburiy"
+      "required": "Ism va xizmat ID majburiy",
+      "storageDevice": "Ma'lumotlar shu qurilmada saqlanadi. Server ulanganda barcha planshetlar bir xil profilni ko'radi.",
+      "storageServer": "Profil serverda saqlanadi — barcha planshetlarda bir xil.",
+      "instructorCode": "Markaz kodi",
+      "instructorCodeHint": "Instruktor roli uchun o'quv markazi administratori bergan kodni kiriting.",
+      "instructorCodeWrong": "Kod noto'g'ri — instruktor roli berilmadi."
     },
     "competencies": {
       "huquqiy_qaror": "Huquqiy qaror",
@@ -514,7 +557,10 @@
       "strengths": "Kuchli tomonlar",
       "risks": "Xavflar",
       "nextWeek": "Keyingi hafta rejasi",
-      "regenerate": "Qayta tahlil"
+      "regenerate": "Qayta tahlil",
+      "attempt": "Urinish",
+      "retake": "Yangi urinish",
+      "history": "Urinishlar tarixi"
     },
     "document": {
       "title": "Hujjatlashtirish",
@@ -663,7 +709,11 @@
         "commands": "Buyruqlar",
         "agitation": "Taranglik",
         "compliance": "Itoat",
-        "hint": "Instruktor ssenariyni jonli boshqaradi: keskinlashtirish, yangi shaxs kiritish, pauza, ALL STOP. Ikkinchi oyna/planshet — shu brauzer profilida."
+        "hint": "Instruktor ssenariyni jonli boshqaradi: keskinlashtirish, yangi shaxs kiritish, pauza, ALL STOP. Ikkinchi oyna/planshet — shu brauzer profilida.",
+        "emptyTitle": "Instruktor stansiyasi hali ulanmagan",
+        "emptyStep1": "Asosiy ekranda TIR ssenariysini oching.",
+        "emptyStep2": "Pastdagi «Instruktor (ghost mode)» kartasida «Instruktor stansiyasi» tugmasini bosing.",
+        "emptyStep3": "Ochilgan oynani ikkinchi monitorga o'tkazing — shu yerdan keskinlashtirish, personaj kiritish, pauza va ALL STOP boshqariladi."
       },
       "quality": "Grafika sifati (HQ/LQ)",
       "loading": "Real muhit yuklanmoqda (panorama, personajlar)...",
@@ -711,7 +761,12 @@
           "pause": "Pauza"
         }
       },
-      "sceneError": "3D poligon yuklanmadi (grafik xatolik). Sahifani yangilang yoki LQ rejimini tanlang."
+      "sceneError": "3D poligon yuklanmadi (grafik xatolik). Sahifani yangilang yoki LQ rejimini tanlang.",
+      "xr": {
+        "enter": "VR rejimiga kirish",
+        "exit": "VR dan chiqish",
+        "hint": "VR: kontroller tepkisi — o'q, ushlagich (grip) — qayta zaryad, chap joystik — yurish (FPS rejimi)."
+      }
     }
   }
 }

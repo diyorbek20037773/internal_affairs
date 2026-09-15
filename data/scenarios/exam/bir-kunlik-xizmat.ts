@@ -17,9 +17,9 @@ export const birKunlikXizmat: ExamScenario = {
   laws: [],
   version: "1.0",
   stages: [
-    { time: "09:00", kind: "mahalla", scenarioId: "mahalla-sh12", title: { uz: "Hududni qabul qilish" } },
-    { time: "10:30", kind: "dialog", scenarioId: "dialog-case04-agressiv", title: { uz: "Nizoli fuqaro" } },
-    { time: "13:00", kind: "tir", scenarioId: "tir-pichoq-hovli", title: { uz: "Xavfli vaziyat — TIR" } },
-    { time: "15:00", kind: "document", scenarioId: "document-pichoq-hodisa", title: { uz: "Hujjatlashtirish — AI hujjat tekshiruvi: qonun va fakt" } },
+    { time: "09:00", kind: "mahalla", scenarioId: "mahalla-sh12", title: { uz: "Hududni qabul qilish", ru: "Приём участка", en: "Taking over the district" } },
+    { time: "10:30", kind: "dialog", scenarioId: "dialog-case04-agressiv", title: { uz: "Nizoli fuqaro", ru: "Конфликтный гражданин", en: "Confrontational citizen" } },
+    { time: "13:00", kind: "tir", scenarioId: "tir-pichoq-hovli", title: { uz: "Xavfli vaziyat — TIR", ru: "Опасная ситуация — тир", en: "Dangerous situation — range" } },
+    { time: "15:00", kind: "document", scenarioId: "document-pichoq-hodisa", title: { uz: "Hujjatlashtirish — AI hujjat tekshiruvi: qonun va fakt", ru: "Документирование — AI-проверка документа: закон и факт", en: "Documentation — AI document check: law and fact" } },
   ],
 };

@@ -13,7 +13,7 @@ import { trainingRepo } from "@/lib/storage/training";
 import { onStoreMode, storeMode, type StoreMode } from "@/lib/storage/trainingRemote";
 import type { HimoyaId, TraineeProfile } from "@/lib/storage/trainingSchema";
 import { getScenario } from "@/data/scenarios";
-import { COMPETENCIES } from "@/data/scenarios/competencies";
+import { COMPETENCIES, COMPETENCY_LABELS } from "@/data/scenarios/competencies";
 import { localized } from "@/data/sops/types";
 import { formatDate } from "@/lib/utils";
 import { SessionList } from "../SessionList";
@@ -52,8 +52,10 @@ export function InstructorClient() {
   if (pLoaded && !profile) return <ProfileGate />;
   if (pLoaded && !isInstructor) {
     return (
-      <Card className="p-8 text-center text-sm text-muted-foreground">
-        {t("title")} — <Link href="/profil" className="text-primary underline">{t("trainee")} → Instruktor</Link>
+      <Card className="space-y-3 p-8 text-center">
+        <p className="font-semibold">{t("notInstructorTitle")}</p>
+        <p className="text-sm text-muted-foreground">{t("notInstructorDesc")}</p>
+        <Button asChild variant="outline" size="sm"><Link href="/profil">{t("openProfile")}</Link></Button>
       </Card>
     );
   }
@@ -99,6 +101,7 @@ export function InstructorClient() {
 
       <section>
         <h3 className="mb-3 text-lg font-bold tracking-tight">{t("trainees")}</h3>
+        <p className="mb-2 text-xs text-muted-foreground">{t("legend")}: {COMPETENCIES.map((c) => localized(COMPETENCY_LABELS[c], locale)).join(" · ")}</p>
         <div className="overflow-x-auto rounded-xl border">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -106,8 +109,8 @@ export function InstructorClient() {
                 <th className="px-3 py-2">{t("trainee")}</th>
                 <th className="px-3 py-2">{t("allSessions")}</th>
                 {COMPETENCIES.map((c) => (
-                  <th key={c} className="px-2 py-2 text-center" title={c}>
-                    {c.slice(0, 3).toUpperCase()}
+                  <th key={c} className="px-2 py-2 text-center" title={localized(COMPETENCY_LABELS[c], locale)}>
+                    {localized(COMPETENCY_LABELS[c], locale).split(" ")[0].slice(0, 5)}
                   </th>
                 ))}
               </tr>
@@ -130,7 +133,7 @@ export function InstructorClient() {
               })}
               {trainees.length === 0 && (
                 <tr>
-                  <td colSpan={2 + COMPETENCIES.length} className="px-3 py-6 text-center text-muted-foreground">—</td>
+                  <td colSpan={2 + COMPETENCIES.length} className="px-3 py-6 text-center text-muted-foreground">{t("noTrainees")}</td>
                 </tr>
               )}
             </tbody>

@@ -33,7 +33,13 @@ export function ExamClient({ exam }: { exam: ExamScenario }) {
   if (pLoaded && !profile) return <ProfileGate />;
   if (!loaded) return null;
 
-  const mine = sessions.filter((s) => s.examId === exam.id);
+  // Attempts: the first run uses `exam.id`, retakes use `exam.id~<timestamp>`. The newest attempt is shown.
+  const attemptIds = Array.from(new Set(sessions.filter((s) => s.examId === exam.id || s.examId?.startsWith(exam.id + "~")).map((s) => s.examId!)));
+  const newestOf = (id: string) => sessions.filter((s) => s.examId === id).map((s) => s.updatedAt).sort().at(-1) ?? "";
+  attemptIds.sort((a, b) => newestOf(b).localeCompare(newestOf(a)));
+  const attemptId = attemptIds[0] ?? exam.id;
+  const attemptNo = attemptIds.length ? attemptIds.length - attemptIds.indexOf(attemptId) : 1;
+  const mine = sessions.filter((s) => s.examId === attemptId);
   const stageSession = (i: number) =>
     mine
       .filter((s) => s.examStageIndex === i)
@@ -60,6 +66,7 @@ export function ExamClient({ exam }: { exam: ExamScenario }) {
             <div className="h-full bg-white transition-all" style={{ width: `${(doneCount / exam.stages.length) * 100}%` }} />
           </div>
           <span className="font-mono text-sm">{doneCount}/{exam.stages.length}</span>
+          {attemptIds.length > 1 && <Badge variant="outline" className="border-white/40 text-white">{t("attempt")} {attemptNo}</Badge>}
           {aggregate != null && <Badge variant="accent">{aggregate}%</Badge>}
         </div>
       </Card>
@@ -73,7 +80,7 @@ export function ExamClient({ exam }: { exam: ExamScenario }) {
           const target = getScenario(st.scenarioId);
           const href = s && s.status === "in_progress"
             ? `/simulyator/${KIND_PATH[st.kind]}/${st.scenarioId}?session=${s.id}`
-            : `/simulyator/${KIND_PATH[st.kind]}/${st.scenarioId}?exam=${exam.id}&stage=${i}`;
+            : `/simulyator/${KIND_PATH[st.kind]}/${st.scenarioId}?exam=${encodeURIComponent(attemptId)}&stage=${i}`;
           return (
             <li key={i} className="relative">
               <span
@@ -139,6 +146,30 @@ export function ExamClient({ exam }: { exam: ExamScenario }) {
           <CheckCircle2 className="mx-auto h-10 w-10 text-success" />
           <p className="mt-3 font-semibold">{t("allDone")}</p>
           <p className="mt-2 text-sm italic text-muted-foreground">{t("passed")}</p>
+          <Button asChild variant="outline" className="mt-4">
+            <Link href={`/simulyator/${KIND_PATH[exam.stages[0].kind]}/${exam.stages[0].scenarioId}?exam=${encodeURIComponent(`${exam.id}~${Date.now()}`)}&stage=0`}>
+              {t("retake")} <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+        </Card>
+      )}
+
+      {attemptIds.length > 1 && (
+        <Card className="p-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("history")}</p>
+          <ul className="space-y-1 text-sm">
+            {attemptIds.map((id, idx) => {
+              const ss = sessions.filter((s) => s.examId === id && s.status === "completed" && s.finalScores);
+              const agg = ss.length ? Math.round(ss.reduce((a, s) => a + COMPETENCIES.reduce((x, c) => x + s.finalScores![c], 0) / 8, 0) / ss.length) : null;
+              const stagesDone = sessions.filter((s) => s.examId === id && s.status === "completed").length;
+              return (
+                <li key={id} className="flex items-center justify-between">
+                  <span>{t("attempt")} {attemptIds.length - idx} · {stagesDone}/{exam.stages.length}</span>
+                  <span className="font-mono">{agg != null ? `${agg}%` : "—"}</span>
+                </li>
+              );
+            })}
+          </ul>
         </Card>
       )}
     </div>

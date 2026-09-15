@@ -19,6 +19,8 @@ import { formatDate, cn } from "@/lib/utils";
 import { CompetencyRadar } from "./CompetencyRadar";
 import { TranscriptView } from "./TranscriptView";
 
+const KIND_PATH: Record<string, string> = { dialog: "muloqot", decision: "qaror", mahalla: "mahalla", document: "hujjat", tir: "tir", exam: "imtihon" };
+
 export function DebriefView({ sessionId }: { sessionId: string }) {
   const t = useTranslations("sim.debrief");
   const tc = useTranslations("common");
@@ -47,9 +49,10 @@ export function DebriefView({ sessionId }: { sessionId: string }) {
   if (!loaded) return <Skeleton className="h-64 w-full" />;
   if (!session) {
     return (
-      <Card className="p-8 text-center text-muted-foreground">
-        {ts("empty")}{" "}
-        <Link href="/mashgulotlarim" className="text-primary underline">
+      <Card className="space-y-2 p-8 text-center">
+        <p className="font-semibold">{t("notFoundTitle")}</p>
+        <p className="text-sm text-muted-foreground">{t("notFoundDesc")}</p>
+        <Link href="/mashgulotlarim" className="text-sm text-primary underline">
           {ts("title")}
         </Link>
       </Card>
@@ -58,6 +61,17 @@ export function DebriefView({ sessionId }: { sessionId: string }) {
 
   const scenario = getScenario(session.scenarioId);
   const d = session.debrief;
+
+  if (session.status === "in_progress") {
+    const path = scenario ? `/simulyator/${KIND_PATH[scenario.kind]}/${scenario.id}?session=${session.id}` : "/mashgulotlarim";
+    return (
+      <Card className="space-y-3 p-8 text-center">
+        <p className="font-semibold">{t("unfinishedTitle")}</p>
+        <p className="text-sm text-muted-foreground">{t("unfinishedDesc")}</p>
+        <Button asChild><Link href={path}>{tc("continue")}</Link></Button>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -182,7 +196,7 @@ export function DebriefView({ sessionId }: { sessionId: string }) {
                       placeholder={t("instructorNote")}
                       rows={2}
                     />
-                    <Button variant="accent" onClick={() => void confirm(profile.id, note)}>
+                    <Button variant="accent" onClick={() => void confirm(profile.id, note).then(() => toast.success(t("confirmedToast")))}>
                       <ShieldCheck className="h-4 w-4" /> {t("confirm")}
                     </Button>
                   </div>

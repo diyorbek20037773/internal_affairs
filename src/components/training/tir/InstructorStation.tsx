@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Flame, Pause, Play, Square, Radio } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getTirScenario } from "@/data/scenarios";
+import { localized } from "@/data/sops/types";
 import { ACTOR_TEXT, primarySuspect, type InstructorCmd, type TirState } from "@/lib/training/tirEngine";
 import { tirChannelName } from "./TirClient";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils";
  */
 export function InstructorStation({ sessionId, scenarioId }: { sessionId: string; scenarioId: string }) {
   const t = useTranslations("sim.tir");
+  const locale = useLocale();
   const scenario = getTirScenario(scenarioId);
   const [state, setState] = useState<TirState | null>(null);
   const [connected, setConnected] = useState(false);
@@ -45,7 +47,7 @@ export function InstructorStation({ sessionId, scenarioId }: { sessionId: string
       <Card className="flex items-center justify-between p-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{scenario.code} · {t("instructor")}</p>
-          <p className="font-semibold">{scenario.title.uz}</p>
+          <p className="font-semibold">{localized(scenario.title, locale)}</p>
         </div>
         <Badge variant={connected ? "success" : "outline"}>{connected ? t("ins.connected") : t("ins.waiting")}</Badge>
       </Card>

@@ -23,6 +23,15 @@ export function ProfileForm() {
   const [rank, setRank] = useState("");
   const [district, setDistrict] = useState("");
   const [role, setRole] = useState<(typeof ROLES)[number]>("trainee");
+  const [code, setCode] = useState("");
+  const [codeRequired, setCodeRequired] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/instructor-code", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d: { required?: boolean }) => setCodeRequired(Boolean(d.required)))
+      .catch(() => setCodeRequired(false));
+  }, []);
 
   useEffect(() => {
     if (!profile) return;
@@ -38,6 +47,16 @@ export function ProfileForm() {
     if (!name.trim() || !badgeId.trim()) {
       toast.error(t("required"));
       return;
+    }
+    // Local mode: the instructor role is protected by the centre's code (INSTRUCTOR_CODE).
+    if (!authEnabled && role === "instructor" && profile?.role !== "instructor" && codeRequired) {
+      const r = await fetch("/api/auth/instructor-code", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code }) })
+        .then((x) => x.json() as Promise<{ ok?: boolean }>)
+        .catch(() => ({ ok: false }));
+      if (!r.ok) {
+        toast.error(t("instructorCodeWrong"));
+        return;
+      }
     }
     await save({
       name: name.trim(),
@@ -55,6 +74,7 @@ export function ProfileForm() {
   return (
     <form onSubmit={submit}>
       <Card className="space-y-5 p-5 md:p-6">
+        <p className="text-xs text-muted-foreground">{authEnabled ? t("storageServer") : t("storageDevice")}</p>
         <Field label={t("name")}>
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Muminov Joldas Kamalovich" />
         </Field>
@@ -94,6 +114,12 @@ export function ProfileForm() {
               </button>
             ))}
           </div>
+          {role === "instructor" && profile?.role !== "instructor" && codeRequired && (
+            <div className="mt-2 space-y-1">
+              <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder={t("instructorCode")} type="password" autoComplete="off" />
+              <p className="text-xs text-muted-foreground">{t("instructorCodeHint")}</p>
+            </div>
+          )}
         </Field>
         )}
         <div className="flex justify-between gap-3">
