@@ -14,6 +14,7 @@ import type { TirEnvironment } from "@/data/scenarios/types";
  */
 
 interface EnvDef {
+  /** Poly Haven asset name — 2k for HQ, 1k for LQ. */
   hdri: string;
   groundHeight: number; // camera height in the HDRI shot
   radius: number;
@@ -27,16 +28,18 @@ interface EnvDef {
 }
 
 const ENVS: Record<TirEnvironment, EnvDef> = {
-  yard: { hdri: "/hdri/overcast_industrial_courtyard_1k.hdr", groundHeight: 1.6, radius: 40, floor: { tex: "aerial_grass_rock", size: 30, repeat: 8 }, cover: "rough_plaster_brick", ambient: 0.25, envIntensity: 0.9, bgIntensity: 0.9, sun: { pos: [8, 12, 6], intensity: 0.9 } },
-  street: { hdri: "/hdri/urban_street_04_1k.hdr", groundHeight: 1.7, radius: 50, floor: { tex: "asphalt_02", size: 40, repeat: 10 }, cover: "concrete_floor_worn_001", ambient: 0.15, sun: { pos: [-6, 10, 4], intensity: 1.2, color: "#ffd9a0" } },
-  plaza: { hdri: "/hdri/palermo_square_1k.hdr", groundHeight: 1.7, radius: 50, floor: { tex: "floor_tiles_06", size: 40, repeat: 16 }, cover: "rough_plaster_brick", ambient: 0.2, envIntensity: 0.7, bgIntensity: 0.75, sun: { pos: [10, 14, -4], intensity: 1.8 } },
-  lobby: { hdri: "/hdri/empty_warehouse_01_1k.hdr", groundHeight: 1.6, radius: 22, floor: { tex: "concrete_floor_worn_001", size: 24, repeat: 8 }, cover: "concrete_floor_worn_001", ambient: 0.3, envIntensity: 0.7, bgIntensity: 0.65 },
-  hallway: { hdri: "/hdri/empty_warehouse_01_1k.hdr", groundHeight: 1.6, radius: 16, floor: { tex: "concrete_floor_worn_001", size: 16, repeat: 6 }, cover: "rough_plaster_brick", ambient: 0.3, envIntensity: 0.7, bgIntensity: 0.65 },
-  range: { hdri: "/hdri/abandoned_parking_1k.hdr", groundHeight: 1.6, radius: 60, floor: { tex: "asphalt_02", size: 60, repeat: 14 }, cover: "concrete_floor_worn_001", ambient: 0.2, envIntensity: 0.8, bgIntensity: 0.85, sun: { pos: [6, 14, 8], intensity: 2.0 } },
+  yard: { hdri: "overcast_industrial_courtyard", groundHeight: 1.6, radius: 40, floor: { tex: "aerial_grass_rock", size: 30, repeat: 8 }, cover: "rough_plaster_brick", ambient: 0.25, envIntensity: 0.9, bgIntensity: 0.9, sun: { pos: [8, 12, 6], intensity: 0.9 } },
+  street: { hdri: "modern_evening_street", groundHeight: 1.6, radius: 45, floor: { tex: "asphalt_02", size: 40, repeat: 10 }, cover: "concrete_floor_worn_001", ambient: 0.25, envIntensity: 1, bgIntensity: 1, sun: { pos: [-8, 9, 5], intensity: 0.6, color: "#ffe2c0" } },
+  plaza: { hdri: "palermo_square", groundHeight: 1.7, radius: 50, floor: { tex: "floor_tiles_06", size: 40, repeat: 16 }, cover: "rough_plaster_brick", ambient: 0.2, envIntensity: 0.7, bgIntensity: 0.75, sun: { pos: [10, 14, -4], intensity: 1.8 } },
+  // real office lobby (reception, glass, stairs) — the VirTra reference look
+  lobby: { hdri: "cinema_lobby", groundHeight: 1.6, radius: 16, cover: "concrete_floor_worn_001", ambient: 0.35, envIntensity: 0.9, bgIntensity: 0.95, sun: { pos: [2, 6, 3], intensity: 0.6 } },
+  hallway: { hdri: "large_corridor", groundHeight: 1.6, radius: 10, cover: "rough_plaster_brick", ambient: 0.35, envIntensity: 0.85, bgIntensity: 0.9, sun: { pos: [0, 5, 2], intensity: 0.5 } },
+  range: { hdri: "abandoned_parking", groundHeight: 1.6, radius: 60, floor: { tex: "asphalt_02", size: 60, repeat: 14 }, cover: "concrete_floor_worn_001", ambient: 0.2, envIntensity: 0.8, bgIntensity: 0.85, sun: { pos: [6, 14, 8], intensity: 2.0 } },
 };
 
-export function Environment({ kind }: { kind: TirEnvironment }) {
+export function Environment({ kind, quality = "high" }: { kind: TirEnvironment; quality?: "high" | "low" }) {
   const def = ENVS[kind];
+  const hdri = `/hdri/${def.hdri}_${quality === "high" ? "2k" : "1k"}.hdr`;
   return (
     <group>
       <ambientLight intensity={def.ambient} />
@@ -55,7 +58,7 @@ export function Environment({ kind }: { kind: TirEnvironment }) {
         />
       )}
       <Suspense fallback={<FlatSky kind={kind} />}>
-        <DreiEnvironment files={def.hdri} background ground={{ height: def.groundHeight, radius: def.radius, scale: def.radius * 2 }} environmentIntensity={def.envIntensity ?? 1} backgroundIntensity={def.bgIntensity ?? 1} />
+        <DreiEnvironment files={hdri} background ground={{ height: def.groundHeight, radius: def.radius, scale: def.radius * 2 }} environmentIntensity={def.envIntensity ?? 1} backgroundIntensity={def.bgIntensity ?? 1} />
       </Suspense>
       {def.floor && (
         <Suspense fallback={null}>
@@ -130,23 +133,15 @@ function Props({ kind }: { kind: TirEnvironment }) {
           <boxGeometry args={[3, 0.08, 0.4]} />
           <meshStandardMaterial color="#475569" />
         </mesh>
-        <pointLight position={[0, 2.3, 0]} intensity={40} color="#dbeafe" distance={9} decay={1.8} />
+        <pointLight position={[0, 2.3, 0]} intensity={6} color="#dbeafe" distance={7} decay={2} />
       </group>
     );
   if (kind === "lobby")
     return (
       <group>
-        <mesh position={[1.5, 2, -12]} castShadow>
-          <cylinderGeometry args={[0.5, 0.5, 4, 24]} />
-          <meshStandardMaterial color="#cfd3d8" roughness={0.6} />
-        </mesh>
-        <mesh position={[3.5, 0.55, -8.5]} castShadow>
-          <boxGeometry args={[3, 1.1, 0.9]} />
+        <mesh position={[3.2, 0.55, -7]} castShadow>
+          <boxGeometry args={[2.6, 1.1, 0.9]} />
           <meshStandardMaterial color="#4b5b6c" roughness={0.7} />
-        </mesh>
-        <mesh position={[-3, 0.35, -6]} castShadow>
-          <boxGeometry args={[2.4, 0.7, 0.9]} />
-          <meshStandardMaterial color="#2f3640" roughness={0.9} />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-2.2, 0.01, -6]}>
           <circleGeometry args={[0.6, 20]} />

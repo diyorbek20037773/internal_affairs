@@ -3,7 +3,8 @@
 import { useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { Bloom, EffectComposer, SMAA, Vignette } from "@react-three/postprocessing";
+import { Bloom, EffectComposer, Noise, SMAA, Vignette } from "@react-three/postprocessing";
+import { BlendFunction } from "postprocessing";
 import type { TirHitZone, TirScenario } from "@/data/scenarios/types";
 import type { TirActor, TirState } from "@/lib/training/tirEngine";
 import { Plate, Vehicle } from "./Actor";
@@ -39,12 +40,12 @@ export function TirScene({
       shadows={quality === "high" ? { type: THREE.PCFSoftShadowMap } : true}
       dpr={quality === "high" ? [1, 1.75] : [1, 1]}
       gl={{ antialias: quality !== "high", toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.9, powerPreference: "high-performance" }}
-      camera={{ position: [0, 1.65, 0], fov: wide ? 98 : 64, near: 0.1, far: 200 }}
+      camera={{ position: [0, 1.6, 0], fov: wide ? 86 : 55, near: 0.1, far: 200 }}
       style={{ cursor: armed ? "crosshair" : "default" }}
-      onCreated={({ camera }) => camera.lookAt(0, 1.2, -8)}
+      onCreated={({ camera }) => camera.lookAt(0, 1.35, -6)}
     >
       <CameraRig inCover={state.inCover} lookX={lookX} lookZ={lookZ} intense={!!primary && (primary.state === "lunging" || primary.state === "charging" || primary.state === "aiming")} shockSeq={state.shockSeq} />
-      <Environment kind={scenario.environment} />
+      <Environment kind={scenario.environment} quality={quality} />
 
       {state.actors.filter((a) => !a.hidden).map((a) =>
         a.kind === "vehicle" ? (
@@ -74,8 +75,9 @@ export function TirScene({
       {quality === "high" && (
         <EffectComposer multisampling={0}>
           <SMAA />
-          <Bloom intensity={0.35} luminanceThreshold={0.85} luminanceSmoothing={0.2} mipmapBlur />
-          <Vignette eskil={false} offset={0.25} darkness={0.55} />
+          <Bloom intensity={0.25} luminanceThreshold={0.9} luminanceSmoothing={0.2} mipmapBlur />
+          <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.35} />
+          <Vignette eskil={false} offset={0.22} darkness={0.5} />
         </EffectComposer>
       )}
 

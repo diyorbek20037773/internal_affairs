@@ -33,7 +33,14 @@ const files = {
   "hdri/empty_warehouse_01_1k.hdr": `${PH}/HDRIs/hdr/1k/empty_warehouse_01_1k.hdr`,
   "hdri/palermo_square_1k.hdr": `${PH}/HDRIs/hdr/1k/palermo_square_1k.hdr`,
   "hdri/abandoned_parking_1k.hdr": `${PH}/HDRIs/hdr/1k/abandoned_parking_1k.hdr`,
+  "hdri/cinema_lobby_1k.hdr": `${PH}/HDRIs/hdr/1k/cinema_lobby_1k.hdr`,
+  "hdri/large_corridor_1k.hdr": `${PH}/HDRIs/hdr/1k/large_corridor_1k.hdr`,
+  "hdri/modern_evening_street_1k.hdr": `${PH}/HDRIs/hdr/1k/modern_evening_street_1k.hdr`,
 };
+// 2k versions for the range PC (HQ); 1k stays for tablets (LQ).
+for (const n of ["overcast_industrial_courtyard", "modern_evening_street", "palermo_square", "abandoned_parking", "cinema_lobby", "large_corridor"]) {
+  files[`hdri/${n}_2k.hdr`] = `${PH}/HDRIs/hdr/2k/${n}_2k.hdr`;
+}
 for (const t of ["asphalt_02", "concrete_floor_worn_001", "aerial_grass_rock", "rough_plaster_brick", "floor_tiles_06"]) {
   for (const m of ["diff", "nor_gl", "rough"]) files[`tex/${t}_${m}_1k.jpg`] = `${PH}/Textures/jpg/1k/${t}/${t}_${m}_1k.jpg`;
 }
