@@ -16,15 +16,17 @@ export interface PlayerState {
 }
 
 export const PLAYER_CFG = {
-  walk: 2.4,
-  sprint: 4.6,
-  crouch: 1.2,
+  walk: 3.2,
+  sprint: 5.4,
+  crouch: 1.5,
   eye: 1.6,
   crouchEye: 1.05,
   gravity: 18,
   jump: 4.2,
   /** Horizontal acceleration / deceleration (1/s). */
-  accel: 12,
+  accel: 16,
+  /** Mouse look multiplier (PointerLockControls pointerSpeed; 1 = 0.002 rad/px). */
+  sensitivity: 0.65,
   bobAmp: 0.02,
   sprintBobAmp: 0.035,
   pitchLimitDeg: 85,

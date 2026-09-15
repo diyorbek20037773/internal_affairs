@@ -64,6 +64,13 @@ export const sfx = {
     burst(c, { dur: 0.35, gain: 0.5, lp: 900 });
     tone(c, 160, 0.18, 0.7, "triangle", 0, 50);
   },
+  /** Suspect fires at the officer — louder low thump, slight delay. */
+  enemyShot() {
+    const c = ac(); if (!c) return;
+    burst(c, { dur: 0.22, gain: 0.7, hp: 200 });
+    burst(c, { dur: 0.5, gain: 0.55, lp: 600 });
+    tone(c, 120, 0.25, 0.6, "triangle", 0, 40);
+  },
   taser() {
     const c = ac(); if (!c) return;
     for (let i = 0; i < 8; i++) tone(c, 1800 + Math.random() * 600, 0.04, 0.25, "square", i * 0.06);

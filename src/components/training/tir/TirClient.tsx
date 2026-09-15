@@ -173,6 +173,17 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
     window.dispatchEvent(new CustomEvent("h360:shock", { detail: { sessionId: session.id, t: state.t } }));
   }, [state.shockSeq, state.t, session.id]);
 
+  // Enemy gunfire audio (actor "o'q uzdi" events).
+  const seenEvents = useRef(0);
+  useEffect(() => {
+    const evs = state.events;
+    for (let i = seenEvents.current; i < evs.length; i++) {
+      const e = evs[i];
+      if (started && (e.kind === "actor" || e.kind === "shock") && /o'q uzdi/.test(e.text)) sfx.enemyShot();
+    }
+    seenEvents.current = evs.length;
+  }, [state.events, started]);
+
   // Mic → talk.
   useEffect(() => {
     if (!speech.listening && speech.transcript) {
@@ -265,6 +276,7 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
     shockSeen.current = 0;
     playerRef.current = initialPlayer();
     officerRef.current = { x: 0, z: 0, crouch: false };
+    seenEvents.current = 0;
     setLastFeedback(null);
     setAllStop(false);
     setStarted(false);

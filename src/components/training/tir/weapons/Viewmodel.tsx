@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { RoundedBox } from "@react-three/drei";
 import type { MutableRefObject } from "react";
 import type { PlayerState } from "../player/playerTypes";
 
@@ -99,67 +100,100 @@ export function Viewmodel({
         {weapon === "pistol" ? (
           <group>
             {/* slide */}
-            <mesh position={[0, 0.045, -0.02]}>
-              <boxGeometry args={[0.034, 0.03, 0.2]} />
-              <meshStandardMaterial color={dark} metalness={0.75} roughness={0.35} />
+            <RoundedBox args={[0.03, 0.03, 0.19]} radius={0.006} smoothness={3} position={[0, 0.047, -0.025]}>
+              <meshStandardMaterial color="#17191d" metalness={0.8} roughness={0.32} />
+            </RoundedBox>
+            {/* slide serrations */}
+            {[0.035, 0.045, 0.055, 0.065].map((z) => (
+              <mesh key={z} position={[0, 0.047, z]}>
+                <boxGeometry args={[0.0315, 0.02, 0.002]} />
+                <meshStandardMaterial color="#0b0c0e" metalness={0.6} roughness={0.5} />
+              </mesh>
+            ))}
+            {/* ejection port */}
+            <mesh position={[0.0155, 0.052, -0.02]}>
+              <boxGeometry args={[0.002, 0.012, 0.03]} />
+              <meshStandardMaterial color="#050506" />
             </mesh>
-            {/* frame */}
-            <mesh position={[0, 0.02, 0]}>
-              <boxGeometry args={[0.032, 0.022, 0.19]} />
-              <meshStandardMaterial color={grip} metalness={0.4} roughness={0.6} />
+            {/* frame + rail */}
+            <RoundedBox args={[0.03, 0.026, 0.17]} radius={0.004} smoothness={2} position={[0, 0.02, -0.005]}>
+              <meshStandardMaterial color="#202329" metalness={0.35} roughness={0.7} />
+            </RoundedBox>
+            {/* barrel / muzzle */}
+            <mesh position={[0, 0.047, -0.122]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.0055, 0.0055, 0.01, 14]} />
+              <meshStandardMaterial color="#050505" metalness={0.9} roughness={0.3} />
             </mesh>
-            {/* barrel tip */}
-            <mesh position={[0, 0.045, -0.125]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.006, 0.006, 0.02, 12]} />
-              <meshStandardMaterial color="#0a0a0a" metalness={0.9} roughness={0.3} />
+            <mesh position={[0, 0.047, -0.1205]} rotation={[Math.PI / 2, 0, 0]}>
+              <ringGeometry args={[0.0055, 0.011, 16]} />
+              <meshStandardMaterial color="#2a2d33" metalness={0.8} roughness={0.35} side={THREE.DoubleSide} />
             </mesh>
-            {/* grip */}
-            <mesh position={[0, -0.04, 0.06]} rotation={[0.28, 0, 0]}>
-              <boxGeometry args={[0.03, 0.11, 0.04]} />
-              <meshStandardMaterial color={grip} roughness={0.85} />
+            {/* grip (textured polymer) */}
+            <RoundedBox args={[0.028, 0.105, 0.042]} radius={0.006} smoothness={2} position={[0, -0.04, 0.055]} rotation={[0.3, 0, 0]}>
+              <meshStandardMaterial color="#1e2126" roughness={0.95} />
+            </RoundedBox>
+            {/* magazine baseplate */}
+            <mesh position={[0, -0.094, 0.07]} rotation={[0.3, 0, 0]}>
+              <boxGeometry args={[0.03, 0.008, 0.046]} />
+              <meshStandardMaterial color="#111318" metalness={0.5} roughness={0.5} />
             </mesh>
-            {/* trigger guard */}
-            <mesh position={[0, -0.005, 0.012]}>
-              <torusGeometry args={[0.018, 0.003, 8, 16, Math.PI]} />
-              <meshStandardMaterial color={dark} metalness={0.6} roughness={0.4} />
+            {/* trigger guard + trigger */}
+            <mesh position={[0, -0.006, 0.012]}>
+              <torusGeometry args={[0.017, 0.0028, 8, 18, Math.PI]} />
+              <meshStandardMaterial color="#1b1d22" metalness={0.5} roughness={0.5} />
             </mesh>
-            {/* sights */}
-            <mesh position={[0, 0.065, -0.11]}>
-              <boxGeometry args={[0.004, 0.008, 0.006]} />
-              <meshStandardMaterial color="#e5e7eb" emissive="#9ae6b4" emissiveIntensity={0.4} />
+            <mesh position={[0, -0.006, 0.014]} rotation={[0.2, 0, 0]}>
+              <boxGeometry args={[0.005, 0.016, 0.003]} />
+              <meshStandardMaterial color="#2b2e35" metalness={0.6} roughness={0.4} />
             </mesh>
-            <mesh position={[0, 0.065, 0.07]}>
-              <boxGeometry args={[0.018, 0.008, 0.006]} />
-              <meshStandardMaterial color={dark} />
+            {/* sights (tritium dots) */}
+            <mesh position={[0, 0.067, -0.108]}>
+              <boxGeometry args={[0.003, 0.007, 0.005]} />
+              <meshStandardMaterial color="#e5e7eb" emissive="#a7f3d0" emissiveIntensity={0.7} />
             </mesh>
-            {/* hands (gloved) */}
-            <mesh position={[0.008, -0.055, 0.07]} rotation={[0.3, 0, -0.15]}>
-              <capsuleGeometry args={[0.019, 0.05, 4, 10]} />
-              <meshStandardMaterial color="#2a2d33" roughness={0.9} />
+            {[-0.005, 0.005].map((x) => (
+              <mesh key={x} position={[x, 0.066, 0.06]}>
+                <boxGeometry args={[0.003, 0.007, 0.004]} />
+                <meshStandardMaterial color="#e5e7eb" emissive="#a7f3d0" emissiveIntensity={0.5} />
+              </mesh>
+            ))}
+            <mesh position={[0, 0.062, 0.06]}>
+              <boxGeometry args={[0.02, 0.003, 0.004]} />
+              <meshStandardMaterial color="#111" />
             </mesh>
-            <mesh position={[-0.016, -0.065, 0.065]} rotation={[0.35, 0, 0.35]}>
-              <capsuleGeometry args={[0.017, 0.045, 4, 10]} />
-              <meshStandardMaterial color="#2a2d33" roughness={0.9} />
-            </mesh>
+            {/* hands — right wraps the grip, left supports */}
+            <group position={[0.004, -0.05, 0.062]} rotation={[0.3, 0, -0.12]}>
+              <RoundedBox args={[0.036, 0.062, 0.044]} radius={0.012} smoothness={3} position={[0.01, -0.004, 0.006]}>
+                <meshStandardMaterial color="#2a2d33" roughness={0.95} />
+              </RoundedBox>
+              <mesh position={[-0.014, 0.024, -0.004]} rotation={[0, 0, 0.9]}>
+                <capsuleGeometry args={[0.008, 0.024, 4, 10]} />
+                <meshStandardMaterial color="#2a2d33" roughness={0.95} />
+              </mesh>
+            </group>
+            <group position={[-0.02, -0.062, 0.05]} rotation={[0.35, 0.2, 0.55]}>
+              <RoundedBox args={[0.032, 0.056, 0.042]} radius={0.011} smoothness={3}>
+                <meshStandardMaterial color="#2a2d33" roughness={0.95} />
+              </RoundedBox>
+            </group>
           </group>
         ) : (
           <group>
-            <mesh position={[0, 0.04, -0.02]}>
-              <boxGeometry args={[0.04, 0.05, 0.17]} />
+            <RoundedBox args={[0.038, 0.05, 0.16]} radius={0.008} smoothness={3} position={[0, 0.04, -0.02]}>
               <meshStandardMaterial color="#f5c518" roughness={0.5} />
-            </mesh>
-            <mesh position={[0, 0.04, -0.11]}>
-              <boxGeometry args={[0.042, 0.052, 0.02]} />
+            </RoundedBox>
+            <mesh position={[0, 0.04, -0.105]}>
+              <boxGeometry args={[0.04, 0.052, 0.014]} />
               <meshStandardMaterial color="#111" />
             </mesh>
-            <mesh position={[0, -0.04, 0.05]} rotation={[0.28, 0, 0]}>
-              <boxGeometry args={[0.03, 0.11, 0.04]} />
-              <meshStandardMaterial color={grip} roughness={0.85} />
-            </mesh>
-            <mesh position={[0.012, -0.05, 0.075]} rotation={[0.3, 0, -0.15]}>
-              <capsuleGeometry args={[0.028, 0.06, 4, 10]} />
-              <meshStandardMaterial color="#2a2d33" roughness={0.9} />
-            </mesh>
+            <RoundedBox args={[0.028, 0.105, 0.042]} radius={0.006} smoothness={2} position={[0, -0.04, 0.05]} rotation={[0.28, 0, 0]}>
+              <meshStandardMaterial color="#1e2126" roughness={0.95} />
+            </RoundedBox>
+            <group position={[0.004, -0.05, 0.06]} rotation={[0.3, 0, -0.12]}>
+              <RoundedBox args={[0.036, 0.062, 0.044]} radius={0.012} smoothness={3} position={[0.01, -0.004, 0.006]}>
+                <meshStandardMaterial color="#2a2d33" roughness={0.95} />
+              </RoundedBox>
+            </group>
           </group>
         )}
         {/* muzzle flash */}

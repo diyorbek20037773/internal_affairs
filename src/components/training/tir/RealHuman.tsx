@@ -25,6 +25,80 @@ const CLIPS = {
 } as const;
 type ClipKey = keyof typeof CLIPS.m;
 
+/**
+ * Outfit recolor. The RPM atlas (1024²) keeps the whole T-shirt in the
+ * bottom-left quadrant; we re-tint that quadrant per actor (keeping the folds
+ * as luminance) and paint out the vendor logo (pixels far from the median
+ * shirt luminance). One CanvasTexture per gender+colour, cached.
+ */
+const SHIRT_REGION = { x: 0, y: 0.5, w: 0.5, h: 0.5 } as const;
+const SHIRT_PALETTE = ["#6b7280", "#8a5a3c", "#3f6b4f", "#5a6b8a", "#7a4a6a", "#4d4d4d", "#a06a3a", "#2f5f7a", "#8a8a5a", "#5c4b7a"];
+const tintCache = new Map<string, THREE.CanvasTexture>();
+
+let blobTex: THREE.CanvasTexture | null = null;
+/** Soft radial ground-contact shadow (replaces the per-frame ContactShadows pass). */
+function blobShadow(): THREE.CanvasTexture | null {
+  if (blobTex || typeof document === "undefined") return blobTex;
+  const c = document.createElement("canvas");
+  c.width = c.height = 128;
+  const ctx = c.getContext("2d");
+  if (!ctx) return null;
+  const g = ctx.createRadialGradient(64, 64, 4, 64, 64, 64);
+  g.addColorStop(0, "rgba(0,0,0,0.75)");
+  g.addColorStop(0.45, "rgba(0,0,0,0.45)");
+  g.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 128, 128);
+  blobTex = new THREE.CanvasTexture(c);
+  return blobTex;
+}
+
+function recolorAtlas(src: THREE.Texture, color: string, key: string): THREE.Texture {
+  const hit = tintCache.get(key);
+  if (hit) return hit;
+  const img = src.image as CanvasImageSource & { width: number; height: number };
+  if (!img || !img.width || typeof document === "undefined") return src;
+  try {
+    const W = img.width, H = img.height;
+    const c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    const ctx = c.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return src;
+    ctx.drawImage(img, 0, 0);
+    const rx = Math.floor(SHIRT_REGION.x * W), ry = Math.floor(SHIRT_REGION.y * H), rw = Math.floor(SHIRT_REGION.w * W), rh = Math.floor(SHIRT_REGION.h * H);
+    const id = ctx.getImageData(rx, ry, rw, rh);
+    const d = id.data;
+    const lums: number[] = [];
+    for (let i = 0; i < d.length; i += 4) {
+      const l = (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) / 255;
+      if (l > 0.03) lums.push(l);
+    }
+    if (lums.length === 0) return src;
+    lums.sort((a, b) => a - b);
+    const med = lums[Math.floor(lums.length / 2)];
+    const tint = new THREE.Color(color);
+    const tr = tint.r * 255, tg = tint.g * 255, tb = tint.b * 255;
+    for (let i = 0; i < d.length; i += 4) {
+      let l = (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) / 255;
+      if (l <= 0.03) continue; // unused atlas space
+      if (Math.abs(l - med) > Math.max(0.18, med * 0.5)) l = med; // logo / print → base cloth
+      const shade = Math.max(0.5, Math.min(1.2, 0.35 + 0.65 * (l / Math.max(med, 0.05))));
+      d[i] = Math.min(255, tr * shade); d[i + 1] = Math.min(255, tg * shade); d[i + 2] = Math.min(255, tb * shade);
+    }
+    ctx.putImageData(id, rx, ry);
+    const tex = new THREE.CanvasTexture(c);
+    tex.flipY = src.flipY;
+    tex.colorSpace = src.colorSpace;
+    tex.wrapS = src.wrapS; tex.wrapT = src.wrapT;
+    tex.anisotropy = src.anisotropy;
+    tex.needsUpdate = true;
+    tintCache.set(key, tex);
+    return tex;
+  } catch {
+    return src;
+  }
+}
+
 export interface HumanProps {
   x: number;
   z: number;
@@ -89,7 +163,7 @@ function findBone(root: THREE.Object3D, name: string): THREE.Bone | undefined {
   return found;
 }
 
-function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender = "m", seed = 0, officer = ORIGIN, actorId, hp = 1 }: HumanProps) {
+function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender = "m", seed = 0, officer = ORIGIN, actorId, hp = 1, shirt }: HumanProps) {
   const avatar = useGLTF(AVATAR[gender]);
   const clipSet = CLIPS[gender];
   const clipGltfs = {
@@ -101,6 +175,8 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
 
   const { scene, mixer, actions, bones, height, mats } = useMemo(() => {
     const scene = SkeletonUtils.clone(avatar.scene) as THREE.Group;
+    // every actor gets their own shirt colour (scenario `shirt`, police navy, else palette by seed)
+    const shirtColor = role === "police" ? "#1c2a4a" : shirt ?? SHIRT_PALETTE[Math.abs(seed) % SHIRT_PALETTE.length];
     scene.traverse((o) => {
       const m = o as THREE.Mesh;
       if (m.isMesh) {
@@ -109,6 +185,7 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
         m.frustumCulled = false;
         const mat = (m.material as THREE.MeshStandardMaterial).clone();
         mat.envMapIntensity = 0.9;
+        if (mat.map) mat.map = recolorAtlas(mat.map, shirtColor, `${gender}:${shirtColor}`);
         m.material = mat;
       }
     });
@@ -130,7 +207,7 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
     const height = 0.96 + (((seed * 9301 + 49297) % 233280) / 233280) * 0.1;
     return { scene, mixer, actions, bones, height, mats };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [avatar, gender]);
+  }, [avatar, gender, shirt, role]);
 
   // Raycast identity: actor id + zone-by-height on the root group.
   useEffect(() => {
@@ -210,7 +287,7 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
     const tDown = state === "down" ? 1 : 0;
     const tKneel = state === "kneeling" ? 1 : 0;
     const tCrouch = state === "cowering" ? 1 : 0;
-    const tLean = state === "lunging" ? 0.3 : 0;
+    const tLean = 0;
     v.down = lerp(v.down, tDown, 3);
     v.kneel = lerp(v.kneel, tKneel, 3);
     v.crouch = lerp(v.crouch, tCrouch, 3);
@@ -234,6 +311,7 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
         break;
       case "lunging":
         tmp.v.set(toOfficer.x, 0.2, toOfficer.z); aimBone(bones.rArm, tmp.v); aimBone(bones.rFore, tmp.v.clone());
+        tmp.v.set(toOfficer.x * 0.5, 0.85, toOfficer.z * 0.5); aimBone(bones.spine, tmp.v, 0.45);
         break;
       case "hands_up":
         tmp.v.set(0.25, 1, 0); aimBone(bones.rArm, tmp.v); tmp.v.set(0, 1, 0); aimBone(bones.rFore, tmp.v);
@@ -271,8 +349,15 @@ function RiggedHuman({ x, z, state, role, weapon, agitation = 40, onShot, gender
     return "limb";
   };
 
+  const blob = useMemo(() => blobShadow(), []);
   return (
     <group ref={group} position={[x, 0, z]}>
+      {blob && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]} renderOrder={1} userData={{ noHit: true }}>
+          <planeGeometry args={[1.1, 1.1]} />
+          <meshBasicMaterial map={blob} transparent depthWrite={false} opacity={0.85} />
+        </mesh>
+      )}
       <group scale={height}>
         <primitive
           object={scene}

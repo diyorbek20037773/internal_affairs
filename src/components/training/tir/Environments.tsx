@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { ContactShadows, Environment as DreiEnvironment, useTexture } from "@react-three/drei";
+import { Environment as DreiEnvironment, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import type { TirEnvironment } from "@/data/scenarios/types";
 
@@ -50,11 +50,14 @@ export function Environment({ kind, quality = "high" }: { kind: TirEnvironment; 
           color={def.sun.color}
           castShadow
           shadow-mapSize={[2048, 2048]}
-          shadow-bias={-0.0004}
-          shadow-camera-left={-15}
-          shadow-camera-right={15}
-          shadow-camera-top={15}
-          shadow-camera-bottom={-15}
+          shadow-bias={-0.0003}
+          shadow-normalBias={0.02}
+          shadow-camera-left={-12}
+          shadow-camera-right={12}
+          shadow-camera-top={12}
+          shadow-camera-bottom={-12}
+          shadow-camera-near={1}
+          shadow-camera-far={40}
         />
       )}
       <Suspense fallback={<FlatSky kind={kind} />}>
@@ -65,7 +68,6 @@ export function Environment({ kind, quality = "high" }: { kind: TirEnvironment; 
           <TexturedFloor tex={def.floor.tex} size={def.floor.size} repeat={def.floor.repeat} />
         </Suspense>
       )}
-      <ContactShadows position={[0, 0.005, -8]} scale={30} blur={2.2} opacity={0.55} far={12} resolution={1024} frames={Infinity} />
       <Suspense fallback={null}>
         <CoverWall tex={def.cover} />
       </Suspense>
@@ -151,22 +153,9 @@ function Props({ kind }: { kind: TirEnvironment }) {
     );
   if (kind === "plaza")
     return (
-      <group>
-        {[-6, 6].map((x) =>
-          [-5, -9].map((z) => (
-            <group key={`${x}${z}`} position={[x, 0, z]}>
-              <mesh position={[0, 0.6, 0]} castShadow>
-                <boxGeometry args={[2.4, 1.2, 1.2]} />
-                <meshStandardMaterial color="#7a5233" roughness={0.9} />
-              </mesh>
-              <mesh position={[0, 2.1, 0]} castShadow>
-                <boxGeometry args={[2.8, 0.06, 1.8]} />
-                <meshStandardMaterial color={x < 0 ? "#b0352a" : "#2b6f9e"} roughness={0.8} />
-              </mesh>
-            </group>
-          ))
-        )}
-      </group>
+      <Suspense fallback={null}>
+        <PlazaStalls />
+      </Suspense>
     );
   if (kind === "range")
     return (
@@ -176,6 +165,48 @@ function Props({ kind }: { kind: TirEnvironment }) {
       </mesh>
     );
   return null;
+}
+
+/** Market stalls: brick counter, timber posts, fabric canopy. */
+function PlazaStalls() {
+  const brick = usePbr("rough_plaster_brick", 2);
+  return (
+    <group>
+      {[-6, 6].map((x) =>
+        [-5, -9].map((z) => (
+          <group key={`${x}${z}`} position={[x, 0, z]}>
+            <mesh position={[0, 0.55, 0]} castShadow receiveShadow>
+              <boxGeometry args={[2.4, 1.1, 1.1]} />
+              <meshStandardMaterial {...brick} roughness={1} />
+            </mesh>
+            <mesh position={[0, 1.12, 0]} castShadow>
+              <boxGeometry args={[2.6, 0.05, 1.3]} />
+              <meshStandardMaterial color="#6b4a2e" roughness={0.85} />
+            </mesh>
+            {[-1.15, 1.15].map((px) =>
+              [-0.5, 0.5].map((pz) => (
+                <mesh key={`${px}${pz}`} position={[px, 1.6, pz]} castShadow>
+                  <cylinderGeometry args={[0.035, 0.035, 1.0, 10]} />
+                  <meshStandardMaterial color="#4a3320" roughness={0.9} />
+                </mesh>
+              ))
+            )}
+            <mesh position={[0, 2.12, 0]} rotation={[0.08, 0, 0]} castShadow>
+              <boxGeometry args={[2.9, 0.03, 1.7]} />
+              <meshStandardMaterial color={x < 0 ? "#a8342c" : "#2f6d94"} roughness={0.95} side={THREE.DoubleSide} />
+            </mesh>
+            {/* goods: crates */}
+            {[-0.7, 0.1, 0.8].map((cx, i) => (
+              <mesh key={cx} position={[cx, 1.27, (i % 2) * 0.3 - 0.15]} castShadow>
+                <boxGeometry args={[0.5, 0.25, 0.4]} />
+                <meshStandardMaterial color={["#c2782e", "#7f9a3a", "#b8402e"][i]} roughness={0.9} />
+              </mesh>
+            ))}
+          </group>
+        ))
+      )}
+    </group>
+  );
 }
 
 function FlatSky({ kind }: { kind: TirEnvironment }) {

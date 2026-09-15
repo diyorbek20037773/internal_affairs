@@ -193,6 +193,7 @@ export function FpsControls({
       enabled={enabled}
       minPolarAngle={lim}
       maxPolarAngle={Math.PI - lim}
+      pointerSpeed={PLAYER_CFG.sensitivity}
       onLock={() => onLockChange(true)}
       onUnlock={() => onLockChange(false)}
     />

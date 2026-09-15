@@ -1,10 +1,10 @@
 "use client";
 
-import { useRef, type MutableRefObject } from "react";
+import { useRef, useState, type MutableRefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { PerformanceMonitor } from "@react-three/drei";
 import * as THREE from "three";
-import { Bloom, EffectComposer, Noise, SMAA, Vignette } from "@react-three/postprocessing";
-import { BlendFunction } from "postprocessing";
+import { Bloom, EffectComposer, SMAA, Vignette } from "@react-three/postprocessing";
 import type { TirHitZone, TirScenario } from "@/data/scenarios/types";
 import { clampOfficer, type TirActor, type TirState } from "@/lib/training/tirEngine";
 import type { WeaponConfig } from "@/lib/training/weaponConfig";
@@ -15,6 +15,7 @@ import { FpsControls } from "./player/FpsControls";
 import type { PlayerState } from "./player/playerTypes";
 import { Viewmodel } from "./weapons/Viewmodel";
 import { ShotRaycaster } from "./weapons/ShotRaycaster";
+import { Impacts, type ImpactEvent } from "./weapons/Impacts";
 
 export const TIR_CANVAS_CLASS = "tir-canvas";
 
@@ -69,14 +70,18 @@ export function TirScene({
   const lookZ = primary ? Math.max(2, Math.hypot(primary.x, primary.z)) : 8;
   const lookX = primary ? primary.x * 0.5 : 0;
   const officer = state.officer;
+  // Adaptive quality: PerformanceMonitor drops the pixel ratio / post-effects when the frame rate sags.
+  const [degraded, setDegraded] = useState(false);
+  const impacts = useRef<ImpactEvent[]>([]);
+  const fx = quality === "high" && !degraded;
 
   return (
     <Canvas
       className={TIR_CANVAS_CLASS}
       shadows={quality === "high" ? { type: THREE.PCFSoftShadowMap } : true}
-      dpr={quality === "high" ? [1, 1.75] : [1, 1]}
-      gl={{ antialias: quality !== "high", toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.9, powerPreference: "high-performance" }}
-      camera={{ position: [0, 1.6, 0], fov: wide ? 86 : 55, near: 0.08, far: 200 }}
+      dpr={fx ? [1, 1.5] : [1, 1]}
+      gl={{ antialias: !fx, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.9, powerPreference: "high-performance" }}
+      camera={{ position: [0, 1.6, 0], fov: wide ? 86 : isFps ? 70 : 55, near: 0.08, far: 200 }}
       style={{ cursor: isFps ? "none" : armed ? "crosshair" : "default" }}
       onCreated={({ camera }) => camera.lookAt(0, 1.35, -6)}
     >
@@ -100,7 +105,11 @@ export function TirScene({
             clickFires={fps.canFireFromClick}
             canFire={fps.canFire}
             weapon={fps.weapon}
-            onShoot={(id, zone) => onShoot(id, zone)}
+            onShoot={(id, zone, point) => {
+              const a = id ? state.actors.find((x) => x.id === id) : undefined;
+              impacts.current.push({ point: point.clone(), kind: a?.kind === "human" && zone !== "miss" ? "blood" : a?.kind === "plate" || zone === "tire" || zone === "body" ? "spark" : "dust" });
+              onShoot(id, zone);
+            }}
             onDryFire={fps.onDryFire}
             onLockTimeout={fps.onLockError}
             recoilRef={recoilRef}
@@ -109,7 +118,10 @@ export function TirScene({
       ) : (
         <CameraRig inCover={state.inCover} lookX={lookX} lookZ={lookZ} intense={!!primary && (primary.state === "lunging" || primary.state === "charging" || primary.state === "aiming")} shockSeq={state.shockSeq} />
       )}
+      <FovSync fov={wide ? 86 : isFps ? 70 : 55} />
       <Environment kind={scenario.environment} quality={quality} />
+      <Impacts queue={impacts} />
+      {quality === "high" && <PerformanceMonitor flipflops={3} onDecline={() => setDegraded(true)} onIncline={() => setDegraded(false)} onFallback={() => setDegraded(true)} />}
 
       {state.actors.filter((a) => !a.hidden).map((a) =>
         a.kind === "vehicle" ? (
@@ -139,12 +151,11 @@ export function TirScene({
       {scenario.partner && <Human x={-3.4} z={-4.4} state="idle" role="police" weapon="gun" seed={11} officer={officer} />}
       {state.backupArrived && <Human x={-4.6} z={-5.2} state="idle" role="police" weapon="gun" seed={17} officer={officer} />}
 
-      {quality === "high" && (
+      {fx && (
         <EffectComposer multisampling={0}>
           <SMAA />
-          <Bloom intensity={0.25} luminanceThreshold={0.9} luminanceSmoothing={0.2} mipmapBlur />
-          <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.35} />
-          <Vignette eskil={false} offset={0.22} darkness={0.5} />
+          <Bloom intensity={0.2} luminanceThreshold={0.92} luminanceSmoothing={0.2} mipmapBlur />
+          <Vignette eskil={false} offset={0.25} darkness={0.4} />
         </EffectComposer>
       )}
 
@@ -163,6 +174,15 @@ export function TirScene({
 
 // Module-level recoil accumulator shared by the raycaster and the controller (one range per page).
 const recoilRef: MutableRefObject<number> = { current: 0 };
+
+function FovSync({ fov }: { fov: number }) {
+  const { camera } = useThree();
+  useFrame(() => {
+    const c = camera as THREE.PerspectiveCamera;
+    if (Math.abs(c.fov - fov) > 0.01) { c.fov += (fov - c.fov) * 0.2; if (Math.abs(c.fov - fov) < 0.05) c.fov = fov; c.updateProjectionMatrix(); }
+  });
+  return null;
+}
 
 function nearestHostile(actors: TirActor[], o: { x: number; z: number }): TirActor | undefined {
   const resolved = new Set(["kneeling", "down", "calm", "fleeing", "hands_up", "stopped", "fled", "hit"]);
