@@ -28,6 +28,7 @@ export type DialogSimError = "ai_unavailable" | "no_keys_configured" | "bad_ai_o
 export function useDialogSim(scenario: DialogScenario, initial: TrainingSession, locale: string) {
   const [session, setSession] = useState<TrainingSession>(initial);
   const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
   const [error, setError] = useState<DialogSimError | null>(null);
   const sessionRef = useRef(session);
   sessionRef.current = session;
@@ -43,10 +44,11 @@ export function useDialogSim(scenario: DialogScenario, initial: TrainingSession,
     async (text: string) => {
       const cur = sessionRef.current;
       const p = cur.payload as DialogPayload;
-      if (busy || cur.status !== "in_progress") return;
+      if (busy || busyRef.current || cur.status !== "in_progress") return;
       const trimmed = text.trim();
       if (!trimmed) return;
 
+      busyRef.current = true;
       setBusy(true);
       setError(null);
 
@@ -67,6 +69,7 @@ export function useDialogSim(scenario: DialogScenario, initial: TrainingSession,
       try {
         const res = await fetch("/api/sim/dialog", {
           method: "POST",
+          signal: AbortSignal.timeout(60000),
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             scenarioId: scenario.id,
@@ -121,6 +124,7 @@ export function useDialogSim(scenario: DialogScenario, initial: TrainingSession,
         setError("generic");
         setSession(cur);
       } finally {
+        busyRef.current = false;
         setBusy(false);
       }
     },

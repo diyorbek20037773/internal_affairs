@@ -662,6 +662,36 @@
         "won": "Situation resolved",
         "lost": "Exercise failed",
         "shootHintFps": "Fire: F — draw, left click on the target at the screen centre. Semi-auto: one click — one shot. R — magazine (15/30). Crouch (C) behind the block to count as cover. Firing without threat conditions — unlawful force."
+      },
+      "input": {
+        "title": "Devices (laser pistol / gamepad)",
+        "close": "Close",
+        "intro": "A laser pistol or gamepad trigger fires. Pistols that act as a mouse need no setup. Gamepads are detected automatically; pick a USB HID device once. “Bind” → press the button on the device.",
+        "gamepad": "Gamepad",
+        "gamepadNone": "Not connected — press a button",
+        "hid": "USB HID device",
+        "hidNone": "Not selected",
+        "hidDetached": "detached",
+        "hidPick": "Pick device",
+        "hidForget": "Forget",
+        "hidCancelled": "No device selected",
+        "unsupported": "Not available in this browser",
+        "bind": "Bind",
+        "press": "Press a button…",
+        "clear": "Clear",
+        "last": "Last signal",
+        "reset": "Defaults",
+        "action": {
+          "fire": "Fire",
+          "reload": "Reload",
+          "draw": "Draw weapon",
+          "holster": "Holster",
+          "taser": "Taser",
+          "backup": "Backup",
+          "cover": "Cover",
+          "retreat": "Retreat",
+          "pause": "Pause"
+        }
       }
     }
   }

@@ -662,6 +662,36 @@
         "won": "Vaziyat hal qilindi",
         "lost": "Mashg'ulot muvaffaqiyatsiz",
         "shootHintFps": "Ot: F — qurol, ekran markazidagi nishonga sichqoncha chap tugmasi. Yarim avtomat: har bosish — bir o'q. R — magazin (15/30). To'siq ortida C bilan cho'kkalang — himoya hisoblanadi. Xavf shartlari bo'lmaganda o'q — qonunsiz kuch."
+      },
+      "input": {
+        "title": "Qurilmalar (lazer to'pponcha / gamepad)",
+        "close": "Yopish",
+        "intro": "Lazer to'pponcha yoki gamepad tepkisi — o'q. Sichqoncha sifatida ishlaydigan to'pponchalar sozlashsiz ishlaydi. Gamepad avtomatik aniqlanadi; USB HID qurilmani bir marta tanlang. «Bog'lash» → qurilmada tugmani bosing.",
+        "gamepad": "Gamepad",
+        "gamepadNone": "Ulanmagan — tugmani bosing",
+        "hid": "USB HID qurilma",
+        "hidNone": "Tanlanmagan",
+        "hidDetached": "uzilgan",
+        "hidPick": "Qurilma tanlash",
+        "hidForget": "Unutish",
+        "hidCancelled": "Qurilma tanlanmadi",
+        "unsupported": "Bu brauzerda yo'q",
+        "bind": "Bog'lash",
+        "press": "Tugmani bosing…",
+        "clear": "O'chirish",
+        "last": "Oxirgi signal",
+        "reset": "Standart",
+        "action": {
+          "fire": "O'q",
+          "reload": "Qayta zaryad",
+          "draw": "Qurol chiqarish",
+          "holster": "G'ilofga",
+          "taser": "Elektroshok",
+          "backup": "Yordam",
+          "cover": "To'siq",
+          "retreat": "Chekinish",
+          "pause": "Pauza"
+        }
       }
     }
   }

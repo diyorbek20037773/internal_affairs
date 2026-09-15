@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import {
   ArrowRight, Crosshair, Maximize2, Mic, MonitorPlay, Radio, Shield, ShieldOff, Zap, MoveLeft, Volume2, VolumeX,
   Play, MessageCircle, AlertTriangle, CheckCircle2, Timer, Trophy, Pause, Square, Flame, ExternalLink, ChevronDown, ChevronUp,
-  RotateCcw, Gamepad2, MousePointer2, Heart, Skull,
+  RotateCcw, Gamepad2, MousePointer2, Heart, Skull, Usb,
 } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { Card } from "@/components/ui/card";
@@ -32,6 +32,8 @@ import { sfx } from "./tirAudio";
 import { initialPlayer, type PlayerState, type TirGameState } from "./player/playerTypes";
 import type { FpsProps, TirRunFlags } from "./TirScene";
 import { detectQuality } from "./quality";
+import { InputDevicesPanel } from "./InputDevicesPanel";
+import { inputHub, onTirInput } from "@/lib/tir/input";
 import { cn } from "@/lib/utils";
 
 const TirScene = dynamic(() => import("./TirScene").then((m) => m.TirScene), { ssr: false });
@@ -97,6 +99,7 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
   const [shockFx, setShockFx] = useState(false);
   const [allStop, setAllStop] = useState(false);
   const [instructorOpen, setInstructorOpen] = useState(false);
+  const [devicesOpen, setDevicesOpen] = useState(false);
   const [talkText, setTalkText] = useState("");
   const [lastFeedback, setLastFeedback] = useState<{ text: string; L: number; P: number } | null>(null);
   const stateRef = useRef(state);
@@ -289,6 +292,8 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
   };
 
   const instructor = (cmd: InstructorCmd) => setState((cur) => applyInstructor(cur, scenario, cmd));
+  const instructorRef = useRef(instructor);
+  instructorRef.current = instructor;
 
   const toggleFullscreen = () => {
     const el = wrapRef.current;
@@ -315,6 +320,26 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+  }, [act]);
+
+  // External devices (laser pistol / gamepad): "fire" is handled inside the scene (hit-scan);
+  // the rest map onto the same actions as the keyboard.
+  useEffect(() => {
+    inputHub.start();
+    const off = onTirInput(({ action }) => {
+      const cur = stateRef.current;
+      switch (action) {
+        case "reload": if (cur.ammo.reloadLeft === 0 && cur.ammo.reserve > 0 && cur.ammo.mag < PISTOL.magazine) sfx.reload(); act("reload"); break;
+        case "draw": { const r = act("draw"); if (r && r.text) sfx.draw(); break; }
+        case "holster": act("holster"); break;
+        case "taser": { const r = act("taser"); if (r && r.text) sfx.taser(); break; }
+        case "backup": act("backup"); break;
+        case "cover": if (controlsRef.current !== "fps") act("cover"); break;
+        case "retreat": if (controlsRef.current !== "fps") act("retreat"); break;
+        case "pause": instructorRef.current({ cmd: stateRef.current.paused ? "resume" : "pause" }); break;
+      }
+    });
+    return () => { off(); inputHub.stop(); };
   }, [act]);
 
   controlsRef.current = controls;
@@ -537,6 +562,7 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
           {fpsMeter > 0 && <span className={cn("flex h-8 items-center rounded-md bg-black/60 px-2 font-mono text-[10px]", fpsMeter >= 50 ? "text-success" : fpsMeter >= 30 ? "text-accent" : "text-destructive")} title="FPS">{fpsMeter} fps</span>}
           <Button size="sm" variant="secondary" className="h-8 bg-black/60 px-2 font-mono text-[10px] text-white hover:bg-black/80" onClick={() => setControls((c) => (c === "fps" ? "fixed" : "fps"))} title={t("controls.toggle")}>{fpsMode ? <Gamepad2 className="mr-1 h-3.5 w-3.5" /> : <MousePointer2 className="mr-1 h-3.5 w-3.5" />}{fpsMode ? t("controls.fps") : t("controls.fixed")}</Button>
           <Button size="sm" variant="secondary" className="h-8 bg-black/60 px-2 font-mono text-[10px] text-white hover:bg-black/80" onClick={() => setQuality((q) => (q === "high" ? "low" : "high"))} title={t("quality")}>{quality === "high" ? "HQ" : "LQ"}</Button>
+          <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={() => setDevicesOpen((v) => !v)} title={t("input.title")} data-testid="devices-toggle"><Usb className="h-4 w-4" /></Button>
           <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={() => setWide((v) => !v)} title={t("wide")}><MonitorPlay className="h-4 w-4" /></Button>
           <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={() => { if (!voice) speech.stopSpeaking(); setVoice((v) => !v); }} title={t("voice")}>{voice ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}</Button>
           <Button size="icon" variant="secondary" className="h-8 w-8 bg-black/60 text-white hover:bg-black/80" onClick={toggleFullscreen} title={t("fullscreen")}><Maximize2 className="h-4 w-4" /></Button>
@@ -584,6 +610,8 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
           <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">{fpsMode ? t("controls.shootHintFps") : t("shootHint")}</p>
         </Card>
       </div>
+
+      {devicesOpen && <InputDevicesPanel onClose={() => setDevicesOpen(false)} />}
 
       {/* Instructor (ghost mode) */}
       <Card className="p-3">

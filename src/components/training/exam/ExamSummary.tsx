@@ -57,6 +57,7 @@ export function ExamSummary({ exam, sessions, traineeId }: { exam: ExamScenario;
     try {
       const res = await fetch("/api/sim/exam-summary", {
         method: "POST",
+        signal: AbortSignal.timeout(90000),
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           locale,

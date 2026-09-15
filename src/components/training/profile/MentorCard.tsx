@@ -62,6 +62,7 @@ export function MentorCard() {
       }));
     fetch("/api/sim/mentor", {
       method: "POST",
+      signal: AbortSignal.timeout(45000),
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ locale, scores: himoyaId.scores, samples: himoyaId.samples, recommendedScenarioId: rec.scenario.id, targetCompetency: rec.competency, recent }),
     })

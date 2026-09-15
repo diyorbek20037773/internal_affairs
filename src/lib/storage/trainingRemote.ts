@@ -79,7 +79,7 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
     throw e;
   }
   if (!res.ok) {
-    if (res.status === 501 || res.status === 503) degrade();
+    if (res.status === 501 || res.status === 503 || res.status === 401) degrade();
     throw new Error(`store ${path} → ${res.status}`);
   }
   return (await res.json()) as T;
@@ -134,14 +134,26 @@ async function authCall<T>(path: string, body?: unknown): Promise<{ status: numb
   return { status: res.status, data };
 }
 
+let meProbe: Promise<AuthMe> | null = null;
+
 export const remoteAuth = {
   me: async (): Promise<AuthMe> => {
-    try {
-      const { data } = await authCall<Partial<AuthMe>>("/api/auth/me");
-      return { enabled: Boolean(data.enabled), profile: data.profile ?? null };
-    } catch {
-      return { enabled: false, profile: null };
+    // One in-flight probe shared by every hook instance on the page (gate, form, sidebar, cards).
+    if (!meProbe) {
+      meProbe = (async (): Promise<AuthMe> => {
+        try {
+          const { status, data } = await authCall<Partial<AuthMe>>("/api/auth/me");
+          // 5xx / 503 (DB blip) must NOT turn into a login wall: fall back to the device profile.
+          if (status !== 200) return { enabled: false, profile: null };
+          return { enabled: Boolean(data.enabled), profile: data.profile ?? null };
+        } catch {
+          return { enabled: false, profile: null };
+        } finally {
+          setTimeout(() => { meProbe = null; }, 1500);
+        }
+      })();
     }
+    return meProbe;
   },
   login: (badgeId: string, pin: string) =>
     authCall<{ profile?: TraineeProfile | null; error?: string }>("/api/auth/login", { badgeId, pin }),

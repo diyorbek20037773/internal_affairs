@@ -80,6 +80,7 @@ function MahallaRunner({ scenario, initial }: { scenario: MahallaScenario; initi
     try {
       const res = await fetch("/api/sim/mahalla-grade", {
         method: "POST",
+        signal: AbortSignal.timeout(90000),
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ scenarioId: scenario.id, locale, picked, plans }),
       });

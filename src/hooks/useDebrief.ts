@@ -39,6 +39,7 @@ export function useDebrief(sessionId: string, locale: string) {
       try {
         const res = await fetch("/api/sim/debrief", {
           method: "POST",
+          signal: AbortSignal.timeout(90000),
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ scenarioId: cur.scenarioId, locale, payload: cur.payload }),
         });

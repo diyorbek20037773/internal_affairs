@@ -8,6 +8,7 @@ import { Bloom, EffectComposer, SMAA, Vignette } from "@react-three/postprocessi
 import type { TirActorDef, TirHitZone, TirScenario } from "@/data/scenarios/types";
 import { clampOfficer, type TirActor, type TirState } from "@/lib/training/tirEngine";
 import type { WeaponConfig } from "@/lib/training/weaponConfig";
+import { PISTOL } from "@/lib/training/weaponConfig";
 import { Plate, Vehicle } from "./Actor";
 import { SmartHuman as Human } from "./RealHuman";
 import { Environment } from "./Environments";
@@ -132,7 +133,11 @@ export function TirScene({
           />
         </>
       ) : (
-        <CameraRig stateRef={stateRef} />
+        <>
+          <CameraRig stateRef={stateRef} />
+          {/* laser pistol / gamepad trigger in fixed mode: hit-scan from the auto-aimed camera centre */}
+          <ShotRaycaster armedRef={armedRef} clickFiresRef={clickFiresRef} weapon={PISTOL} onShoot={(id, zone) => onShoot(id, zone)} onDryFire={() => undefined} recoilRef={recoilRef} pointer={false} />
+        </>
       )}
       <FovSync fov={wide ? 86 : isFps ? 70 : 55} />
       <Environment kind={scenario.environment} quality={quality} />

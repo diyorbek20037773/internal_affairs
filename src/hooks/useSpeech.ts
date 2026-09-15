@@ -110,6 +110,7 @@ export function useSpeech({ locale }: UseSpeechOptions) {
           const bytes = new Uint8Array(wav);
           for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + 0x8000)));
           const res = await fetch("/api/stt", {
+            signal: AbortSignal.timeout(45_000),
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ audio: btoa(bin), mimeType: "audio/wav", locale }),
@@ -242,6 +243,7 @@ export function useSpeech({ locale }: UseSpeechOptions) {
       setSpeaking(true);
       try {
         const res = await fetch("/api/tts", {
+          signal: AbortSignal.timeout(30_000),
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: trimmed.slice(0, 1200), locale }),

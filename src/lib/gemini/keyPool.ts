@@ -44,7 +44,7 @@ export function loadKeys(): string[] {
 function clientFor(key: string): GoogleGenAI {
   let client = clientCache.get(key);
   if (!client) {
-    client = new GoogleGenAI({ apiKey: key });
+    client = new GoogleGenAI({ apiKey: key, httpOptions: { timeout: 50_000 } });
     clientCache.set(key, client);
   }
   return client;

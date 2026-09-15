@@ -1,9 +1,9 @@
 "use client";
 
 import {
-  HimoyaIdFileSchema,
+  HimoyaIdSchema,
   ProfileFileSchema,
-  SessionsFileSchema,
+  TrainingSessionSchema,
   type HimoyaId,
   type TraineeProfile,
   type TrainingSession,
@@ -60,13 +60,50 @@ function writeJson(key: string, value: unknown): void {
   window.localStorage.setItem(key, JSON.stringify(value));
 }
 
+/**
+ * Rows that fail today's schema (written by an older build, or hand-edited)
+ * are kept aside and written back untouched, so a schema change can never
+ * wipe a tablet's history. They are simply invisible until a migration or a
+ * newer build understands them.
+ */
+type Quarantined = { key: string; rows: unknown[] };
+const quarantine = new Map<string, unknown[]>();
+
+function readItems<T>(key: string, parseItem: (raw: unknown) => T | undefined): T[] {
+  const raw = readJson<unknown>(key, (r) => r);
+  const items = raw && typeof raw === "object" && Array.isArray((raw as { items?: unknown }).items) ? ((raw as { items: unknown[] }).items) : [];
+  const ok: T[] = [];
+  const bad: unknown[] = [];
+  for (const it of items) {
+    const v = parseItem(it);
+    if (v === undefined) bad.push(it);
+    else ok.push(v);
+  }
+  quarantine.set(key, bad);
+  if (bad.length && typeof console !== "undefined") console.warn(`[h360] ${key}: ${bad.length} row(s) kept aside (schema mismatch)`);
+  return ok;
+}
+
+function writeItems(key: string, items: unknown[]): void {
+  const kept = quarantine.get(key) ?? [];
+  try {
+    writeJson(key, { version: 1, items: [...items, ...kept] });
+  } catch (e) {
+    // Quota: drop the oldest completed/abandoned sessions and retry once.
+    const isQuota = e instanceof DOMException && (e.name === "QuotaExceededError" || e.name === "NS_ERROR_DOM_QUOTA_REACHED");
+    if (!isQuota || key !== TRAINING_KEYS.sessions) throw e;
+    const list = (items as TrainingSession[]).slice().sort((a, b) => a.updatedAt.localeCompare(b.updatedAt));
+    const trimmed = list.filter((s, i) => !(i < Math.ceil(list.length / 4) && s.status !== "in_progress"));
+    writeJson(key, { version: 1, items: [...trimmed.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)), ...kept] });
+  }
+}
+void (0 as unknown as Quarantined);
+
 function readSessions(): TrainingSession[] {
-  return (
-    readJson(TRAINING_KEYS.sessions, (raw) => {
-      const r = SessionsFileSchema.safeParse(raw);
-      return r.success ? r.data.items : undefined;
-    }) ?? []
-  );
+  return readItems<TrainingSession>(TRAINING_KEYS.sessions, (raw) => {
+    const r = TrainingSessionSchema.safeParse(raw);
+    return r.success ? r.data : undefined;
+  });
 }
 
 function writeSessions(items: TrainingSession[]): void {
@@ -86,16 +123,14 @@ function writeSessions(items: TrainingSession[]): void {
     }
     list = list.filter((s) => !toDrop.has(s.id));
   }
-  writeJson(TRAINING_KEYS.sessions, { version: 1, items: list });
+  writeItems(TRAINING_KEYS.sessions, list);
 }
 
 function readHimoyaIds(): HimoyaId[] {
-  return (
-    readJson(TRAINING_KEYS.himoyaId, (raw) => {
-      const r = HimoyaIdFileSchema.safeParse(raw);
-      return r.success ? r.data.items : undefined;
-    }) ?? []
-  );
+  return readItems<HimoyaId>(TRAINING_KEYS.himoyaId, (raw) => {
+    const r = HimoyaIdSchema.safeParse(raw);
+    return r.success ? r.data : undefined;
+  });
 }
 
 export const localTrainingRepo: TrainingRepo = {
@@ -142,7 +177,7 @@ export const localTrainingRepo: TrainingRepo = {
     const idx = items.findIndex((x) => x.traineeId === h.traineeId);
     if (idx === -1) items.push(h);
     else items[idx] = h;
-    writeJson(TRAINING_KEYS.himoyaId, { version: 1, items });
+    writeItems(TRAINING_KEYS.himoyaId, items);
     embedPost({ type: "h360:himoya-id", himoyaId: h });
   },
   async listHimoyaIds() {

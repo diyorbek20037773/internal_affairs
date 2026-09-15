@@ -5,6 +5,7 @@ import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import type { TirHitZone } from "@/data/scenarios/types";
 import type { WeaponConfig } from "@/lib/training/weaponConfig";
+import { onTirInput } from "@/lib/tir/input";
 
 /**
  * Camera-centre hit-scan. On left pointer-down (while active) casts a ray from
@@ -12,6 +13,9 @@ import type { WeaponConfig } from "@/lib/training/weaponConfig";
  * `userData.actorId` on an ancestor (zone from `userData.zone` on the mesh or
  * `userData.zoneOf(point)` on the actor root). Walls/ground/nothing → miss.
  * Rate-limited by the weapon's fireRate; semi-auto = one shot per click.
+ * External devices (laser pistol / gamepad via `h360:input` "fire") pull the
+ * same trigger without needing pointer lock; with `pointer={false}` (fixed
+ * camera mode) only those external pulls are honoured.
  */
 export function ShotRaycaster({
   armedRef,
@@ -21,6 +25,7 @@ export function ShotRaycaster({
   onDryFire,
   onLockTimeout,
   recoilRef,
+  pointer = true,
 }: {
   /** Round is playing with the weapon drawn; `canFire` = magazine not empty and not reloading. */
   armedRef: MutableRefObject<{ armed: boolean; canFire: boolean }>;
@@ -32,6 +37,8 @@ export function ShotRaycaster({
   onShoot: (actorId: string | null, zone: TirHitZone, point: THREE.Vector3) => void;
   onDryFire: () => void;
   recoilRef: MutableRefObject<number>;
+  /** Listen to mouse/touch on the canvas (FPS mode). */
+  pointer?: boolean;
 }) {
   const { gl, camera, scene } = useThree();
   const lastShot = useRef(0);
@@ -42,15 +49,10 @@ export function ShotRaycaster({
 
   useEffect(() => {
     const el = gl.domElement;
-    const down = (e: PointerEvent) => {
+    const fire = () => {
       const c = cb.current;
       const { armed, canFire } = armedRef.current;
-      if (e.button !== 0 || !armed) return;
-      if (!clickFiresRef.current) {
-        // this click is the lock request; if nothing happens, fall back to click-to-fire
-        window.setTimeout(() => { if (!clickFiresRef.current && !document.pointerLockElement) cb.current.onLockTimeout?.(); }, 500);
-        return;
-      }
+      if (!armed) return;
       const now = performance.now();
       if (now - lastShot.current < 1000 / c.weapon.fireRate) return;
       lastShot.current = now;
@@ -69,9 +71,22 @@ export function ShotRaycaster({
       recoilRef.current += c.weapon.recoil;
       c.onShoot(null, "miss", ray.ray.at(30, new THREE.Vector3()));
     };
-    el.addEventListener("pointerdown", down);
-    return () => el.removeEventListener("pointerdown", down);
-  }, [gl, camera, scene, ray, centre, recoilRef, armedRef, clickFiresRef]);
+    const down = (e: PointerEvent) => {
+      if (e.button !== 0 || !armedRef.current.armed) return;
+      if (!clickFiresRef.current) {
+        // this click is the lock request; if nothing happens, fall back to click-to-fire
+        window.setTimeout(() => { if (!clickFiresRef.current && !document.pointerLockElement) cb.current.onLockTimeout?.(); }, 500);
+        return;
+      }
+      fire();
+    };
+    if (pointer) el.addEventListener("pointerdown", down);
+    const offInput = onTirInput((d) => { if (d.action === "fire") fire(); });
+    return () => {
+      if (pointer) el.removeEventListener("pointerdown", down);
+      offInput();
+    };
+  }, [gl, camera, scene, ray, centre, recoilRef, armedRef, clickFiresRef, pointer]);
 
   return null;
 }
