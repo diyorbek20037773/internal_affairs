@@ -1,9 +1,11 @@
 "use client";
 
 import {
+  ExamSignoffSchema,
   HimoyaIdSchema,
   ProfileFileSchema,
   TrainingSessionSchema,
+  type ExamSignoff,
   type HimoyaId,
   type TraineeProfile,
   type TrainingSession,
@@ -20,6 +22,7 @@ export const TRAINING_KEYS = {
   profile: "h360:profile:v1",
   sessions: "h360:sessions:v1",
   himoyaId: "h360:himoyaId:v1",
+  signoffs: "h360:signoffs:v1",
 } as const;
 
 /** Keep localStorage well under the 5 MB budget. */
@@ -39,6 +42,10 @@ export interface TrainingRepo {
   getHimoyaId(traineeId: string): Promise<HimoyaId | undefined>;
   saveHimoyaId(h: HimoyaId): Promise<void>;
   listHimoyaIds(): Promise<HimoyaId[]>;
+
+  /** Instructor sign-off of an exam attempt (examId). */
+  listSignoffs(traineeId?: string): Promise<ExamSignoff[]>;
+  saveSignoff(x: ExamSignoff): Promise<void>;
 
   /** All known profiles (instructor cabinet names); only this device when local-only. */
   listProfiles(): Promise<TraineeProfile[]>;
@@ -126,6 +133,13 @@ function writeSessions(items: TrainingSession[]): void {
   writeItems(TRAINING_KEYS.sessions, list);
 }
 
+function readSignoffs(): ExamSignoff[] {
+  return readItems<ExamSignoff>(TRAINING_KEYS.signoffs, (raw) => {
+    const r = ExamSignoffSchema.safeParse(raw);
+    return r.success ? r.data : undefined;
+  });
+}
+
 function readHimoyaIds(): HimoyaId[] {
   return readItems<HimoyaId>(TRAINING_KEYS.himoyaId, (raw) => {
     const r = HimoyaIdSchema.safeParse(raw);
@@ -182,6 +196,16 @@ export const localTrainingRepo: TrainingRepo = {
   },
   async listHimoyaIds() {
     return readHimoyaIds();
+  },
+  async listSignoffs(traineeId) {
+    return readSignoffs().filter((x) => !traineeId || x.traineeId === traineeId);
+  },
+  async saveSignoff(x) {
+    const items = readSignoffs();
+    const idx = items.findIndex((y) => y.examId === x.examId);
+    if (idx === -1) items.push(x);
+    else items[idx] = x;
+    writeItems(TRAINING_KEYS.signoffs, items);
   },
   async listProfiles() {
     const p = await localTrainingRepo.getProfile();
@@ -278,6 +302,19 @@ export const hybridTrainingRepo: TrainingRepo = {
   async saveHimoyaId(h) {
     await localTrainingRepo.saveHimoyaId(h);
     push(() => remoteStore.saveHimoyaId(h));
+  },
+  async listSignoffs(traineeId) {
+    const local = await localTrainingRepo.listSignoffs(traineeId);
+    if (!(await online())) return local;
+    try {
+      return mergeById(local, await remoteStore.listSignoffs(traineeId), (x) => x.examId);
+    } catch {
+      return local;
+    }
+  },
+  async saveSignoff(x) {
+    await localTrainingRepo.saveSignoff(x);
+    push(() => remoteStore.saveSignoff(x));
   },
   async listHimoyaIds() {
     const local = await localTrainingRepo.listHimoyaIds();

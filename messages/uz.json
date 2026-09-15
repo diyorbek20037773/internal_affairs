@@ -488,7 +488,55 @@
       "notInstructorDesc": "Bu bo'lim instruktorlar uchun. Profilda «Instruktor» rolini tanlang (markaz kodi bilan).",
       "openProfile": "Profilni ochish",
       "noTrainees": "Hali o'quvchilar yo'q — birinchi mashg'ulot yakunlangach shu yerda ko'rinadi.",
-      "legend": "Kompetensiyalar"
+      "legend": "Kompetensiyalar",
+      "exams": "Imtihonlar (Bir kunlik xizmat)",
+      "noExams": "Imtihon urinishlari yo'q.",
+      "stages": "{done}/{total} bosqich",
+      "retakeTag": "qayta topshirish",
+      "awaitingSignoff": "Imzo kutmoqda",
+      "inProgress": "Jarayonda",
+      "signoff": "Imzolash",
+      "changeSignoff": "Qarorni o'zgartirish",
+      "signoffNote": "Instruktor izohi (ixtiyoriy)",
+      "signoffIncomplete": "Barcha bosqichlar yakunlanmagan — baribir qaror qabul qilish mumkin.",
+      "signed": "Imtihon qarori saqlandi",
+      "verdict": {
+        "passed": "O'tdi",
+        "retake": "Qayta topshiradi",
+        "failed": "O'tmadi"
+      },
+      "group": "Guruh (hudud)",
+      "noMatch": "Filtrga mos yozuv yo'q.",
+      "close": "Yopish",
+      "kinds": {
+        "dialog": "AI-Muloqot",
+        "decision": "Qaror",
+        "mahalla": "Smart Mahalla",
+        "document": "Hujjat",
+        "tir": "TIR"
+      },
+      "filter": {
+        "search": "Ism yoki xizmat ID…",
+        "group": "Guruh",
+        "allGroups": "Barcha guruhlar",
+        "kind": "Trenajyor",
+        "allKinds": "Barcha trenajyorlar",
+        "period": "Davr",
+        "period_7": "7 kun",
+        "period_30": "30 kun",
+        "period_all": "Hammasi",
+        "reset": "Tozalash"
+      },
+      "report": {
+        "title": "O'quvchi hisoboti",
+        "print": "Chop etish / PDF",
+        "open": "Hisobot",
+        "generated": "Tuzildi",
+        "instructor": "Instruktor",
+        "trainee": "O'quvchi",
+        "summary": "{total} ta yakunlangan mashg'ulot, {confirmed} tasi instruktor tasdiqlagan.",
+        "debrief": "Debrif"
+      }
     },
     "auth": {
       "intro": "Server rejimi: xizmat ID va PIN bilan kiring. Profil, mashg'ulotlar va HIMOYA-ID barcha planshetlarda bir xil bo'ladi. Oflayn bo'lsa ma'lumot qurilmada saqlanib, ulanishda sinxronlanadi.",

@@ -223,6 +223,17 @@ export const TraineeProfileSchema = z.object({
   createdAt: z.string(),
 });
 
+/** Instructor's final decision on one "Bir kunlik xizmat" exam attempt (examId = attempt id). */
+export const ExamSignoffSchema = z.object({
+  examId: z.string(),
+  traineeId: z.string(),
+  verdict: z.enum(["passed", "retake", "failed"]),
+  note: z.string().max(2000).default(""),
+  signedBy: z.string(),
+  signedByName: z.string().default(""),
+  updatedAt: z.string(),
+});
+
 export const HimoyaIdSchema = z.object({
   traineeId: z.string(),
   scores: CompetencyScoresSchema,
@@ -266,3 +277,5 @@ export type DebriefLlm = z.infer<typeof DebriefLlmSchema>;
 export type TraineeProfile = z.infer<typeof TraineeProfileSchema>;
 export type HimoyaId = z.infer<typeof HimoyaIdSchema>;
 export type SessionStatus = z.infer<typeof SessionStatusSchema>;
+
+export type ExamSignoff = z.infer<typeof ExamSignoffSchema>;

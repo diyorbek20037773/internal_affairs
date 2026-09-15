@@ -218,3 +218,14 @@
 html[data-embed="1"] .h360-chrome {
   display: none !important;
 }
+
+/* Instructor report → PDF via the browser print dialog: only #h360-print stays on the sheet. */
+@media print {
+  body * { visibility: hidden; }
+  #h360-print, #h360-print * { visibility: visible; }
+  #h360-print { position: absolute; inset: 0 auto auto 0; width: 100%; box-shadow: none !important; border: 0 !important; }
+  .print\:hidden { display: none !important; }
+  body { background: #fff !important; color: #000 !important; }
+  main { overflow: visible !important; }
+  @page { margin: 14mm; }
+}

@@ -488,7 +488,55 @@
       "notInstructorDesc": "This section is for instructors. Choose the “Instructor” role in your profile (with the centre code).",
       "openProfile": "Open profile",
       "noTrainees": "No trainees yet — they appear after the first completed session.",
-      "legend": "Competencies"
+      "legend": "Competencies",
+      "exams": "Exams (One day of service)",
+      "noExams": "No exam attempts yet.",
+      "stages": "{done}/{total} stages",
+      "retakeTag": "retake",
+      "awaitingSignoff": "Awaiting sign-off",
+      "inProgress": "In progress",
+      "signoff": "Sign off",
+      "changeSignoff": "Change decision",
+      "signoffNote": "Instructor note (optional)",
+      "signoffIncomplete": "Not all stages are completed — a decision can still be recorded.",
+      "signed": "Exam decision saved",
+      "verdict": {
+        "passed": "Passed",
+        "retake": "Retake",
+        "failed": "Failed"
+      },
+      "group": "Group (district)",
+      "noMatch": "Nothing matches the filter.",
+      "close": "Close",
+      "kinds": {
+        "dialog": "AI Dialogue",
+        "decision": "Decision",
+        "mahalla": "Smart Mahalla",
+        "document": "Document",
+        "tir": "TIR"
+      },
+      "filter": {
+        "search": "Name or badge ID…",
+        "group": "Group",
+        "allGroups": "All groups",
+        "kind": "Trainer",
+        "allKinds": "All trainers",
+        "period": "Period",
+        "period_7": "7 days",
+        "period_30": "30 days",
+        "period_all": "All",
+        "reset": "Reset"
+      },
+      "report": {
+        "title": "Trainee report",
+        "print": "Print / PDF",
+        "open": "Report",
+        "generated": "Generated",
+        "instructor": "Instructor",
+        "trainee": "Trainee",
+        "summary": "{total} completed sessions, {confirmed} confirmed by an instructor.",
+        "debrief": "Debrief"
+      }
     },
     "auth": {
       "intro": "Server mode: sign in with your badge ID and PIN. Profile, sessions and HIMOYA-ID are the same on every tablet. Offline data stays on the device and syncs when connected.",

@@ -63,6 +63,14 @@ CREATE TABLE IF NOT EXISTS h360_himoya_ids (
   updated_at  text NOT NULL,
   data        jsonb NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS h360_exam_signoffs (
+  exam_id     text PRIMARY KEY,
+  trainee_id  text NOT NULL,
+  updated_at  text NOT NULL,
+  data        jsonb NOT NULL
+);
+CREATE INDEX IF NOT EXISTS h360_exam_signoffs_trainee_idx ON h360_exam_signoffs (trainee_id);
 `;
 
 /** Idempotent auto-migration; runs once per process. */

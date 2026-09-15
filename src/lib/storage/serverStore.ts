@@ -1,5 +1,5 @@
 import { query } from "@/lib/db/pg";
-import type { HimoyaId, TraineeProfile, TrainingSession } from "./trainingSchema";
+import type { ExamSignoff, HimoyaId, TraineeProfile, TrainingSession } from "./trainingSchema";
 
 /** Postgres-backed store used by /api/store/* (schemas validated in the routes). */
 
@@ -67,5 +67,21 @@ export async function saveHimoyaId(h: HimoyaId): Promise<void> {
      ON CONFLICT (trainee_id) DO UPDATE SET updated_at = EXCLUDED.updated_at, data = EXCLUDED.data
      WHERE h360_himoya_ids.updated_at <= EXCLUDED.updated_at`,
     [h.traineeId, h.updatedAt, JSON.stringify(h)]
+  );
+}
+
+export async function listSignoffs(traineeId?: string): Promise<ExamSignoff[]> {
+  const rows = traineeId
+    ? await query<{ data: ExamSignoff }>("SELECT data FROM h360_exam_signoffs WHERE trainee_id = $1 ORDER BY updated_at DESC", [traineeId])
+    : await query<{ data: ExamSignoff }>("SELECT data FROM h360_exam_signoffs ORDER BY updated_at DESC LIMIT 2000");
+  return rows.map((r) => r.data);
+}
+
+export async function saveSignoff(x: ExamSignoff): Promise<void> {
+  await query(
+    `INSERT INTO h360_exam_signoffs (exam_id, trainee_id, updated_at, data) VALUES ($1, $2, $3, $4)
+     ON CONFLICT (exam_id) DO UPDATE SET trainee_id = EXCLUDED.trainee_id, updated_at = EXCLUDED.updated_at, data = EXCLUDED.data
+     WHERE h360_exam_signoffs.updated_at <= EXCLUDED.updated_at`,
+    [x.examId, x.traineeId, x.updatedAt, JSON.stringify(x)]
   );
 }

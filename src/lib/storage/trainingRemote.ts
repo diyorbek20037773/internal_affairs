@@ -1,6 +1,6 @@
 "use client";
 
-import type { HimoyaId, TraineeProfile, TrainingSession } from "./trainingSchema";
+import type { ExamSignoff, HimoyaId, TraineeProfile, TrainingSession } from "./trainingSchema";
 
 /**
  * Thin fetch client for /api/store/*. Throws on any non-2xx so the hybrid repo
@@ -117,6 +117,10 @@ export const remoteStore = {
     ),
   listHimoyaIds: () => call<{ items: HimoyaId[] }>("/api/store/himoya-id").then((r) => r.items),
   saveHimoyaId: (h: HimoyaId) => call<{ ok: true }>("/api/store/himoya-id", json(h)).then(() => undefined),
+
+  listSignoffs: (traineeId?: string) =>
+    call<{ items: ExamSignoff[] }>(`/api/store/signoffs${traineeId ? `?traineeId=${q(traineeId)}` : ""}`).then((r) => r.items),
+  saveSignoff: (x: ExamSignoff) => call<{ ok: true }>("/api/store/signoffs", json(x)).then(() => undefined),
 };
 
 /* ---------- auth (badge + PIN; only when the server store is on) ---------- */
