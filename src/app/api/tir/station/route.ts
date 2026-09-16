@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
   if (p.get("list") === "1") {
     const denied = await gate(req, "station");
     if (denied) return denied;
-    return Response.json({ items: listLive() });
+    return Response.json({ items: await listLive() });
   }
   const session = p.get("session") ?? "";
   const role = Role.safeParse(p.get("role") ?? "station");
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
   const denied = await gate(req, role.data);
   if (denied) return denied;
   const after = Number(p.get("after") ?? "-1");
-  return Response.json(read(session, role.data, Number.isFinite(after) ? after : -1));
+  return Response.json(await read(session, role.data, Number.isFinite(after) ? after : -1));
 }
 
 export async function POST(req: NextRequest) {
@@ -52,6 +52,6 @@ export async function POST(req: NextRequest) {
   const { session, from, msg, scenarioId, traineeId } = parsed.data;
   const denied = await gate(req, from);
   if (denied) return denied;
-  const seq = publish(session, from, msg, { scenarioId, traineeId });
+  const seq = await publish(session, from, msg, { scenarioId, traineeId });
   return Response.json({ ok: true, seq });
 }
