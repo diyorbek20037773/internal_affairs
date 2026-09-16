@@ -1,8 +1,8 @@
 import type { Content, Schema } from "@google/genai";
 import { withKeyFailover } from "./keyPool";
 import {
-  GEMINI_MODEL,
   GENERATION_CONFIG,
+  modelFor,
   JSON_GENERATION_CONFIG,
   SAFETY_SETTINGS,
   type JsonProfile,
@@ -22,9 +22,9 @@ export async function* streamChat({
   contents,
   systemInstruction,
 }: StreamChatArgs): AsyncGenerator<string> {
-  const { first, iterator } = await withKeyFailover(async (ai) => {
+  const { first, iterator } = await withKeyFailover(async (ai, _key, ctx) => {
     const response = await ai.models.generateContentStream({
-      model: GEMINI_MODEL,
+      model: modelFor(ctx.overloaded),
       contents,
       config: {
         systemInstruction,
@@ -55,9 +55,9 @@ export async function generateText({
   contents,
   systemInstruction,
 }: StreamChatArgs): Promise<string> {
-  return withKeyFailover(async (ai) => {
+  return withKeyFailover(async (ai, _key, ctx) => {
     const response = await ai.models.generateContent({
-      model: GEMINI_MODEL,
+      model: modelFor(ctx.overloaded),
       contents,
       config: {
         systemInstruction,
@@ -134,9 +134,9 @@ export async function generateJson<T>({
             },
           ];
 
-    const raw = await withKeyFailover(async (ai) => {
+    const raw = await withKeyFailover(async (ai, _key, ctx) => {
       const response = await ai.models.generateContent({
-        model: GEMINI_MODEL,
+        model: modelFor(ctx.overloaded),
         contents: turn,
         config: {
           systemInstruction,

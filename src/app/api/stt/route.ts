@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { aiGuard } from "@/lib/aiGuard";
 import { z } from "zod";
 import { withKeyFailover } from "@/lib/gemini/keyPool";
-import { GEMINI_MODEL } from "@/lib/gemini/config";
+import { modelFor } from "@/lib/gemini/config";
 import { simErrorResponse } from "@/lib/training/apiErrors";
 
 export const runtime = "nodejs";
@@ -40,9 +40,9 @@ export async function POST(req: NextRequest) {
   const prompt = `Bu audio — ichki ishlar xodimining o'quv mashg'ulotidagi nutqi (${lang} tilida). Faqat aytilgan so'zlarni ${lang} tilida aniq transkripsiya qil. Izoh, tarjima, qo'shimcha matn yozma. Agar nutq eshitilmasa yoki tushunarsiz bo'lsa, bo'sh qator qaytar.`;
 
   try {
-    const text = await withKeyFailover(async (ai) => {
+    const text = await withKeyFailover(async (ai, _key, ctx) => {
       const res = await ai.models.generateContent({
-        model: GEMINI_MODEL,
+        model: modelFor(ctx.overloaded),
         contents: [
           {
             role: "user",
