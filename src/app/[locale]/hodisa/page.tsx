@@ -2,11 +2,12 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { IncidentTypeGrid } from "@/components/incident/IncidentTypeGrid";
 
-export default async function HodisaPage({
-  params,
-}: {
-  params: { locale: string };
-}) {
+export default async function HodisaPage(
+  props: {
+    params: Promise<{ locale: string }>;
+  }
+) {
+  const params = await props.params;
   setRequestLocale(params.locale);
   const t = await getTranslations("incident");
 

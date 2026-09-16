@@ -11,6 +11,8 @@ npm run e2e:crawl                              # barcha sahifalar desktop + plan
 npm run e2e:relay                              # TIR relay: soxta poligon (fetch) → BASE, instruktor stansiyasi UI → BASE2 (ikki instans + bitta DATABASE_URL = multi-instance)
 npm run e2e:station                            # TIR instruktor stansiyasi: real 3D poligon (kontekst A) ⇄ stansiya (kontekst B), pauza + ALL STOP
 npm run e2e:report-pdf                         # Instruktor kabineti → o'quvchi hisoboti → /api/report/pdf yuklab olish (uz, ru)
+npm run e2e:auth                               # Xizmat ID + PIN: ro'yxatdan o'tish, oflayn sessiya yuklanishi, instruktor boshqa planshetda (DATABASE_URL + AUTH_SECRET + INSTRUCTOR_BADGES=SH-0001)
+npm run e2e:embed                              # E-O'quv embed bridge: /embed-demo.html → postMessage protokoli (qurilma rejimi — DATABASE_URL'siz server)
 ```
 
 3D testlar headless Chromium bilan `--use-gl=swiftshader` ishlatadi; 2k panoramalar birinchi yuklanishda 40–150 s olishi mumkin.

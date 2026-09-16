@@ -9,11 +9,12 @@ import { NAV_ENTRIES } from "@/components/layout/nav";
 
 const CARD_KEYS = ["inspektor", "hodisa", "ishlarim", "qonunchilik", "guide"] as const;
 
-export default async function DashboardPage({
-  params,
-}: {
-  params: { locale: string };
-}) {
+export default async function DashboardPage(
+  props: {
+    params: Promise<{ locale: string }>;
+  }
+) {
+  const params = await props.params;
   setRequestLocale(params.locale);
   const t = await getTranslations("dashboard");
   const tc = await getTranslations("dashboard.cards");

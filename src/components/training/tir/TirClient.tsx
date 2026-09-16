@@ -450,7 +450,7 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
         {shockFx && (
           <div className="pointer-events-none absolute inset-x-0 top-1/3 flex justify-center">
             <p className="flex items-center gap-2 rounded-lg bg-destructive px-4 py-2 text-lg font-black uppercase tracking-wider text-white shadow-lg animate-pulse">
-              <Zap className="h-6 w-6" /> {t("shock")}
+              <Zap className="h-6 w-6" /> {t("shockHit")}
             </p>
           </div>
         )}

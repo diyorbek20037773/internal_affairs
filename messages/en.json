@@ -729,6 +729,7 @@
         "down": "Down",
         "calm": "Calm"
       },
+      "shockHit": "SHOCK — OFFICER HIT",
       "shock": {
         "title": "Shock belt (output)",
         "enabled": "Enabled",

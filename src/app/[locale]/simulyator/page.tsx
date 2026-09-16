@@ -6,7 +6,8 @@ import { ProfileGate } from "@/components/training/profile/ProfileGate";
 import { validateScenarioGraph } from "@/data/scenarios";
 import { ModelBanner } from "@/components/training/ModelBanner";
 
-export default async function SimulyatorPage({ params }: { params: { locale: string } }) {
+export default async function SimulyatorPage(props: { params: Promise<{ locale: string }> }) {
+  const params = await props.params;
   setRequestLocale(params.locale);
   const t = await getTranslations("sim.hub");
   const problems = process.env.NODE_ENV !== "production" ? validateScenarioGraph() : [];

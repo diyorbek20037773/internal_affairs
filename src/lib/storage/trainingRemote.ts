@@ -159,9 +159,17 @@ export const remoteAuth = {
     }
     return meProbe;
   },
-  login: (badgeId: string, pin: string) =>
-    authCall<{ profile?: TraineeProfile | null; error?: string }>("/api/auth/login", { badgeId, pin }),
-  register: (input: { badgeId: string; pin: string; name: string; rank: string; district: string }) =>
-    authCall<{ profile?: TraineeProfile; error?: string }>("/api/auth/register", input),
-  logout: () => authCall<{ ok: boolean }>("/api/auth/logout", {}),
+  // Login state changes → drop the shared /me answer, or a refresh right after would read the stale one.
+  login: (badgeId: string, pin: string) => {
+    meProbe = null;
+    return authCall<{ profile?: TraineeProfile | null; error?: string }>("/api/auth/login", { badgeId, pin }).finally(() => { meProbe = null; });
+  },
+  register: (input: { badgeId: string; pin: string; name: string; rank: string; district: string }) => {
+    meProbe = null;
+    return authCall<{ profile?: TraineeProfile; error?: string }>("/api/auth/register", input).finally(() => { meProbe = null; });
+  },
+  logout: () => {
+    meProbe = null;
+    return authCall<{ ok: boolean }>("/api/auth/logout", {}).finally(() => { meProbe = null; });
+  },
 };

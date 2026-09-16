@@ -10,13 +10,14 @@ export function generateStaticParams() {
   return routing.locales.flatMap((locale) => TIR_SCENARIOS.map((s) => ({ locale, scenarioId: s.id })));
 }
 
-export default function TirScenarioPage({
-  params,
-  searchParams,
-}: {
-  params: { locale: string; scenarioId: string };
-  searchParams: { session?: string; exam?: string; stage?: string };
-}) {
+export default async function TirScenarioPage(
+  props: {
+    params: Promise<{ locale: string; scenarioId: string }>;
+    searchParams: Promise<{ session?: string; exam?: string; stage?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   setRequestLocale(params.locale);
   const scenario = getTirScenario(params.scenarioId);
   if (!scenario) notFound();

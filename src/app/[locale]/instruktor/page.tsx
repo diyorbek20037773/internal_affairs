@@ -2,7 +2,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { InstructorClient } from "@/components/training/instructor/InstructorClient";
 
-export default async function InstruktorPage({ params }: { params: { locale: string } }) {
+export default async function InstruktorPage(props: { params: Promise<{ locale: string }> }) {
+  const params = await props.params;
   setRequestLocale(params.locale);
   const t = await getTranslations("sim.instructor");
   return (

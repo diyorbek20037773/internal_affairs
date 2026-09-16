@@ -6,13 +6,14 @@ import { LiveRanges } from "@/components/training/tir/LiveRanges";
 
 export const dynamic = "force-dynamic";
 
-export default async function TirInstructorPage({
-  params,
-  searchParams,
-}: {
-  params: { locale: string };
-  searchParams: { session?: string; scenario?: string };
-}) {
+export default async function TirInstructorPage(
+  props: {
+    params: Promise<{ locale: string }>;
+    searchParams: Promise<{ session?: string; scenario?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   setRequestLocale(params.locale);
   const t = await getTranslations("sim.tir");
   return (

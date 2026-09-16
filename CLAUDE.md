@@ -1,6 +1,6 @@
 # HIMOYA-360 — Claude working rules
 
-**What:** scenario-based simulation training platform for IIV (MoI Uzbekistan) officers. "Mening Inspektorim" is a module inside it. Next.js 14 App Router + TS + Tailwind, next-intl (uz/ru/en), Gemini (`@google/genai`), Three.js/r3f for the TIR range.
+**What:** scenario-based simulation training platform for IIV (MoI Uzbekistan) officers. "Mening Inspektorim" is a module inside it. Next.js 15 App Router (React 19) + TS + Tailwind, next-intl 4 (uz/ru/en), Gemini (`@google/genai`), Three.js/r3f 9 + drei 10 for the TIR range (three pinned 0.160 / postprocessing 6.36 — newer postprocessing needs three ≥0.168).
 
 **Live:** https://internalaffairs-production.up.railway.app (Railway, deploy-on-push from `main`, `GEMINI_API_KEYS` set there; no local `.env`).
 

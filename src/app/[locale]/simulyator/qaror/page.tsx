@@ -3,7 +3,8 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { ScenarioGrid } from "@/components/training/ScenarioGrid";
 import { DECISION_SCENARIOS } from "@/data/scenarios/decision";
 
-export default async function QarorPage({ params }: { params: { locale: string } }) {
+export default async function QarorPage(props: { params: Promise<{ locale: string }> }) {
+  const params = await props.params;
   setRequestLocale(params.locale);
   const t = await getTranslations("sim.hub");
   return (

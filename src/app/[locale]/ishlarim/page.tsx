@@ -2,11 +2,12 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { CasesList } from "@/components/cases/CasesList";
 
-export default async function IshlarimPage({
-  params,
-}: {
-  params: { locale: string };
-}) {
+export default async function IshlarimPage(
+  props: {
+    params: Promise<{ locale: string }>;
+  }
+) {
+  const params = await props.params;
   setRequestLocale(params.locale);
   const t = await getTranslations("cases");
 

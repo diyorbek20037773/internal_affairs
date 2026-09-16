@@ -2,7 +2,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ProfileForm } from "@/components/training/profile/ProfileForm";
 
-export default async function ProfilPage({ params }: { params: { locale: string } }) {
+export default async function ProfilPage(props: { params: Promise<{ locale: string }> }) {
+  const params = await props.params;
   setRequestLocale(params.locale);
   const t = await getTranslations("sim.profile");
   return (

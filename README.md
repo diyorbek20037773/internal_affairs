@@ -58,7 +58,7 @@ AI raqamli yordamchi — O'zbekiston Respublikasi Ichki ishlar organlari **profi
 
 ## Texnologiya
 
-Next.js 14 (App Router) · TypeScript · Tailwind CSS · shadcn/ui uslubi · `@google/genai` · `next-intl` · `next-themes` · `zod`.
+Next.js 15 (App Router, React 19) · TypeScript · Tailwind CSS · shadcn/ui uslubi · `@google/genai` · `next-intl` · `next-themes` · `zod`.
 
 ## Ishga tushirish (lokal)
 

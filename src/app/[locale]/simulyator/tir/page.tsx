@@ -3,7 +3,8 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { ScenarioGrid } from "@/components/training/ScenarioGrid";
 import { TIR_SCENARIOS } from "@/data/scenarios/tir";
 
-export default async function TirPage({ params }: { params: { locale: string } }) {
+export default async function TirPage(props: { params: Promise<{ locale: string }> }) {
+  const params = await props.params;
   setRequestLocale(params.locale);
   const t = await getTranslations("sim.hub");
   return (

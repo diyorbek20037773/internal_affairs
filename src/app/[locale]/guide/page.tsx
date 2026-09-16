@@ -6,7 +6,8 @@ const TRAINEE_STEPS = ["one", "two", "three", "four", "five", "six"] as const;
 const INSTRUCTOR_STEPS = ["one", "two", "three", "four"] as const;
 const MODULE_STEPS = ["one", "two", "three"] as const;
 
-export default async function GuidePage({ params }: { params: { locale: string } }) {
+export default async function GuidePage(props: { params: Promise<{ locale: string }> }) {
+  const params = await props.params;
   setRequestLocale(params.locale);
   const t = await getTranslations("guide");
 

@@ -3,7 +3,8 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { ScenarioGrid } from "@/components/training/ScenarioGrid";
 import { DIALOG_SCENARIOS } from "@/data/scenarios/dialog";
 
-export default async function MuloqotPage({ params }: { params: { locale: string } }) {
+export default async function MuloqotPage(props: { params: Promise<{ locale: string }> }) {
+  const params = await props.params;
   setRequestLocale(params.locale);
   const t = await getTranslations("sim.hub");
   return (

@@ -3,7 +3,8 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { ScenarioGrid } from "@/components/training/ScenarioGrid";
 import { DOCUMENT_SCENARIOS } from "@/data/scenarios/document";
 
-export default async function HujjatPage({ params }: { params: { locale: string } }) {
+export default async function HujjatPage(props: { params: Promise<{ locale: string }> }) {
+  const params = await props.params;
   setRequestLocale(params.locale);
   const t = await getTranslations("sim.hub");
   return (

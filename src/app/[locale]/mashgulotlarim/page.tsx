@@ -2,7 +2,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SessionsClient } from "@/components/training/SessionsClient";
 
-export default async function MashgulotlarimPage({ params }: { params: { locale: string } }) {
+export default async function MashgulotlarimPage(props: { params: Promise<{ locale: string }> }) {
+  const params = await props.params;
   setRequestLocale(params.locale);
   const t = await getTranslations("sim.sessions");
   return (

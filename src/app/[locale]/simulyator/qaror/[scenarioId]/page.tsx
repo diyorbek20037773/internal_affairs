@@ -11,13 +11,14 @@ export function generateStaticParams() {
   );
 }
 
-export default function QarorScenarioPage({
-  params,
-  searchParams,
-}: {
-  params: { locale: string; scenarioId: string };
-  searchParams: { session?: string; exam?: string; stage?: string };
-}) {
+export default async function QarorScenarioPage(
+  props: {
+    params: Promise<{ locale: string; scenarioId: string }>;
+    searchParams: Promise<{ session?: string; exam?: string; stage?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   setRequestLocale(params.locale);
   const scenario = getDecisionScenario(params.scenarioId);
   if (!scenario) notFound();

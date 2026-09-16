@@ -29,7 +29,7 @@
 6. 3 языка UI: uz (по умолчанию) / ru / en.
 
 ## 4. Техническая архитектура
-- Next.js 14 App Router, TypeScript, Tailwind, shadcn-стиль UI, next-intl, next-themes.
+- Next.js 15 App Router (React 19), TypeScript, Tailwind, shadcn-стиль UI, next-intl, next-themes.
 - AI: Gemini (`@google/genai`), пул ключей с ротацией и failover; `generateJson()` — JSON mode + zod + 1 repair-retry. Контракт ошибок: `no_keys_configured` 500 / `ai_unavailable` 503 / `bad_ai_output` 502.
 - API: `/api/chat`, `/api/legal`, `/api/tts`, `/api/stt`, `/api/sim/{dialog,debrief,mahalla-grade,document-check,mentor,exam-summary}`, `/api/health`.
 - Хранение: `TrainingRepo` (async интерфейс) — локальный адаптер (localStorage `h360:*`) и серверный (Postgres, `/api/store/*`), гибрид: пишем локально всегда, на сервер — если доступен. `CasesRepo` (`mi:cases:v1`) — дела модуля «Мой инспектор».

@@ -3,7 +3,8 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { ExamClient } from "@/components/training/exam/ExamClient";
 import { EXAM_SCENARIOS } from "@/data/scenarios";
 
-export default async function ImtihonPage({ params }: { params: { locale: string } }) {
+export default async function ImtihonPage(props: { params: Promise<{ locale: string }> }) {
+  const params = await props.params;
   setRequestLocale(params.locale);
   const t = await getTranslations("sim.exam");
   const exam = EXAM_SCENARIOS[0];

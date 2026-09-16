@@ -6,11 +6,12 @@ import { DebriefView } from "@/components/training/debrief/DebriefView";
 // Session ids live in the browser — this route is always rendered on demand.
 export const dynamic = "force-dynamic";
 
-export default async function DebrifPage({
-  params,
-}: {
-  params: { locale: string; sessionId: string };
-}) {
+export default async function DebrifPage(
+  props: {
+    params: Promise<{ locale: string; sessionId: string }>;
+  }
+) {
+  const params = await props.params;
   setRequestLocale(params.locale);
   const t = await getTranslations("sim.debrief");
   return (

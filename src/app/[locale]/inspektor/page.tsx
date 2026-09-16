@@ -3,13 +3,14 @@ import { InspektorClient } from "@/components/chat/InspektorClient";
 import { KeysBanner } from "@/components/chat/KeysBanner";
 import { INCIDENT_TYPES, type IncidentType } from "@/types/incident";
 
-export default function InspektorPage({
-  params,
-  searchParams,
-}: {
-  params: { locale: string };
-  searchParams: { case?: string; type?: string };
-}) {
+export default async function InspektorPage(
+  props: {
+    params: Promise<{ locale: string }>;
+    searchParams: Promise<{ case?: string; type?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   setRequestLocale(params.locale);
 
   const type =
