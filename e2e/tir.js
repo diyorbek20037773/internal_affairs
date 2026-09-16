@@ -52,7 +52,7 @@ const step = (n, ok, note = "") => { results.push(ok); console.log(`${ok ? "PASS
 
   // 2) Crowd: talk calm repeatedly (should NOT shoot); verify hostage + bystanders rendered and outcome verbal/timeout
   await open("tir-olomon-pichoq");
-  await page.screenshot({ path: `${OUT}/tir2-2-crowd.png` });
+  // no screenshot here: at ~1 fps a full-page capture takes >10 s and the unattended suspect lunges
   for (let i = 0; i < 30 && !(await ended()); i++) await press(String((i % 2) + 1), 3000);
   await page.waitForFunction(() => /Kuch ishlatmasdan|Vaqt tugadi/.test(document.body.innerText), null, { timeout: 15000 }).catch(() => {});
   step("Crowd: resolved without shooting", await bodyHas(/Kuch ishlatmasdan|Vaqt tugadi/), (await page.locator("body").innerText()).match(/Kuch ishlatmasdan[^\n]*|Vaqt tugadi[^\n]*|Nomutanosib[^\n]*|otildi[^\n]*/)?.[0] ?? "no end");

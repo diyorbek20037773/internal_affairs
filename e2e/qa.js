@@ -128,7 +128,8 @@ const step = (name, ok, note = "") => {
 
   // 6. Mashg'ulotlarim + HIMOYA-ID + KPI
   await page.goto(`${B}/uz/mashgulotlarim`, { waitUntil: "domcontentloaded" });
-  await page.waitForTimeout(800);
+  await page.waitForFunction(() => document.body.innerText.includes("Kuchli tomonlar") || document.body.innerText.includes("Profil hali shakllanmagan"), null, { timeout: 20000 }).catch(() => {});
+  await page.waitForTimeout(500);
   step("HIMOYA-ID radar (tasdiqlangan)", (await page.getByText("Kuchli tomonlar").count()) > 0);
   step("Amaliy xizmat KPI kartasi", (await page.getByText(/Amaliy xizmat/).count()) > 0);
   step("Sessiyalar ro'yxati ≥ 4", (await page.getByRole("button", { name: "Ochish" }).count()) >= 4);
@@ -136,7 +137,8 @@ const step = (name, ok, note = "") => {
 
   // 7. Instruktor + imtihon
   await page.goto(`${B}/uz/instruktor`, { waitUntil: "domcontentloaded" });
-  await page.waitForTimeout(600);
+  await page.waitForFunction(() => document.body.innerText.includes("Tasdiq kutayotgan debriflar"), null, { timeout: 20000 }).catch(() => {});
+  await page.waitForTimeout(300);
   step("Instruktor: tasdiq kutayotganlar", (await page.getByText("Tasdiq kutayotgan debriflar").count()) > 0);
   await shot("09-instruktor");
   await page.goto(`${B}/uz/simulyator/imtihon`, { waitUntil: "domcontentloaded" });
