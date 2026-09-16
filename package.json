@@ -15,7 +15,10 @@
     "e2e:tir": "node e2e/tir.js",
     "e2e:fps": "node e2e/fps.js",
     "e2e:crawl": "node e2e/crawl.js",
-    "e2e:dialog": "node e2e/dialog.js"
+    "e2e:dialog": "node e2e/dialog.js",
+    "e2e:relay": "node e2e/relay.js",
+    "e2e:station": "node e2e/station.js",
+    "e2e:report-pdf": "node e2e/report-pdf.js"
   },
   "dependencies": {
     "@google/genai": "^1.9.0",
