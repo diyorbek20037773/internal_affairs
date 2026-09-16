@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Printer, X } from "lucide-react";
+import { FileDown, Printer, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,11 +13,13 @@ import { COMPETENCIES, COMPETENCY_LABELS } from "@/data/scenarios/competencies";
 import { localized } from "@/data/sops/types";
 import { formatDate } from "@/lib/utils";
 import { avgScore } from "./cabinetFilters";
+import type { ReportDoc } from "@/lib/pdf/traineeReport";
 
 /**
- * Printable trainee report (HIMOYA-ID + sessions + exam sign-offs). "PDF" =
- * the browser's print dialog: `@media print` in globals.css keeps only
- * `#h360-print` on the page, so Save-as-PDF on the tablet yields a clean sheet.
+ * Printable trainee report (HIMOYA-ID + sessions + exam sign-offs). Two ways
+ * out: the browser's print dialog (`@media print` in globals.css keeps only
+ * `#h360-print` on the page) and a real PDF from `/api/report/pdf` — the
+ * component sends its already-localised rows, the server lays them out.
  */
 export function TraineeReport({
   profile,
@@ -40,13 +44,78 @@ export function TraineeReport({
   const completed = sessions.filter((s) => s.status === "completed");
   const confirmed = completed.filter((s) => s.debrief?.status === "confirmed");
   const avg = himoyaId ? Math.round(COMPETENCIES.reduce((a, c) => a + himoyaId.scores[c], 0) / COMPETENCIES.length) : null;
+  const [busy, setBusy] = useState(false);
+
+  const buildDoc = (): ReportDoc => ({
+    locale: (["uz", "ru", "en"].includes(locale) ? locale : "uz") as ReportDoc["locale"],
+    labels: {
+      title: t("title"), generated: t("generated"), instructor: t("instructor"), trainee: t("trainee"),
+      exams: ti("exams"), sessions: ti("allSessions"), date: ti("date"), scenario: ti("scenario"), score: ti("score"), debrief: t("debrief"),
+      confirmed: ti("signed"), provisional: ti("awaitingSignoff"),
+    },
+    trainee: {
+      name: profile?.name ?? traineeId,
+      badge: profile?.badgeId ?? "",
+      meta: [profile?.rank, profile?.district].filter(Boolean).join(" · "),
+    },
+    generatedAt: formatDate(new Date().toISOString(), locale),
+    instructorName,
+    himoya: {
+      avg,
+      rows: COMPETENCIES.map((c) => ({ label: localized(COMPETENCY_LABELS[c], locale), value: himoyaId && (himoyaId.samples[c] ?? 0) > 0 ? himoyaId.scores[c] : null })),
+    },
+    summary: t("summary", { total: completed.length, confirmed: confirmed.length }),
+    exams: signoffs.slice(0, 50).map((x) => {
+      const ex = getExamScenario(x.examId.split("~")[0]);
+      return {
+        title: ex ? localized(ex.title, locale) : x.examId,
+        verdict: ti(`verdict.${x.verdict}`),
+        tone: x.verdict === "passed" ? "ok" : x.verdict === "failed" ? "bad" : "neutral",
+        date: formatDate(x.updatedAt, locale),
+        by: x.signedByName || x.signedBy.slice(0, 8),
+        note: x.note || undefined,
+      };
+    }),
+    sessions: completed.slice(0, 200).map((s) => {
+      const sc = getScenario(s.scenarioId);
+      return {
+        date: formatDate(s.endedAt ?? s.updatedAt, locale),
+        scenario: sc ? `${sc.code} — ${localized(sc.title, locale)}` : s.scenarioId,
+        score: String(avgScore(s) ?? "—"),
+        debrief: s.debrief ? (s.debrief.status === "confirmed" ? "✓" : "…") : "—",
+      };
+    }),
+  });
+
+  const downloadPdf = async () => {
+    setBusy(true);
+    try {
+      const r = await fetch("/api/report/pdf", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(buildDoc()) });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `himoya360-${(profile?.badgeId ?? traineeId).replace(/[^\w-]+/g, "_")}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch (e) {
+      console.error("[report/pdf]", e);
+      toast.error(t("pdfFailed"));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <Card className="space-y-4 p-4 print:border-0 print:p-0 print:shadow-none" id="h360-print" data-testid="trainee-report">
       <div className="flex items-start justify-between gap-3 print:hidden">
         <h3 className="text-lg font-bold tracking-tight">{t("title")}</h3>
         <div className="flex gap-2">
-          <Button size="sm" variant="accent" onClick={() => window.print()} data-testid="report-print"><Printer className="mr-1 h-4 w-4" /> {t("print")}</Button>
+          <Button size="sm" variant="accent" onClick={downloadPdf} disabled={busy} data-testid="report-pdf"><FileDown className="mr-1 h-4 w-4" /> {t("download")}</Button>
+          <Button size="sm" variant="outline" onClick={() => window.print()} data-testid="report-print"><Printer className="mr-1 h-4 w-4" /> {t("print")}</Button>
           <Button size="icon" variant="ghost" className="h-9 w-9" onClick={onClose} aria-label={ti("close")}><X className="h-4 w-4" /></Button>
         </div>
       </div>

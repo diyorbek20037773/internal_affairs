@@ -13,6 +13,8 @@ const nextConfig = {
   reactStrictMode: true,
   // Separate build dir for a side-by-side dev/test server (`NEXT_DIST_DIR=.next-dev`).
   distDir: process.env.NEXT_DIST_DIR || ".next",
+  // pdfkit reads its font metrics from disk; keep it out of the webpack bundle.
+  experimental: { serverComponentsExternalPackages: ["pdfkit"] },
   async headers() {
     return [
       {

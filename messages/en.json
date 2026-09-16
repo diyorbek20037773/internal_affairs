@@ -535,7 +535,9 @@
         "instructor": "Instructor",
         "trainee": "Trainee",
         "summary": "{total} completed sessions, {confirmed} confirmed by an instructor.",
-        "debrief": "Debrief"
+        "debrief": "Debrief",
+        "download": "Download PDF",
+        "pdfFailed": "Could not build the PDF. Try again."
       }
     },
     "auth": {

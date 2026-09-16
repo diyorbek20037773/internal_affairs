@@ -535,7 +535,9 @@
         "instructor": "Instruktor",
         "trainee": "O'quvchi",
         "summary": "{total} ta yakunlangan mashg'ulot, {confirmed} tasi instruktor tasdiqlagan.",
-        "debrief": "Debrif"
+        "debrief": "Debrif",
+        "download": "PDF yuklab olish",
+        "pdfFailed": "PDF tayyorlab bo‘lmadi. Qayta urinib ko‘ring."
       }
     },
     "auth": {
