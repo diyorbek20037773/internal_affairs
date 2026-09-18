@@ -158,6 +158,60 @@ export interface DecisionOption {
   outcome?: DecisionOutcome;
 }
 
+/** Rubric line for AI-graded free-response tasks (voice / text). */
+export interface TaskRubricItem {
+  id: string;
+  text: LocalizedText;
+}
+
+/** Score-driven edge out of a non-choice task: first branch with score >= minScore wins. */
+export interface TaskBranch {
+  minScore: Score03;
+  next: string | null;
+  outcome?: DecisionOutcome;
+  consequence: LocalizedText;
+}
+
+export interface ScanHotspot {
+  id: string;
+  /** Centre in % of the scene box. */
+  x: number;
+  y: number;
+  label: LocalizedText;
+  /** true = real risk the officer must notice; false = distractor. */
+  hazard: boolean;
+  /** Why it matters — shown after the scan. */
+  note?: LocalizedText;
+}
+
+export interface OrderItem {
+  id: string;
+  text: LocalizedText;
+}
+
+interface ScoredTaskBase {
+  /** Instruction shown above the task. */
+  prompt: LocalizedText;
+  competencies: Competency[];
+  branches: TaskBranch[];
+}
+
+export type DecisionTask =
+  | { kind: "choice"; options: DecisionOption[] }
+  | (ScoredTaskBase & {
+      kind: "voice" | "text";
+      /** Who the officer is addressing (voice) or what document part (text). */
+      addressee?: LocalizedText;
+      rubric: TaskRubricItem[];
+      minWords: number;
+      /** A model answer, shown after grading. */
+      sample: LocalizedText;
+    })
+  | (ScoredTaskBase & { kind: "scan"; scene: string; hotspots: ScanHotspot[] })
+  | (ScoredTaskBase & { kind: "order"; items: OrderItem[]; answer: string[] });
+
+export type DecisionTaskKind = DecisionTask["kind"];
+
 export interface DecisionNode {
   id: string;
   situation: LocalizedText;
@@ -166,7 +220,7 @@ export interface DecisionNode {
   /** Node to jump to when timer expires; null = treat as terminal fail. */
   onTimeout?: string | null;
   chainPrompt?: ChainPrompt;
-  options: DecisionOption[];
+  task: DecisionTask;
 }
 
 export interface DecisionScenario extends ScenarioBase {
@@ -182,6 +236,20 @@ export interface DecisionStep {
   optionId: string | null;
   elapsedMs: number;
   timedOut: boolean;
+  task?: DecisionTaskKind;
+  /** 0–3 for non-choice tasks. */
+  score?: number;
+  /** Transcript / written text. */
+  response?: string;
+  /** Scan: tapped hotspot ids; order: ids in the chosen order. */
+  picks?: string[];
+  /** Scan: taps that hit nothing. */
+  misses?: number;
+  /** Voice/text: rubric id → met. */
+  rubric?: Record<string, boolean>;
+  feedback?: string;
+  /** AI grading unavailable — neutral score, instructor reviews. */
+  ungraded?: boolean;
 }
 
 /* ------------------------------------------------------------------------ */

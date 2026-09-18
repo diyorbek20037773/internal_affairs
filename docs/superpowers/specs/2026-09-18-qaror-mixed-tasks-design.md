@@ -30,7 +30,7 @@ Non-choice tasks carry `competencies`, and `branches: {minScore, next, outcome?,
 `DecisionStepSchema` gains optional `task`, `score` (0–3), `response` (text/transcript), `picks` (scan/order ids), `rubric` (id → met), `feedback`, `ungraded`. Old sessions still parse.
 
 ### Grading route
-`POST /api/sim/task-grade {scenarioId, nodeId, response, locale}` — rubric taken from server-side scenario data, `generateJson()` returns per-item `met` + `violation` (insult/threat/unlawful promise) + feedback + strength. Server computes score = round(3 × coverage), violation caps at 1, below `minWords` caps at 1. Error contract unchanged (500/503/502). On AI failure the client offers **Retry** or **Continue ungraded** (score 1 → middle branch, `ungraded: true`, visible to instructor).
+`POST /api/sim/task-grade {scenarioId, nodeId, response, locale}` — rubric taken from server-side scenario data, `generateJson()` returns per-item `met` + `violation` (insult/threat/unlawful promise) + feedback + strength. Server computes score = round(3 × coverage), violation caps at 1, below `minWords` caps at 1. Error contract unchanged (500/503/502). On AI failure the client offers **Retry** or **Continue ungraded** (branches as score 2 — an outage must not steer the story against the trainee; `ungraded: true` steps are left out of competency scoring and flagged for the instructor).
 
 ### Scoring
 `decisionDeterministic`: choice steps as before; task steps add `score/3×100` into each of their competencies; means per competency; `natijadorlik` from outcome.

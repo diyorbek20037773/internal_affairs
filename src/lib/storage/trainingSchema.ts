@@ -66,6 +66,14 @@ export const DecisionStepSchema = z.object({
   optionId: z.string().nullable(),
   elapsedMs: z.number(),
   timedOut: z.boolean(),
+  task: z.enum(["choice", "voice", "text", "scan", "order"]).optional(),
+  score: z.number().min(0).max(3).optional(),
+  response: z.string().max(8000).optional(),
+  picks: z.array(z.string()).optional(),
+  misses: z.number().int().min(0).optional(),
+  rubric: z.record(z.string(), z.boolean()).optional(),
+  feedback: z.string().max(2000).optional(),
+  ungraded: z.boolean().optional(),
 });
 
 /* ---------- mahalla ---------- */

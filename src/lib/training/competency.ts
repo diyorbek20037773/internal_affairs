@@ -61,27 +61,44 @@ export function decisionDeterministic(
 ): Partial<CompetencyScores> {
   const legal: number[] = [];
   const prop: number[] = [];
+  const byComp = new Map<Competency, number[]>();
+  const add = (c: Competency, v: number) => byComp.set(c, [...(byComp.get(c) ?? []), v]);
   for (const step of payload.path) {
     const node = scenario.nodes[step.nodeId];
     if (!node) continue;
+    const task = node.task;
+    if (task.kind !== "choice") {
+      // Ungraded (AI was down) → the instructor scores it; it moves nothing here.
+      if (step.ungraded) continue;
+      // Scan / order / voice / text: the 0–3 score feeds the task's own competencies.
+      const v = step.timedOut ? 0 : ((step.score ?? 0) / 3) * 100;
+      for (const c of task.competencies) add(c, v);
+      continue;
+    }
     if (step.timedOut || !step.optionId) {
       // Speed is never graded; a timeout only says the situation was not assessed.
       prop.push(0);
       continue;
     }
-    const opt = node.options.find((o) => o.id === step.optionId);
+    const opt = task.options.find((o) => o.id === step.optionId);
     if (!opt) continue;
     legal.push(opt.legality);
     prop.push(opt.proportionality);
   }
   const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
-  const huquqiy_qaror = clampScore((mean(legal) / 3) * 100);
-  const vaziyat_tahlili = clampScore((mean(prop) / 3) * 100);
-  const natijadorlik =
-    payload.outcome === "success" ? 100 : payload.outcome === "partial" ? 55 : 10;
-  // De-escalation credit: never chose an option with proportionality 0.
-  const deeskalatsiya = clampScore(100 - prop.filter((p) => p === 0).length * 35);
-  return { huquqiy_qaror, vaziyat_tahlili, natijadorlik, deeskalatsiya };
+  const out: Partial<CompetencyScores> = {};
+  for (const [c, vs] of byComp) out[c] = clampScore(mean(vs));
+  const blend = (c: Competency, v: number) => {
+    out[c] = out[c] == null ? clampScore(v) : clampScore((out[c]! + v) / 2);
+  };
+  if (legal.length) blend("huquqiy_qaror", (mean(legal) / 3) * 100);
+  if (prop.length) {
+    blend("vaziyat_tahlili", (mean(prop) / 3) * 100);
+    // De-escalation credit: never chose an option with proportionality 0.
+    blend("deeskalatsiya", 100 - prop.filter((p) => p === 0).length * 35);
+  }
+  out.natijadorlik = payload.outcome === "success" ? 100 : payload.outcome === "partial" ? 55 : 10;
+  return out;
 }
 
 /** 3 pts exact position, 1 pt present in top-3 but wrong slot; max 9. */

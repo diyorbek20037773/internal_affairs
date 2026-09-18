@@ -65,12 +65,20 @@ export function TranscriptView({ session }: { session: TrainingSession }) {
         <ol className="space-y-3 text-sm">
           {p.path.map((st, i) => {
             const node = scenario.nodes[st.nodeId];
-            const opt = st.optionId ? node?.options.find((o) => o.id === st.optionId) : undefined;
+            const opt = st.optionId && node?.task.kind === "choice" ? node.task.options.find((o) => o.id === st.optionId) : undefined;
+            const scored = node && node.task.kind !== "choice" ? node.task : undefined;
             return (
               <li key={i} className="rounded-lg border p-3">
                 <div className="mb-1 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
                   <span className="font-mono">node:{st.nodeId}</span>
                   {node?.chainPrompt && <Badge variant="outline" className="text-[10px]">{tq(`chain.${node.chainPrompt}`)}</Badge>}
+                  {node && <Badge variant="outline" className="text-[10px]">{tq(`task.${node.task.kind}.label`)}</Badge>}
+                  {scored && !st.timedOut && st.score != null && (
+                    <Badge variant={st.score >= 3 ? "success" : st.score >= 2 ? "secondary" : "destructive"} className="text-[10px]">
+                      {tq("score")} {st.score}/3
+                    </Badge>
+                  )}
+                  {st.ungraded && <Badge variant="accent" className="text-[10px]">{tq("ungraded")}</Badge>}
                   {st.timedOut ? (
                     <Badge variant="destructive" className="text-[10px]">{tq("timeout")}</Badge>
                   ) : opt ? (
@@ -87,6 +95,18 @@ export function TranscriptView({ session }: { session: TrainingSession }) {
                 {node && <p className="text-muted-foreground">{localized(node.situation, locale)}</p>}
                 {opt && <p className="mt-1 font-medium">→ {localized(opt.text, locale)}</p>}
                 {opt && <p className="mt-1 text-xs text-muted-foreground">{tq("consequence")}: {localized(opt.consequence, locale)}</p>}
+                {scored && st.response && <p className="mt-1 whitespace-pre-wrap font-medium">«{st.response}»</p>}
+                {scored && st.picks && st.picks.length > 0 && (scored.kind === "scan" || scored.kind === "order") && (
+                  <p className="mt-1 font-medium">
+                    → {st.picks
+                      .map((id) => {
+                        const it = scored.kind === "scan" ? scored.hotspots.find((h) => h.id === id)?.label : scored.items.find((x) => x.id === id)?.text;
+                        return it ? localized(it, locale) : id;
+                      })
+                      .join(scored.kind === "order" ? " → " : " · ")}
+                  </p>
+                )}
+                {scored && st.feedback && <p className="mt-1 text-xs text-muted-foreground">{st.feedback}</p>}
               </li>
             );
           })}

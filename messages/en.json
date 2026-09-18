@@ -284,7 +284,7 @@
       },
       "decision": {
         "title": "Decision simulator",
-        "desc": "Scenario situation: assess threat, choose a proportionate response. Not speed — legality."
+        "desc": "One call, different tasks: read the scene, speak, write, set priorities, decide fast."
       },
       "mahalla": {
         "title": "Smart Mahalla",
@@ -378,8 +378,58 @@
         "partial": "Partially correct",
         "fail": "Failed outcome"
       },
-      "hint": "Speed is not graded — legality and proportionality are. «Correctly not shooting» is also top marks.",
-      "chainTitle": "Decision chain"
+      "hint": "What's graded is not speed but whether the decision is lawful and proportionate, and how you speak and write.",
+      "chainTitle": "Decision chain",
+      "task": {
+        "choice": {
+          "label": "Fast decision"
+        },
+        "scan": {
+          "label": "Scene analysis",
+          "finish": "Finish analysis",
+          "marks": "Marks: {n}",
+          "clear": "Clear",
+          "found": "Found",
+          "missed": "Missed",
+          "falseAlarm": "Extra marks: {n}",
+          "distractor": "Not a risk"
+        },
+        "order": {
+          "label": "Priorities",
+          "reset": "Start over",
+          "submit": "Confirm order",
+          "yourOrder": "Your order",
+          "correctOrder": "Correct order"
+        },
+        "voice": {
+          "label": "Spoken answer",
+          "record": "Speak",
+          "stop": "Stop",
+          "processing": "Transcribing…",
+          "placeholder": "Speak and the text appears here. Correct it or type if needed.",
+          "noMic": "No microphone available, so type your answer.",
+          "submit": "Send answer"
+        },
+        "text": {
+          "label": "Written task",
+          "placeholder": "Write here…",
+          "submit": "Submit"
+        }
+      },
+      "words": "{n} words (at least {min})",
+      "score": "Score",
+      "grading": "AI is grading your answer…",
+      "gradeFailed": "AI can't grade right now.",
+      "retry": "Retry",
+      "skipUngraded": "Continue ungraded",
+      "ungraded": "Instructor will grade",
+      "rubricTitle": "Criteria",
+      "sample": "Model answer",
+      "strength": "Strength",
+      "violation": "Serious error: insult, threat or unlawful statement",
+      "tooShort": "Answer too short",
+      "steps": "Tasks",
+      "addressee": "To"
     },
     "mahalla": {
       "title": "Smart Mahalla",

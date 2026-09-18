@@ -87,16 +87,47 @@ const step = (name, ok, note = "") => {
   }
 
   // 3. Qaror simulyatori — optimal path
-  await page.goto(`${B}/uz/simulyator/qaror/decision-pichoqli-shaxs`, { waitUntil: "domcontentloaded" });
-  const pick = async (re) => {
-    await page.getByRole("button", { name: re }).first().click();
+  await page.goto(`${B}/uz/simulyator/qaror/decision-uchinchi-qavat`, { waitUntil: "domcontentloaded" });
+  const next = async () => {
     await page.getByRole("button", { name: "Davom etish" }).click();
     await page.waitForTimeout(400);
   };
-  await pick(/8 m masofada to'xtayman/);
-  await pick(/Tushunaman, bu og'ir/);
-  await pick(/men ishonaman/);
-  await pick(/Pichoqni dalil sifatida olaman/);
+  const pick = async (re) => {
+    await page.getByRole("button", { name: re }).first().click();
+    await next();
+  };
+  // Voice/text are graded by Gemini; if it is down, continue ungraded.
+  const answer = async (text, submit) => {
+    await page.getByTestId("task-answer").fill(text);
+    await page.getByRole("button", { name: submit }).click();
+    const done = await Promise.race([
+      page.getByText("Mezonlar").waitFor({ timeout: 90000 }).then(() => "graded"),
+      page.getByText("AI hozir baholay olmadi.").waitFor({ timeout: 90000 }).then(() => "failed"),
+    ]).catch(() => "timeout");
+    if (done === "failed") await page.getByRole("button", { name: "Baholamasdan davom etish" }).click();
+    step(`Qaror: ${submit} → ${done}`, done === "graded");
+    await next();
+  };
+  // 1 scan: tap every hazard
+  const scene = page.getByTestId("scan-scene");
+  await scene.waitFor();
+  const box = await scene.boundingBox();
+  for (const [x, y] of [[50, 48], [57, 45], [46, 88], [38, 82], [12, 30], [86, 50]])
+    await page.mouse.click(box.x + (box.width * x) / 100, box.y + (box.height * y) / 100);
+  await page.getByRole("button", { name: "Tahlilni yakunlash" }).click();
+  step("Qaror: sahna tahlili 3/3", (await page.getByText("Ball 3/3").count()) > 0);
+  await next();
+  await pick(/Politsiya! Hamma koridorga/);
+  await answer("Assalomu alaykum. Men profilaktika inspektori, leytenant Muminov. Bu xonadondan chaqiruv tushdi, shuning uchun keldik. Iltimos, to'xtang va qo'llaringizni ko'rinadigan joyda tuting. Hozir tinch hal qilamiz — sherigim siz bilan, men rafiqangiz bilan alohida gaplashaman.", "Javobni yuborish");
+  if (await page.getByRole("button", { name: /To'xtang! Orqaga!/ }).count()) await pick(/To'xtang! Orqaga!/);
+  for (const re of [/Pichoqni nazoratga olish/, /Tomonlarni alohida/, /jarohatini ko'rish/, /Bolani xotirjam/, /Navbatchi qismga xabar/])
+    await page.getByRole("button", { name: re }).click();
+  await page.getByRole("button", { name: "Tartibni tasdiqlash" }).click();
+  await next();
+  await answer("Madina opa, eringiz boshqa xonada, sherigim u bilan. Hozir siz xavfsizsiz, sizni hech kim ayblamayapti. Nima bo'lganini o'zingiz aytib bera olasizmi? Bilishingiz kerak: himoya orderi bor, shifokor ko'rigini ham tashkil qilamiz. Qaror sizniki, men shu yerdaman.", "Javobni yuborish");
+  await pick(/Yozishni to'xtatib/);
+  await answer("2026-yil 18-sentabr soat 22:10 da «102» orqali qo'shni fuqaroning xabari bo'yicha 3-qavat 12-xonadonga yetib keldik. Xonadonda fuqaro Bobur, rafiqasi Madina va 6 yoshli bola bor edi. Eshik oldida siniq shisha, koridor tokchasida oshxona pichog'i, Madinaning yuzida shish qayd etildi. Tomonlar alohida xonalarga ajratildi, pichoq nazoratga olindi, bola qo'shni nazoratiga berildi, Madina tibbiy ko'rikka yo'llandi. «Xotin-qizlarni tazyiq va zo'ravonlikdan himoya qilish to'g'risida»gi Qonun (O'RQ-561) asosida himoya orderi uchun materiallar tayyorlanmoqda.", "Topshirish");
+  await pick(/Himoya orderi arizasiz ham berilishini/);
   step("Qaror: qonuniy yo'l → success", (await page.getByText("Qonuniy va mutanosib yakun").count()) > 0);
   await shot("05-qaror");
   await page.getByRole("button", { name: /Smart Debrifing/ }).click();

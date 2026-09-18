@@ -6,6 +6,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 interface UseSpeechOptions {
   locale: string;
+  /** Hard cap for one server-STT recording. Default 15 s (a dialog turn). */
+  maxRecordMs?: number;
 }
 
 
@@ -52,7 +54,7 @@ const TTS_LANG: Record<string, string> = {
   en: "en-US",
 };
 
-export function useSpeech({ locale }: UseSpeechOptions) {
+export function useSpeech({ locale, maxRecordMs = 15000 }: UseSpeechOptions) {
   const [sttSupported, setSttSupported] = useState(false);
   const [ttsSupported, setTtsSupported] = useState(false);
   const [listening, setListening] = useState(false);
@@ -134,12 +136,12 @@ export function useSpeech({ locale }: UseSpeechOptions) {
       rec.start();
       setListening(true);
       // hard cap — a talk turn is short
-      window.setTimeout(() => { if (recorderRef.current === rec && rec.state === "recording") rec.stop(); }, 15000);
+      window.setTimeout(() => { if (recorderRef.current === rec && rec.state === "recording") rec.stop(); }, maxRecordMs);
     } catch (err: any) {
       setListening(false);
       setSttError(err?.name === "NotAllowedError" ? "not-allowed" : "start_failed");
     }
-  }, [locale]);
+  }, [locale, maxRecordMs]);
 
   const startListening = useCallback(() => {
     if (sttMode === "server") {

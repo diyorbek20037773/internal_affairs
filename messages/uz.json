@@ -284,7 +284,7 @@
       },
       "decision": {
         "title": "Qaror simulyatori",
-        "desc": "Ssenariyli vaziyat: xavfni baholang, mutanosib chora tanlang. Tezlik emas — qonuniylik."
+        "desc": "Bitta chaqiruv — turli vazifalar: sahnani tahlil qiling, gapiring, yozing, ustuvorlikni belgilang, tez qaror qiling."
       },
       "mahalla": {
         "title": "Smart Mahalla",
@@ -378,8 +378,58 @@
         "partial": "Qisman to'g'ri",
         "fail": "Muvaffaqiyatsiz yakun"
       },
-      "hint": "Baholanadigan narsa tezlik emas — qarorning qonuniyligi va mutanosibligi. «To'g'ri otmaslik» ham a'lo baho.",
-      "chainTitle": "Qaror zanjiri"
+      "hint": "Baholanadigan narsa tezlik emas — qarorning qonuniyligi, mutanosibligi va qanday gapirib, qanday yozganingiz.",
+      "chainTitle": "Qaror zanjiri",
+      "task": {
+        "choice": {
+          "label": "Tezkor qaror"
+        },
+        "scan": {
+          "label": "Sahna tahlili",
+          "finish": "Tahlilni yakunlash",
+          "marks": "Belgilar: {n}",
+          "clear": "Tozalash",
+          "found": "Topildi",
+          "missed": "O'tkazib yuborildi",
+          "falseAlarm": "Ortiqcha belgi: {n}",
+          "distractor": "Xavf emas"
+        },
+        "order": {
+          "label": "Ustuvorlik",
+          "reset": "Qayta boshlash",
+          "submit": "Tartibni tasdiqlash",
+          "yourOrder": "Sizning tartibingiz",
+          "correctOrder": "To'g'ri tartib"
+        },
+        "voice": {
+          "label": "Ovozli javob",
+          "record": "Gapirish",
+          "stop": "To'xtatish",
+          "processing": "Nutq matnga o'girilmoqda…",
+          "placeholder": "Gapiring — matn shu yerda paydo bo'ladi. Kerak bo'lsa tuzatishingiz yoki yozishingiz mumkin.",
+          "noMic": "Mikrofon mavjud emas — javobni yozing.",
+          "submit": "Javobni yuborish"
+        },
+        "text": {
+          "label": "Yozma vazifa",
+          "placeholder": "Shu yerga yozing…",
+          "submit": "Topshirish"
+        }
+      },
+      "words": "{n} so'z (kamida {min})",
+      "score": "Ball",
+      "grading": "AI javobingizni baholamoqda…",
+      "gradeFailed": "AI hozir baholay olmadi.",
+      "retry": "Qayta urinish",
+      "skipUngraded": "Baholamasdan davom etish",
+      "ungraded": "Instruktor baholaydi",
+      "rubricTitle": "Mezonlar",
+      "sample": "Namuna javob",
+      "strength": "Yaxshi tomoni",
+      "violation": "Qo'pol xato: haqorat, tahdid yoki noqonuniy gap",
+      "tooShort": "Javob juda qisqa",
+      "steps": "Vazifalar",
+      "addressee": "Kimga"
     },
     "mahalla": {
       "title": "Smart Mahalla",

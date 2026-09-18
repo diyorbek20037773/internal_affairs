@@ -81,13 +81,29 @@ export function validateScenarioGraph(): string[] {
     for (const node of Object.values(s.nodes)) {
       if (node.onTimeout && !s.nodes[node.onTimeout])
         problems.push(`${s.id}/${node.id}: onTimeout → ${node.onTimeout} missing`);
-      if (node.options.length === 0) problems.push(`${s.id}/${node.id}: no options`);
-      for (const o of node.options) {
-        if (o.next && !s.nodes[o.next])
-          problems.push(`${s.id}/${node.id}/${o.id}: next → ${o.next} missing`);
-        if (o.next === null && !o.outcome)
-          problems.push(`${s.id}/${node.id}/${o.id}: terminal without outcome`);
+      const task = node.task;
+      if (task.kind === "choice") {
+        if (task.options.length === 0) problems.push(`${s.id}/${node.id}: no options`);
+        for (const o of task.options) {
+          if (o.next && !s.nodes[o.next])
+            problems.push(`${s.id}/${node.id}/${o.id}: next → ${o.next} missing`);
+          if (o.next === null && !o.outcome)
+            problems.push(`${s.id}/${node.id}/${o.id}: terminal without outcome`);
+        }
+        continue;
       }
+      if (!task.branches.some((b) => b.minScore === 0))
+        problems.push(`${s.id}/${node.id}: no branch for score 0`);
+      for (const b of task.branches) {
+        if (b.next && !s.nodes[b.next]) problems.push(`${s.id}/${node.id}: branch → ${b.next} missing`);
+        if (b.next === null && !b.outcome) problems.push(`${s.id}/${node.id}: terminal branch without outcome`);
+      }
+      if (task.kind === "order") {
+        const ids = new Set(task.items.map((x) => x.id));
+        for (const id of task.answer) if (!ids.has(id)) problems.push(`${s.id}/${node.id}: answer ${id} not an item`);
+      }
+      if (task.kind === "scan" && !task.hotspots.some((h) => h.hazard))
+        problems.push(`${s.id}/${node.id}: scan without hazards`);
     }
   }
   for (const e of EXAM_SCENARIOS) {

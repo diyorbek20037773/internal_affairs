@@ -1,13 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { DecisionOption, DecisionScenario } from "@/data/scenarios/types";
+import type { DecisionOption, DecisionScenario, TaskBranch } from "@/data/scenarios/types";
 import type { DecisionPayload, TrainingSession } from "@/lib/storage/trainingSchema";
 import { trainingRepo } from "@/lib/storage/training";
 import { touch } from "@/lib/training/sessionFactory";
-import { choose, currentNode, timeout } from "@/lib/training/decisionEngine";
+import { choose, currentNode, submitTask, timeout, type TaskResult } from "@/lib/training/decisionEngine";
 
 const TICK_MS = 250;
+
+export interface GradeExtra {
+  strength?: string;
+  violation?: boolean;
+  tooShort?: boolean;
+}
 
 /**
  * Runs a branching decision scenario with a per-node timer that pauses while
@@ -16,11 +22,21 @@ const TICK_MS = 250;
  */
 export function useDecisionSim(scenario: DecisionScenario, initial: TrainingSession) {
   const [session, setSession] = useState<TrainingSession>(initial);
-  const [pending, setPending] = useState<{ option?: DecisionOption; timedOut: boolean; next: DecisionPayload; finished: boolean } | null>(null);
+  const [pending, setPending] = useState<{
+    option?: DecisionOption;
+    branch?: TaskBranch;
+    result?: TaskResult;
+    /** Grader extras shown on the result card only (not persisted). */
+    extra?: GradeExtra;
+    timedOut: boolean;
+    next: DecisionPayload;
+    finished: boolean;
+  } | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
   const sessionRef = useRef(session);
   sessionRef.current = session;
   const elapsedRef = useRef(0);
+  const nodeStartRef = useRef(Date.now());
   const hiddenRef = useRef(false);
 
   const payload = session.payload as DecisionPayload;
@@ -30,6 +46,7 @@ export function useDecisionSim(scenario: DecisionScenario, initial: TrainingSess
   // Reset timer whenever the node changes.
   useEffect(() => {
     elapsedRef.current = 0;
+    nodeStartRef.current = Date.now();
     setElapsedMs(0);
   }, [node?.id]);
 
@@ -81,6 +98,18 @@ export function useDecisionSim(scenario: DecisionScenario, initial: TrainingSess
     [pending, scenario]
   );
 
+  /** Scan / order / voice / text result → score-driven branch. */
+  const submit = useCallback(
+    (result: TaskResult, extra?: GradeExtra) => {
+      const cur = sessionRef.current;
+      const p = cur.payload as DecisionPayload;
+      if (pending || cur.status !== "in_progress") return;
+      const { payload: next, branch, finished } = submitTask(scenario, p, result, Date.now() - nodeStartRef.current);
+      setPending({ branch, result, extra, timedOut: false, next, finished });
+    },
+    [pending, scenario]
+  );
+
   const proceed = useCallback(async () => {
     if (!pending) return;
     const cur = sessionRef.current;
@@ -108,6 +137,7 @@ export function useDecisionSim(scenario: DecisionScenario, initial: TrainingSess
     remainingSec: timerSec ? Math.max(0, Math.ceil((timerSec * 1000 - elapsedMs) / 1000)) : null,
     pending,
     pick,
+    submit,
     proceed,
     abandon,
     finished: session.status !== "in_progress",

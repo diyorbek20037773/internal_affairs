@@ -122,13 +122,33 @@ export function decisionEvidence(s: DecisionScenario, p: DecisionPayload): strin
   const steps = p.path.map((st, i) => {
     const node = s.nodes[st.nodeId];
     if (!node) return `${i + 1}. node:${st.nodeId} (?)`;
-    const opt = st.optionId ? node.options.find((o) => o.id === st.optionId) : undefined;
-    const alt = node.options
-      .map((o) => `   · option:${o.id} [qonuniylik=${o.legality}/3, mutanosiblik=${o.proportionality}/3]${o.id === st.optionId ? " ← TANLANDI" : ""}: ${o.text.uz}`)
-      .join("\n");
-    return `${i + 1}. node:${node.id}${node.chainPrompt ? ` (${node.chainPrompt})` : ""}: ${node.situation.uz}
+    const head = `${i + 1}. node:${node.id} [vazifa=${node.task.kind}]${node.chainPrompt ? ` (${node.chainPrompt})` : ""}: ${node.situation.uz}`;
+    if (st.timedOut) return `${head}
+   Oqibat: VAQT TUGADI (vaziyat baholanmadi)`;
+    const task = node.task;
+    if (task.kind === "choice") {
+      const opt = st.optionId ? task.options.find((o) => o.id === st.optionId) : undefined;
+      const alt = task.options
+        .map((o) => `   · option:${o.id} [qonuniylik=${o.legality}/3, mutanosiblik=${o.proportionality}/3]${o.id === st.optionId ? " ← TANLANDI" : ""}: ${o.text.uz}`)
+        .join("\n");
+      return `${head}
 ${alt}
-   Oqibat: ${st.timedOut ? "VAQT TUGADI (vaziyat baholanmadi)" : opt?.consequence.uz ?? "-"}`;
+   Oqibat: ${opt?.consequence.uz ?? "-"}`;
+    }
+    const lines = [`${head}`, `   Topshiriq: ${task.prompt.uz}`, `   Tizim bali: ${st.score ?? "-"}/3${st.ungraded ? " (AI baholay olmadi — instruktor ko'rsin)" : ""}`];
+    if (task.kind === "voice" || task.kind === "text") {
+      lines.push(`   Xodim ${task.kind === "voice" ? "aytdi" : "yozdi"}: «${st.response ?? ""}»`);
+      const met = st.rubric ?? {};
+      lines.push(...task.rubric.map((r) => `   · rubric:${r.id} ${met[r.id] ? "✓" : "✗"} ${r.text.uz}`));
+    } else if (task.kind === "scan") {
+      const picked = new Set(st.picks ?? []);
+      lines.push(...task.hotspots.map((h) => `   · ${h.hazard ? "XAVF" : "chalg'ituvchi"} ${h.label.uz}: ${picked.has(h.id) ? "belgiladi" : "belgilamadi"}`));
+    } else if (task.kind === "order") {
+      const name = (id: string) => task.items.find((x) => x.id === id)?.text.uz ?? id;
+      lines.push(`   Xodim tartibi: ${(st.picks ?? []).map(name).join(" → ")}`);
+      lines.push(`   To'g'ri tartib: ${task.answer.map(name).join(" → ")}`);
+    }
+    return lines.join("\n");
   });
   return `# SSENARIY: ${s.code} — ${s.title.uz}
 ${s.brief.uz}

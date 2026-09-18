@@ -6,7 +6,7 @@ const OUT = __dirname + "/.out/audit";
 fs.mkdirSync(OUT, { recursive: true });
 const ROUTES = [
   "/uz", "/uz/simulyator", "/uz/simulyator/muloqot", "/uz/simulyator/muloqot/dialog-case04-agressiv",
-  "/uz/simulyator/qaror", "/uz/simulyator/qaror/decision-pichoqli-shaxs", "/uz/simulyator/mahalla", "/uz/simulyator/mahalla/mahalla-sh12",
+  "/uz/simulyator/qaror", "/uz/simulyator/qaror/decision-uchinchi-qavat", "/uz/simulyator/mahalla", "/uz/simulyator/mahalla/mahalla-sh12",
   "/uz/simulyator/hujjat", "/uz/simulyator/hujjat/document-pichoq-hodisa", "/uz/simulyator/tir", "/uz/simulyator/imtihon",
   "/uz/mashgulotlarim", "/uz/instruktor", "/uz/profil", "/uz/inspektor", "/uz/hodisa", "/uz/qonunchilik", "/uz/ishlarim", "/uz/guide",
   "/ru/simulyator", "/en/simulyator", "/uz/simulyator/tir/instruktor",
