@@ -166,6 +166,17 @@ export function quotaScope(err: unknown): "minute" | "day" {
   return /per\s*day|perday|daily limit|requests per day|PerDayPer/i.test(msg) ? "day" : "minute";
 }
 
+/**
+ * The useful half of a Gemini error for /api/health: the quota metric line
+ * ("Quota exceeded for metric … limit GenerateRequestsPerDayPerProject…"),
+ * which names WHICH wall was hit, rather than the boilerplate before it.
+ */
+function quotaDetail(err: unknown): string {
+  const msg = (err as Error)?.message ?? String(err);
+  const metric = /Quota exceeded for metric[^"\n]*/i.exec(msg)?.[0];
+  return (metric ?? msg).slice(0, 220);
+}
+
 /** Classify an error: what it means for THIS key and whether another key may succeed. */
 export function classifyKeyError(err: unknown): FailKind {
   const anyErr = err as { status?: number; code?: number; message?: string; name?: string };
@@ -225,7 +236,7 @@ export async function withKeyFailover<T>(
       const kind = classifyKeyError(err);
       if (kind === "fatal") throw err;
       stats.failovers++;
-      stats.lastError = `${kind}: ${(err as Error)?.message?.slice(0, 300) ?? String(err)}`;
+      stats.lastError = `${kind}: ${quotaDetail(err)}`;
       coolKey(key, kind === "quota" && quotaScope(err) === "day" ? "quota_day" : kind, keys);
       if (kind === "overloaded") overloaded = true;
       console.warn(`[gemini] key ${maskKey(key)} ${kind}; rotating. attempt ${attempt + 1}/${maxRetries}`);
