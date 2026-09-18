@@ -50,6 +50,8 @@ let cachedKeys: string[] | null = null;
 const clientCache = new Map<string, GoogleGenAI>();
 /** key → epoch ms until which the key is skipped. */
 const coolingUntil = new Map<string, number>();
+/** key → why it is cooling. Only "soft" reasons (the server's fault) may be released early. */
+const coolingKind = new Map<string, "quota" | "overloaded" | "invalid" | "timeout">();
 const stats = { requests: 0, failovers: 0, exhausted: 0, lastError: "" };
 
 export function loadKeys(): string[] {
@@ -115,18 +117,26 @@ export function pickKey(keys: string[], exclude: Set<string>): string | null {
 export function coolKey(key: string, kind: Exclude<FailKind, "fatal">, keys = loadKeys()): void {
   const now = Date.now();
   coolingUntil.set(key, now + COOLDOWN_MS[kind]);
+  coolingKind.set(key, kind);
 
+  // Only keys parked for a server-side hiccup may be released early: a key that
+  // really is out of quota would just answer 429 again and waste an attempt.
   const maxCooling = Math.max(1, Math.floor(keys.length * MAX_COOLING_SHARE));
-  const cooling = keys
-    .filter((k) => (coolingUntil.get(k) ?? 0) > now)
+  const cooling = keys.filter((k) => (coolingUntil.get(k) ?? 0) > now);
+  const releasable = cooling
+    .filter((k) => coolingKind.get(k) === "overloaded" || coolingKind.get(k) === "timeout")
     .sort((a, b) => (coolingUntil.get(a) ?? 0) - (coolingUntil.get(b) ?? 0));
-  for (let i = 0; i < cooling.length - maxCooling; i++) coolingUntil.delete(cooling[i]);
+  for (let i = 0; i < Math.min(releasable.length, cooling.length - maxCooling); i++) {
+    coolingUntil.delete(releasable[i]);
+    coolingKind.delete(releasable[i]);
+  }
 }
 
 /** Test seam: reset the pool's in-memory state. */
 export function __resetPool() {
   cursor = 0;
   coolingUntil.clear();
+  coolingKind.clear();
   cachedKeys = null;
 }
 
@@ -215,10 +225,17 @@ export function poolHealth() {
   const now = Date.now();
   const keys = loadKeys();
   const cooling = keys.filter((k) => (coolingUntil.get(k) ?? 0) > now).length;
+  const coolingByKind = { quota: 0, overloaded: 0, invalid: 0, timeout: 0 };
+  for (const k of keys) {
+    if ((coolingUntil.get(k) ?? 0) <= now) continue;
+    const kind = coolingKind.get(k);
+    if (kind) coolingByKind[kind]++;
+  }
   return {
     keys: keys.length,
     healthy: keys.length - cooling,
     cooling,
+    coolingByKind,
     attemptTimeoutMs: ATTEMPT_TIMEOUT_MS,
     deadlineMs: TOTAL_DEADLINE_MS,
     ...stats,
