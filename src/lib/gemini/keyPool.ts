@@ -4,7 +4,8 @@ import { GoogleGenAI } from "@google/genai";
  * Gemini API key pool.
  *
  * `GEMINI_API_KEYS` env var holds MULTIPLE keys (comma OR newline separated).
- * Each request picks a random HEALTHY key; on a rate-limit / quota / transient
+ * Requests walk the pool round-robin (each one starts at the key after the
+ * previous request's), skipping cooling keys; on a rate-limit / quota / transient
  * error the request fails over to another key. Failures are remembered per key
  * (cool-down) so the next request skips them, backoff is capped, and the whole
  * failover has a hard deadline — a Gemini "overloaded" wave must answer with a
@@ -72,14 +73,38 @@ function maskKey(key: string): string {
   return key.length <= 6 ? "***" : `${key.slice(0, 4)}…${key.slice(-2)}`;
 }
 
-/** Pick a random healthy key not in `exclude`; if every key is cooling, pick the one that recovers soonest. */
-function pickKey(keys: string[], exclude: Set<string>): string | null {
+/** Round-robin cursor: the next request starts at the key after the last one used. */
+let cursor = 0;
+
+/**
+ * Pick the next healthy key not in `exclude`, walking the pool in order from
+ * the cursor — every request goes to a different key, so a free-tier per-key
+ * rate limit is spread across the whole pool instead of being hit twice in a
+ * row by chance (which is what random picking did). If every key is cooling,
+ * fall back to the one that recovers soonest.
+ */
+export function pickKey(keys: string[], exclude: Set<string>): string | null {
   const now = Date.now();
+  if (keys.length === 0) return null;
+
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[(cursor + i) % keys.length];
+    if (exclude.has(key)) continue;
+    if ((coolingUntil.get(key) ?? 0) > now) continue;
+    cursor = (cursor + i + 1) % keys.length;
+    return key;
+  }
+
   const candidates = keys.filter((k) => !exclude.has(k));
   if (candidates.length === 0) return null;
-  const healthy = candidates.filter((k) => (coolingUntil.get(k) ?? 0) <= now);
-  if (healthy.length > 0) return healthy[Math.floor(Math.random() * healthy.length)];
   return candidates.slice().sort((a, b) => (coolingUntil.get(a) ?? 0) - (coolingUntil.get(b) ?? 0))[0];
+}
+
+/** Test seam: reset the pool's in-memory state. */
+export function __resetPool() {
+  cursor = 0;
+  coolingUntil.clear();
+  cachedKeys = null;
 }
 
 type FailKind = "quota" | "overloaded" | "invalid" | "timeout" | "fatal";
@@ -112,7 +137,7 @@ interface FailoverOptions {
 }
 
 /**
- * Execute `fn` with a randomly-picked healthy Gemini client. On a retriable
+ * Execute `fn` with the next healthy Gemini client in round-robin order. On a retriable
  * error rotate to another key (cooling the failed one). `fn` MUST establish the
  * work (including pulling the first stream chunk) so a 429 surfaces here.
  * `fn` receives `overloaded = true` once a 503 wave has been seen, so callers

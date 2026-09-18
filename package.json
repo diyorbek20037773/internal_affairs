@@ -10,6 +10,7 @@
     "check:tir": "tsx --tsconfig tsconfig.json scripts/tir-engine.check.ts",
     "check:tir:fps": "tsx --tsconfig tsconfig.json scripts/tir-fps.check.ts",
     "check:dialog": "tsx --tsconfig tsconfig.json scripts/dialog-reply.check.ts",
+    "check:keys": "tsx --tsconfig tsconfig.json scripts/keypool.check.ts",
     "assets": "node scripts/fetch-assets.mjs",
     "prebuild": "node scripts/build-sw.mjs && node scripts/fetch-assets.mjs",
     "e2e:qa": "node e2e/qa.js",
