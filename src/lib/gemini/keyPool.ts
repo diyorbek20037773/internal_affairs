@@ -33,8 +33,13 @@ const num = (v: string | undefined, d: number) => (Number(v) > 0 ? Number(v) : d
 export const ATTEMPT_TIMEOUT_MS = num(process.env.GEMINI_ATTEMPT_TIMEOUT_MS, 25_000);
 /** Whole failover budget (all keys, all backoffs). Must stay under the client's fetch timeout. */
 export const TOTAL_DEADLINE_MS = num(process.env.GEMINI_DEADLINE_MS, 45_000);
-/** Max keys tried per request. */
-const MAX_ATTEMPTS = Math.floor(num(process.env.GEMINI_MAX_ATTEMPTS, 6));
+/**
+ * Max keys tried per request. Gemini's free-tier quota is per MINUTE and a
+ * 429 comes back in ~150 ms, so with a large pool it is worth walking further
+ * before giving up: at 6 attempts a 35-key pool answered 503 while two dozen
+ * keys were still usable. The total deadline still bounds the wait.
+ */
+const MAX_ATTEMPTS = Math.floor(num(process.env.GEMINI_MAX_ATTEMPTS, 12));
 const BACKOFF_CAP_MS = 2_000;
 /**
  * Cool-downs after a failure, by kind. Only `quota` and `invalid` are the KEY's
