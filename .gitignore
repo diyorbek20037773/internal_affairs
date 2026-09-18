@@ -45,3 +45,6 @@ yarn-error.log*
 e2e/.out/
 /.next-*/
 /public/sw.js
+
+# key probe output — NEVER commit real API keys
+keys.valid.txt
