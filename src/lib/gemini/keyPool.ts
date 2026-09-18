@@ -126,9 +126,9 @@ export function pickKey(keys: string[], exclude: Set<string>): string | null {
  * the cap is reached the keys that recover soonest are released early, so a
  * wave of server-side errors can never take the whole pool out of service.
  */
-export function coolKey(key: string, kind: CoolKind, keys = loadKeys()): void {
+export function coolKey(key: string, kind: CoolKind, keys = loadKeys(), forMs?: number): void {
   const now = Date.now();
-  coolingUntil.set(key, now + COOLDOWN_MS[kind]);
+  coolingUntil.set(key, now + (forMs ?? COOLDOWN_MS[kind]));
   coolingKind.set(key, kind);
 
   // Only keys parked for a server-side hiccup may be released early: a key that
@@ -164,6 +164,24 @@ export type CoolKind = Exclude<FailKind, "fatal"> | "quota_day";
 export function quotaScope(err: unknown): "minute" | "day" {
   const msg = (err as { message?: string })?.message ?? String(err);
   return /per\s*day|perday|daily limit|requests per day|PerDayPer/i.test(msg) ? "day" : "minute";
+}
+
+/**
+ * Gemini usually says exactly when the key is usable again
+ * ("Please retry in 22.037s" / `retryDelay: "22s"`). Honour that instead of
+ * guessing: a per-minute burst comes back in seconds, a per-day exhaustion
+ * asks for hours, and either way we stop retrying a key before it is ready.
+ */
+export function retryAfterMs(err: unknown): number | null {
+  const msg = (err as { message?: string })?.message ?? String(err);
+  const m = /(?:retry in|retryDelay"?\s*:\s*"?)\s*([\d.]+)\s*(ms|s|m|h)?/i.exec(msg);
+  if (!m) return null;
+  const n = Number(m[1]);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  const unit = (m[2] ?? "s").toLowerCase();
+  const ms = unit === "ms" ? n : unit === "m" ? n * 60_000 : unit === "h" ? n * 3_600_000 : n * 1_000;
+  // A little slack, and never park longer than the daily cool-down.
+  return Math.min(Math.round(ms * 1.1) + 500, COOLDOWN_MS.quota_day);
 }
 
 /**
@@ -237,7 +255,10 @@ export async function withKeyFailover<T>(
       if (kind === "fatal") throw err;
       stats.failovers++;
       stats.lastError = `${kind}: ${quotaDetail(err)}`;
-      coolKey(key, kind === "quota" && quotaScope(err) === "day" ? "quota_day" : kind, keys);
+      const quotaWait = kind === "quota" ? retryAfterMs(err) : null;
+      const coolAs: CoolKind =
+        kind === "quota" && (quotaScope(err) === "day" || (quotaWait ?? 0) > 5 * 60_000) ? "quota_day" : kind;
+      coolKey(key, coolAs, keys, quotaWait ?? undefined);
       if (kind === "overloaded") overloaded = true;
       console.warn(`[gemini] key ${maskKey(key)} ${kind}; rotating. attempt ${attempt + 1}/${maxRetries}`);
       const remaining = deadline - Date.now();

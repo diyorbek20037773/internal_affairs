@@ -1,6 +1,6 @@
 process.env.GEMINI_API_KEYS = "k1,k2,k3,k4";
 
-import { __resetPool, coolKey, loadKeys, pickKey, poolHealth, quotaScope, classifyKeyError, withKeyFailover } from "@/lib/gemini/keyPool";
+import { __resetPool, coolKey, loadKeys, pickKey, poolHealth, quotaScope, retryAfterMs, classifyKeyError, withKeyFailover } from "@/lib/gemini/keyPool";
 
 let pass = 0, fail = 0;
 const check = (name: string, ok: boolean, note = "") => { ok ? pass++ : fail++; console.log(`${ok ? "PASS" : "FAIL"}  ${name}${note ? " — " + note : ""}`); };
@@ -86,6 +86,18 @@ async function main() {
     check("health separates daily from per-minute quota", h.coolingByKind.quota === 1 && h.coolingByKind.quota_day === 1, JSON.stringify(h.coolingByKind));
     const picks = [0, 1, 2, 3].map(() => pickKey(keys, none()));
     check("both quota-parked keys skipped", !picks.includes("k1") && !picks.includes("k2"), picks.join(","));
+  }
+
+  // 8) Google's own retry delay decides how long a key waits.
+  {
+    const live = new Error(
+      "429 Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 22.037194325s."
+    );
+    const ms = retryAfterMs(live)!;
+    check("retryAfterMs reads 'Please retry in 22.0s'", ms > 22_000 && ms < 26_000, `${ms}ms`);
+    check("retryAfterMs reads retryDelay field", retryAfterMs(new Error('{"retryDelay":"37s"}'))! > 37_000);
+    check("retryAfterMs: no delay in message → null", retryAfterMs(quota()) === null);
+    check("retryAfterMs capped at the daily park", retryAfterMs(new Error("retry in 99h"))! <= 3 * 60 * 60_000);
   }
 
   check("classify: 429 → quota", classifyKeyError(quota()) === "quota");
