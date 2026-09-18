@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import { aiGuard } from "@/lib/aiGuard";
 import { z } from "zod";
 import { withKeyFailover } from "@/lib/gemini/keyPool";
-import { modelFor } from "@/lib/gemini/config";
 import { simErrorResponse } from "@/lib/training/apiErrors";
 
 export const runtime = "nodejs";
@@ -42,7 +41,7 @@ export async function POST(req: NextRequest) {
   try {
     const text = await withKeyFailover(async (ai, _key, ctx) => {
       const res = await ai.models.generateContent({
-        model: modelFor(ctx.overloaded),
+        model: ctx.model,
         contents: [
           {
             role: "user",

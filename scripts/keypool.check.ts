@@ -1,6 +1,6 @@
 process.env.GEMINI_API_KEYS = "k1,k2,k3,k4";
 
-import { __resetPool, coolKey, loadKeys, pickKey, poolHealth, quotaScope, retryAfterMs, classifyKeyError, withKeyFailover } from "@/lib/gemini/keyPool";
+import { __forgetCooling, __resetPool, coolKey, loadKeys, pickKey, poolHealth, quotaScope, retryAfterMs, classifyKeyError, withKeyFailover } from "@/lib/gemini/keyPool";
 
 let pass = 0, fail = 0;
 const check = (name: string, ok: boolean, note = "") => { ok ? pass++ : fail++; console.log(`${ok ? "PASS" : "FAIL"}  ${name}${note ? " — " + note : ""}`); };
@@ -98,6 +98,46 @@ async function main() {
     check("retryAfterMs reads retryDelay field", retryAfterMs(new Error('{"retryDelay":"37s"}'))! > 37_000);
     check("retryAfterMs: no delay in message → null", retryAfterMs(quota()) === null);
     check("retryAfterMs capped at the daily park", retryAfterMs(new Error("retry in 99h"))! <= 3 * 60 * 60_000);
+  }
+
+  // 8b) The free-tier daily wall says "retry in 28s" — a key that keeps hitting it must not be retried every half minute.
+  {
+    __resetPool();
+    const live = () => Object.assign(new Error(
+      "429 Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 28.8s."
+    ), { status: 429 });
+    await withKeyFailover(async () => { throw live(); }, { maxRetries: 4, fallbackModel: null }).catch(() => {});
+    check("first free-tier 429 honours Google's delay", poolHealth().coolingByKind.quota === 4, JSON.stringify(poolHealth().coolingByKind));
+    __forgetCooling(); // the 28 s pass — the key is picked again
+    await withKeyFailover(async () => { throw live(); }, { maxRetries: 1, fallbackModel: null }).catch(() => {});
+    check("repeat free-tier 429 → parked long", poolHealth().coolingByKind.quota_day === 1, JSON.stringify(poolHealth().coolingByKind));
+
+    __resetPool();
+    const dayWithHint = Object.assign(new Error("429 quotaId GenerateRequestsPerDayPerProjectPerModel-FreeTier. Please retry in 20s."), { status: 429 });
+    await withKeyFailover(async () => { throw dayWithHint; }, { maxRetries: 1, fallbackModel: null }).catch(() => {});
+    check("explicit daily wall beats a short retry hint", poolHealth().coolingByKind.quota_day === 1, JSON.stringify(poolHealth().coolingByKind));
+  }
+
+  // 8c) Quota is per model: a key out of primary quota still serves the fallback, and TTS quota never parks chat.
+  {
+    __resetPool();
+    const keys = loadKeys();
+    keys.forEach((k) => coolKey(k, "quota_day", keys));
+    const seen: string[] = [];
+    const out = await withKeyFailover(async (_ai, key, ctx) => { seen.push(`${key}:${ctx.model}`); return "ok"; });
+    check("primary exhausted → fallback model answers", out === "ok" && seen.length === 1 && seen[0].endsWith(":gemini-2.5-flash-lite"), seen.join(","));
+
+    __resetPool();
+    await withKeyFailover(async () => { throw quota(); }, { model: "tts", fallbackModel: null, maxRetries: 4 }).catch(() => {});
+    const h = poolHealth();
+    check("TTS quota leaves the chat model's keys alone", h.healthy === 4, `healthy=${h.healthy}`);
+    const chat = await withKeyFailover(async (_ai, _key, ctx) => ctx.model);
+    check("chat still uses the primary model", chat === "gemini-2.5-flash", chat);
+
+    __resetPool();
+    coolKey("k1", "invalid", loadKeys());
+    const picks = [0, 1, 2, 3].map(() => pickKey(loadKeys(), none(), "gemini-2.5-flash-lite"));
+    check("invalid key skipped for every model", !picks.includes("k1"), picks.join(","));
   }
 
   // 9) Separator tolerance — operators paste comma, semicolon or newline lists.

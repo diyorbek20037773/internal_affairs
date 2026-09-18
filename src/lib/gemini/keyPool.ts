@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { GEMINI_FALLBACK_MODEL, GEMINI_MODEL } from "./config";
 
 /**
  * Gemini API key pool.
@@ -56,15 +57,33 @@ const COOLDOWN_MS = {
   invalid: 30 * 60_000,
   timeout: 5_000,
 } as const;
+/**
+ * A free-tier 429 names the same metric (`generate_content_free_tier_requests`)
+ * for the per-minute and the per-day wall and always suggests "retry in ~30s",
+ * even when the day's 20 requests are gone. A slot that hits quota again this
+ * soon after its previous quota hit is treated as done for now.
+ */
+const QUOTA_REPEAT_WINDOW_MS = 5 * 60_000;
+/** Park for a repeat offender — long enough to stop the waste, short enough to notice the reset. */
+const QUOTA_REPEAT_PARK_MS = 30 * 60_000;
 /** Never park more than this share of the pool — the rest stay available. */
 const MAX_COOLING_SHARE = 0.5;
 
 let cachedKeys: string[] | null = null;
 const clientCache = new Map<string, GoogleGenAI>();
-/** key → epoch ms until which the key is skipped. */
+/**
+ * Quotas are per (project, model), so a key is parked per model: a key whose
+ * gemini-2.5-flash day is over still has its flash-lite and TTS quota. A slot is
+ * the bare key for the primary model and `key@model` for any other; an invalid
+ * key is parked on its bare slot and skipped for every model.
+ */
+const slotOf = (key: string, model: string) => (model === GEMINI_MODEL ? key : `${key}@${model}`);
+/** slot → epoch ms until which it is skipped. */
 const coolingUntil = new Map<string, number>();
-/** key → why it is cooling. Only "soft" reasons (the server's fault) may be released early. */
+/** slot → why it is cooling. Only "soft" reasons (the server's fault) may be released early. */
 const coolingKind = new Map<string, CoolKind>();
+/** slot → when it last hit a quota wall. */
+const lastQuotaAt = new Map<string, number>();
 const stats = { requests: 0, failovers: 0, exhausted: 0, lastError: "" };
 
 export function loadKeys(): string[] {
@@ -98,28 +117,36 @@ function maskKey(key: string): string {
 /** Round-robin cursor: the next request starts at the key after the last one used. */
 let cursor = 0;
 
+function isCooling(key: string, model: string, now: number): boolean {
+  if ((coolingUntil.get(slotOf(key, model)) ?? 0) > now) return true;
+  return coolingKind.get(key) === "invalid" && (coolingUntil.get(key) ?? 0) > now;
+}
+
 /**
- * Pick the next healthy key not in `exclude`, walking the pool in order from
- * the cursor — every request goes to a different key, so a free-tier per-key
- * rate limit is spread across the whole pool instead of being hit twice in a
- * row by chance (which is what random picking did). If every key is cooling,
- * fall back to the one that recovers soonest.
+ * Pick the next healthy key for `model` whose slot is not in `exclude`, walking
+ * the pool in order from the cursor — every request goes to a different key, so
+ * a free-tier per-key rate limit is spread across the whole pool instead of
+ * being hit twice in a row by chance (which is what random picking did). If
+ * every key is cooling, fall back to the one that recovers soonest — unless
+ * `strict`, which answers null so the caller can switch model instead.
  */
-export function pickKey(keys: string[], exclude: Set<string>): string | null {
+export function pickKey(keys: string[], exclude: Set<string>, model = GEMINI_MODEL, strict = false): string | null {
   const now = Date.now();
   if (keys.length === 0) return null;
 
   for (let i = 0; i < keys.length; i++) {
     const key = keys[(cursor + i) % keys.length];
-    if (exclude.has(key)) continue;
-    if ((coolingUntil.get(key) ?? 0) > now) continue;
+    if (exclude.has(slotOf(key, model))) continue;
+    if (isCooling(key, model, now)) continue;
     cursor = (cursor + i + 1) % keys.length;
     return key;
   }
+  if (strict) return null;
 
-  const candidates = keys.filter((k) => !exclude.has(k));
+  const candidates = keys.filter((k) => !exclude.has(slotOf(k, model)));
   if (candidates.length === 0) return null;
-  return candidates.slice().sort((a, b) => (coolingUntil.get(a) ?? 0) - (coolingUntil.get(b) ?? 0))[0];
+  const until = (k: string) => coolingUntil.get(slotOf(k, model)) ?? 0;
+  return candidates.slice().sort((a, b) => until(a) - until(b))[0];
 }
 
 /**
@@ -127,10 +154,12 @@ export function pickKey(keys: string[], exclude: Set<string>): string | null {
  * the cap is reached the keys that recover soonest are released early, so a
  * wave of server-side errors can never take the whole pool out of service.
  */
-export function coolKey(key: string, kind: CoolKind, keys = loadKeys(), forMs?: number): void {
+export function coolKey(key: string, kind: CoolKind, keys = loadKeys(), forMs?: number, model = GEMINI_MODEL): void {
   const now = Date.now();
-  coolingUntil.set(key, now + (forMs ?? COOLDOWN_MS[kind]));
-  coolingKind.set(key, kind);
+  // A bad key is bad for every model.
+  const slot = kind === "invalid" ? key : slotOf(key, model);
+  coolingUntil.set(slot, now + (forMs ?? COOLDOWN_MS[kind]));
+  coolingKind.set(slot, kind);
 
   // Only keys parked for a server-side hiccup may be released early: a key that
   // really is out of quota would just answer 429 again and waste an attempt.
@@ -145,11 +174,18 @@ export function coolKey(key: string, kind: CoolKind, keys = loadKeys(), forMs?: 
   }
 }
 
+/** Test seam: let every park expire now, keeping the quota history. */
+export function __forgetCooling() {
+  coolingUntil.clear();
+  coolingKind.clear();
+}
+
 /** Test seam: reset the pool's in-memory state. */
 export function __resetPool() {
   cursor = 0;
   coolingUntil.clear();
   coolingKind.clear();
+  lastQuotaAt.clear();
   cachedKeys = null;
 }
 
@@ -221,52 +257,75 @@ interface FailoverOptions {
   maxRetries?: number;
   /** Override the total budget (ms). */
   deadlineMs?: number;
+  /** Model the attempts use (quota is tracked per model). Default: GEMINI_MODEL. */
+  model?: string;
+  /** Lighter model for overload, or when `model` has no quota left on any key; null = none. */
+  fallbackModel?: string | null;
+}
+
+/**
+ * How long a quota-hit slot is parked. An explicit daily wall parks for the day
+ * even when Google suggests "retry in 28s"; a slot that keeps hitting quota is
+ * parked long enough to stop wasting attempts; otherwise honour Google's delay.
+ */
+function quotaParkMs(err: unknown, slot: string, now: number): number {
+  const hint = retryAfterMs(err);
+  const repeat = now - (lastQuotaAt.get(slot) ?? -Infinity) < QUOTA_REPEAT_WINDOW_MS;
+  lastQuotaAt.set(slot, now);
+  if (quotaScope(err) === "day") return Math.max(hint ?? 0, COOLDOWN_MS.quota_day);
+  if (repeat) return Math.max(hint ?? 0, QUOTA_REPEAT_PARK_MS);
+  return hint ?? COOLDOWN_MS.quota;
 }
 
 /**
  * Execute `fn` with the next healthy Gemini client in round-robin order. On a retriable
  * error rotate to another key (cooling the failed one). `fn` MUST establish the
  * work (including pulling the first stream chunk) so a 429 surfaces here.
- * `fn` receives `overloaded = true` once a 503 wave has been seen, so callers
- * can switch to a lighter fallback model for the remaining attempts.
+ * `fn` receives the model to call: the fallback once a 503 wave has been seen,
+ * or once no key has quota left for the primary model (quota is per model).
  */
 export async function withKeyFailover<T>(
-  fn: (ai: GoogleGenAI, key: string, ctx: { attempt: number; overloaded: boolean }) => Promise<T>,
+  fn: (ai: GoogleGenAI, key: string, ctx: { attempt: number; overloaded: boolean; model: string }) => Promise<T>,
   opts: FailoverOptions = {}
 ): Promise<T> {
   const keys = loadKeys();
   if (keys.length === 0) throw new NoKeysConfiguredError();
 
-  const maxRetries = Math.max(1, Math.min(opts.maxRetries ?? MAX_ATTEMPTS, keys.length));
+  const primary = opts.model ?? GEMINI_MODEL;
+  const fallback = opts.fallbackModel === undefined ? GEMINI_FALLBACK_MODEL : opts.fallbackModel;
+  const maxRetries = Math.max(1, Math.min(opts.maxRetries ?? MAX_ATTEMPTS, keys.length * (fallback ? 2 : 1)));
   const deadline = Date.now() + (opts.deadlineMs ?? TOTAL_DEADLINE_MS);
+  /** Slots (key × model) already tried in this request. */
   const tried = new Set<string>();
   let lastErr: unknown;
   let overloaded = false;
   stats.requests++;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
-    const key = pickKey(keys, tried);
+    let model = overloaded && fallback ? fallback : primary;
+    let key = pickKey(keys, tried, model, !!fallback && model === primary);
+    // No key has primary-model quota left — the fallback model has its own.
+    if (!key && fallback && model === primary) {
+      model = fallback;
+      key = pickKey(keys, tried, model);
+    }
     if (!key) break;
-    tried.add(key);
+    tried.add(slotOf(key, model));
     try {
-      return await fn(clientFor(key), key, { attempt, overloaded });
+      return await fn(clientFor(key), key, { attempt, overloaded: model !== primary, model });
     } catch (err) {
       lastErr = err;
       const kind = classifyKeyError(err);
       if (kind === "fatal") throw err;
       stats.failovers++;
-      stats.lastError = `${kind}: ${quotaDetail(err)}`;
-      // Park for exactly what Gemini asked for when it said; otherwise fall back
-      // to the per-minute / per-day default. The label follows the real wait, so
-      // /api/health never reports a day-long park for a 40-second one.
-      const parkMs =
-        kind === "quota"
-          ? (retryAfterMs(err) ?? (quotaScope(err) === "day" ? COOLDOWN_MS.quota_day : COOLDOWN_MS.quota))
-          : COOLDOWN_MS[kind];
+      stats.lastError = `${kind} (${model}): ${quotaDetail(err)}`;
+      // The label follows the real wait, so /api/health never reports a
+      // day-long park for a 40-second one.
+      const parkMs = kind === "quota" ? quotaParkMs(err, slotOf(key, model), Date.now()) : COOLDOWN_MS[kind];
       const coolAs: CoolKind = kind === "quota" && parkMs > 5 * 60_000 ? "quota_day" : kind;
-      coolKey(key, coolAs, keys, parkMs);
+      coolKey(key, coolAs, keys, parkMs, model);
       if (kind === "overloaded") overloaded = true;
-      console.warn(`[gemini] key ${maskKey(key)} ${kind}; rotating. attempt ${attempt + 1}/${maxRetries}`);
+      console.warn(`[gemini] key ${maskKey(key)} ${model} ${coolAs}; rotating. attempt ${attempt + 1}/${maxRetries}`);
       const remaining = deadline - Date.now();
       if (remaining <= 0) break;
       // Capped, jittered backoff for server-side overload; immediate rotation otherwise.
@@ -293,11 +352,13 @@ export function poolHealth() {
     const kind = coolingKind.get(k);
     if (kind) coolingByKind[kind]++;
   }
+  const fallbackHealthy = keys.filter((k) => !isCooling(k, GEMINI_FALLBACK_MODEL, now)).length;
   return {
     keys: keys.length,
     healthy: keys.length - cooling,
     cooling,
     coolingByKind,
+    fallback: { model: GEMINI_FALLBACK_MODEL, healthy: fallbackHealthy },
     attemptTimeoutMs: ATTEMPT_TIMEOUT_MS,
     deadlineMs: TOTAL_DEADLINE_MS,
     ...stats,

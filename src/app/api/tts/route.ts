@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
       const inline = part?.inlineData;
       if (!inline?.data) throw new Error("no_audio");
       return { data: inline.data, mime: inline.mimeType };
-    });
+    }, { model: TTS_MODEL, fallbackModel: null });
 
     const pcm = Buffer.from(data, "base64");
     const wav = pcmToWav(pcm, rateFromMime(mime));

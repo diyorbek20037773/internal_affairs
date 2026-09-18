@@ -1,8 +1,6 @@
 export const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
-/** Lighter model used for the remaining attempts once the primary model reports "overloaded" (503). */
+/** Lighter model for the remaining attempts on a 503 wave, or once the primary model has no quota left. */
 export const GEMINI_FALLBACK_MODEL = process.env.GEMINI_FALLBACK_MODEL || "gemini-2.5-flash-lite";
-/** Pick the model for an attempt. */
-export const modelFor = (overloaded: boolean) => (overloaded ? GEMINI_FALLBACK_MODEL : GEMINI_MODEL);
 
 export const GENERATION_CONFIG = {
   temperature: 0.4,

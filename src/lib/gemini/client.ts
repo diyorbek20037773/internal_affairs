@@ -2,7 +2,6 @@ import type { Content, Schema } from "@google/genai";
 import { withKeyFailover } from "./keyPool";
 import {
   GENERATION_CONFIG,
-  modelFor,
   JSON_GENERATION_CONFIG,
   SAFETY_SETTINGS,
   type JsonProfile,
@@ -24,7 +23,7 @@ export async function* streamChat({
 }: StreamChatArgs): AsyncGenerator<string> {
   const { first, iterator } = await withKeyFailover(async (ai, _key, ctx) => {
     const response = await ai.models.generateContentStream({
-      model: modelFor(ctx.overloaded),
+      model: ctx.model,
       contents,
       config: {
         systemInstruction,
@@ -57,7 +56,7 @@ export async function generateText({
 }: StreamChatArgs): Promise<string> {
   return withKeyFailover(async (ai, _key, ctx) => {
     const response = await ai.models.generateContent({
-      model: modelFor(ctx.overloaded),
+      model: ctx.model,
       contents,
       config: {
         systemInstruction,
@@ -110,7 +109,7 @@ export async function* streamJsonRaw({
   const gen = JSON_GENERATION_CONFIG[profile];
   const { first, iterator } = await withKeyFailover(async (ai, _key, ctx) => {
     const response = await ai.models.generateContentStream({
-      model: modelFor(ctx.overloaded),
+      model: ctx.model,
       contents,
       config: {
         systemInstruction,
@@ -179,7 +178,7 @@ export async function generateJson<T>({
 
     const raw = await withKeyFailover(async (ai, _key, ctx) => {
       const response = await ai.models.generateContent({
-        model: modelFor(ctx.overloaded),
+        model: ctx.model,
         contents: turn,
         config: {
           systemInstruction,
