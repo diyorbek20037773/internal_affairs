@@ -22,6 +22,50 @@ interface DialogApiResponse {
 export type DialogSimError = "ai_unavailable" | "no_keys_configured" | "bad_ai_output" | "too_long" | "rate_limited" | "generic";
 
 /**
+ * Consume the SSE turn stream: `delta` frames carry the citizen's reply as it
+ * is generated (shown live), `final` carries the authoritative turn result.
+ */
+async function readTurnStream(
+  res: Response,
+  onDelta: (text: string) => void
+): Promise<DialogApiResponse | null> {
+  const reader = res.body?.getReader();
+  if (!reader) return null;
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let shown = "";
+  let final: DialogApiResponse | null = null;
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let cut: number;
+    while ((cut = buffer.indexOf("\n\n")) >= 0) {
+      const frame = buffer.slice(0, cut);
+      buffer = buffer.slice(cut + 2);
+      const event = /^event: (.+)$/m.exec(frame)?.[1];
+      const data = frame
+        .split("\n")
+        .filter((l) => l.startsWith("data: "))
+        .map((l) => l.slice(6))
+        .join("");
+      if (!event || !data) continue;
+      const payload = JSON.parse(data);
+      if (event === "delta") {
+        shown += payload.text as string;
+        onDelta(shown);
+      } else if (event === "final") {
+        final = payload as DialogApiResponse;
+      } else if (event === "error") {
+        return null;
+      }
+    }
+  }
+  return final;
+}
+
+/**
  * Drives one AI-Muloqot session: sends officer utterances to /api/sim/dialog,
  * persists after every turn (4G-drop safe), exposes live state + end reason.
  */
@@ -30,6 +74,8 @@ export function useDialogSim(scenario: DialogScenario, initial: TrainingSession,
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
   const [error, setError] = useState<DialogSimError | null>(null);
+  /** Citizen reply as it streams in; cleared once the turn is persisted. */
+  const [streamingReply, setStreamingReply] = useState("");
   const sessionRef = useRef(session);
   sessionRef.current = session;
 
@@ -78,6 +124,7 @@ export function useDialogSim(scenario: DialogScenario, initial: TrainingSession,
             history: p.transcript.slice(1).map((t) => ({ role: t.role, text: t.text })),
             officerText: trimmed,
             officerTurns: officerTurnsBefore + 1,
+            stream: true,
           }),
         });
         if (!res.ok) {
@@ -96,7 +143,12 @@ export function useDialogSim(scenario: DialogScenario, initial: TrainingSession,
           setSession(cur);
           return;
         }
-        const data = (await res.json()) as DialogApiResponse;
+        const data = await readTurnStream(res, setStreamingReply);
+        if (!data) {
+          setError("bad_ai_output");
+          setSession(cur);
+          return;
+        }
 
         const officerWithAssessment: DialogTurn = {
           ...officerTurn,
@@ -126,6 +178,7 @@ export function useDialogSim(scenario: DialogScenario, initial: TrainingSession,
         setError("generic");
         setSession(cur);
       } finally {
+        setStreamingReply("");
         busyRef.current = false;
         setBusy(false);
       }
@@ -157,6 +210,7 @@ export function useDialogSim(scenario: DialogScenario, initial: TrainingSession,
     officerTurns,
     lastAssessment,
     busy,
+    streamingReply,
     error,
     clearError: () => setError(null),
     send,

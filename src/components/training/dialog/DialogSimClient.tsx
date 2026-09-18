@@ -61,7 +61,7 @@ function DialogRunner({ scenario, initial }: { scenario: DialogScenario; initial
   // Auto-scroll.
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [sim.transcript.length, sim.busy]);
+  }, [sim.transcript.length, sim.busy, sim.streamingReply]);
 
   // Voice: mic transcript → send.
   useEffect(() => {
@@ -181,13 +181,32 @@ function DialogRunner({ scenario, initial }: { scenario: DialogScenario; initial
                 <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent">
                   <User className="h-4 w-4" />
                 </div>
-                <div className="rounded-2xl rounded-bl-md border border-border/70 bg-card px-4 py-2.5 text-sm text-muted-foreground">
-                  <span className="inline-flex gap-1">
-                    <span className="animate-bounce">•</span>
-                    <span className="animate-bounce [animation-delay:120ms]">•</span>
-                    <span className="animate-bounce [animation-delay:240ms]">•</span>
-                  </span>{" "}
-                  {t("thinking")}
+                <div
+                  className={cn(
+                    "max-w-[85%] rounded-2xl rounded-bl-md border border-border/70 bg-card px-4 py-2.5 text-sm leading-relaxed",
+                    !sim.streamingReply && "text-muted-foreground"
+                  )}
+                >
+                  {sim.streamingReply ? (
+                    <>
+                      <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wider opacity-60">
+                        {t("citizen")}
+                      </p>
+                      <p className="whitespace-pre-wrap">
+                        {sim.streamingReply}
+                        <span className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse bg-accent align-middle" />
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <span className="inline-flex gap-1">
+                        <span className="animate-bounce">•</span>
+                        <span className="animate-bounce [animation-delay:120ms]">•</span>
+                        <span className="animate-bounce [animation-delay:240ms]">•</span>
+                      </span>{" "}
+                      {t("thinking")}
+                    </>
+                  )}
                 </div>
               </div>
             )}

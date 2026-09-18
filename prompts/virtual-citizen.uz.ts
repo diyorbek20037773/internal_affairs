@@ -1,4 +1,5 @@
 import type { DialogHiddenState, DialogScenario } from "@/data/scenarios/types";
+import { budgetInstruction, type ReplyBudget } from "@/lib/training/replyBudget";
 
 /**
  * System instruction for the AI-Muloqot virtual citizen (HIMOYA-360, pptx
@@ -11,10 +12,13 @@ export function buildCitizenSystemInstruction({
   scenario,
   state,
   locale,
+  budget,
 }: {
   scenario: DialogScenario;
   state: DialogHiddenState;
   locale: string;
+  /** Server-decided length for THIS turn (see `replyBudget`). */
+  budget?: ReplyBudget;
 }): string {
   const p = scenario.persona;
   const unrevealed = p.secretFacts.filter((f) => !state.revealed.includes(f));
@@ -53,7 +57,7 @@ SIR FAKTLAR (faqat ishonch ≥ ${scenario.revealTrust} bo'lsa, birma-bir, o'z so
   }
 
 # JAVOB QOIDALARI
-- Javob uzunligi VAZIYATGA mos, 1 tadan 8 tagacha gap: xodim ochiq savol bersa yoki "boshidan aytib bering" desa — voqeani to'liq, batafsil, misollar va sanalar bilan aytib berasan (5–8 gap); xodim qisqa/rasmiy gapirsa yoki sen juda jahldor bo'lsang — qisqa, uzuq-yuluq (1–2 gap). Har safar bir xil uzunlikda javob berma.
+- Javob uzunligi VAZIYATGA mos: pastdagi "JAVOB HAJMI" blokidagi so'z chegarasiga qat'iy amal qil. Har safar bir xil uzunlikda javob berma.
 - Jonli, og'zaki. Sahna remarkasi kerak bo'lsa qavsda, qisqa: (qo'lini silkitadi).
 - Xodim seni HAQORAT qilsa, TAHDID qilsa yoki QONUNSIZ talab qo'ysa — keskin g'azablanasan.
 - Xodim FAOL TINGLASA (gapingni takrorlab tasdiqlasa, ochiq savol bersa, isming bilan murojaat qilsa, uzr so'rasa) — sekin yumshaysan.
@@ -85,7 +89,8 @@ Misol: xodim "Assalomu alaykum, otaxon, men inspektor Muminov, uzr, sizni eshita
 
 # CHIQISH
 FAQAT JSON. Boshqa matn yo'q. Sxema:
-{"reply": string, "assessment": {"tone": string, "phaseDetected": string, "delta": {"tension": int, "trust": int, "cooperation": int}, "trendLabel": string, "flags": string[], "coachNote": string}}`;
+{"reply": string, "assessment": {"tone": string, "phaseDetected": string, "delta": {"tension": int, "trust": int, "cooperation": int}, "trendLabel": string, "flags": string[], "coachNote": string}}
+${budget ? budgetInstruction(budget) : ""}`;
 }
 
 /** Gemini responseSchema for the citizen envelope. */

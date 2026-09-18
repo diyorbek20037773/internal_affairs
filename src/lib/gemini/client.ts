@@ -94,7 +94,50 @@ export interface GenerateJsonArgs<T> {
   retries?: number;
 }
 
-function stripFences(text: string): string {
+/**
+ * Streaming twin of `generateJson`: yields the raw JSON text as it arrives so a
+ * caller can surface the first property (the citizen's `reply`) while the rest
+ * of the envelope is still generating. Key failover happens before the first
+ * chunk is yielded, so a 429/quota error still surfaces as a thrown error and
+ * the route can answer with a proper HTTP status.
+ */
+export async function* streamJsonRaw({
+  contents,
+  systemInstruction,
+  responseSchema,
+  profile = "grader",
+}: Omit<GenerateJsonArgs<unknown>, "parse" | "retries">): AsyncGenerator<string> {
+  const gen = JSON_GENERATION_CONFIG[profile];
+  const { first, iterator } = await withKeyFailover(async (ai, _key, ctx) => {
+    const response = await ai.models.generateContentStream({
+      model: modelFor(ctx.overloaded),
+      contents,
+      config: {
+        systemInstruction,
+        temperature: gen.temperature,
+        topP: gen.topP,
+        maxOutputTokens: gen.maxOutputTokens,
+        thinkingConfig: { thinkingBudget: gen.thinkingBudget },
+        responseMimeType: "application/json",
+        responseSchema,
+        safetySettings: SAFETY_SETTINGS as unknown as never,
+      },
+    });
+    const it = response[Symbol.asyncIterator]();
+    const firstChunk = await it.next(); // 429/quota surfaces here → failover
+    return { first: firstChunk, iterator: it };
+  });
+
+  if (!first.done && first.value?.text) yield first.value.text;
+  while (true) {
+    const next = await iterator.next();
+    if (next.done) break;
+    const text = next.value?.text;
+    if (text) yield text;
+  }
+}
+
+export function stripFences(text: string): string {
   const trimmed = text.trim();
   const m = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
   return m ? m[1] : trimmed;
