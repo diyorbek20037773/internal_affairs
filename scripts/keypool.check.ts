@@ -1,6 +1,6 @@
 process.env.GEMINI_API_KEYS = "k1,k2,k3,k4";
 
-import { __resetPool, loadKeys, pickKey, classifyKeyError, withKeyFailover } from "@/lib/gemini/keyPool";
+import { __resetPool, coolKey, loadKeys, pickKey, poolHealth, classifyKeyError, withKeyFailover } from "@/lib/gemini/keyPool";
 
 let pass = 0, fail = 0;
 const check = (name: string, ok: boolean, note = "") => { ok ? pass++ : fail++; console.log(`${ok ? "PASS" : "FAIL"}  ${name}${note ? " — " + note : ""}`); };
@@ -58,6 +58,17 @@ async function main() {
     const used: string[] = [];
     await withKeyFailover(async (_ai, key) => { used.push(key); throw new Error("bad request shape"); }).catch(() => {});
     check("fatal error → no rotation", used.length === 1, used.join(","));
+  }
+
+  // 6) A wave of server-side errors must never park the whole pool.
+  {
+    __resetPool();
+    const keys = loadKeys();
+    keys.forEach((k) => coolKey(k, "timeout", keys));
+    const h = poolHealth();
+    check("cooling capped at half the pool", h.cooling <= keys.length / 2 && h.healthy >= keys.length / 2, `healthy=${h.healthy} cooling=${h.cooling}`);
+    const picks = [0, 1].map(() => pickKey(keys, none()));
+    check("healthy keys still served after the wave", picks.every((k) => k !== null) && new Set(picks).size === 2, picks.join(","));
   }
 
   check("classify: 429 → quota", classifyKeyError(quota()) === "quota");

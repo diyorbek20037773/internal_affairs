@@ -36,8 +36,15 @@ export const TOTAL_DEADLINE_MS = num(process.env.GEMINI_DEADLINE_MS, 45_000);
 /** Max keys tried per request. */
 const MAX_ATTEMPTS = Math.floor(num(process.env.GEMINI_MAX_ATTEMPTS, 6));
 const BACKOFF_CAP_MS = 2_000;
-/** Cool-downs after a failure, by kind. */
-const COOLDOWN_MS = { quota: 60_000, overloaded: 15_000, invalid: 30 * 60_000, timeout: 30_000 } as const;
+/**
+ * Cool-downs after a failure, by kind. Only `quota` and `invalid` are the KEY's
+ * fault; a 503/504 from Gemini says nothing about the key, so parking it for
+ * half a minute used to collapse the whole pool under load (a burst of 12
+ * parallel turns left 30 of 35 keys cooling on server-side timeouts alone).
+ */
+const COOLDOWN_MS = { quota: 60_000, overloaded: 8_000, invalid: 30 * 60_000, timeout: 5_000 } as const;
+/** Never park more than this share of the pool — the rest stay available. */
+const MAX_COOLING_SHARE = 0.5;
 
 let cachedKeys: string[] | null = null;
 const clientCache = new Map<string, GoogleGenAI>();
@@ -98,6 +105,22 @@ export function pickKey(keys: string[], exclude: Set<string>): string | null {
   const candidates = keys.filter((k) => !exclude.has(k));
   if (candidates.length === 0) return null;
   return candidates.slice().sort((a, b) => (coolingUntil.get(a) ?? 0) - (coolingUntil.get(b) ?? 0))[0];
+}
+
+/**
+ * Park a key after a failure, keeping at least half the pool selectable: when
+ * the cap is reached the keys that recover soonest are released early, so a
+ * wave of server-side errors can never take the whole pool out of service.
+ */
+export function coolKey(key: string, kind: Exclude<FailKind, "fatal">, keys = loadKeys()): void {
+  const now = Date.now();
+  coolingUntil.set(key, now + COOLDOWN_MS[kind]);
+
+  const maxCooling = Math.max(1, Math.floor(keys.length * MAX_COOLING_SHARE));
+  const cooling = keys
+    .filter((k) => (coolingUntil.get(k) ?? 0) > now)
+    .sort((a, b) => (coolingUntil.get(a) ?? 0) - (coolingUntil.get(b) ?? 0));
+  for (let i = 0; i < cooling.length - maxCooling; i++) coolingUntil.delete(cooling[i]);
 }
 
 /** Test seam: reset the pool's in-memory state. */
@@ -169,7 +192,7 @@ export async function withKeyFailover<T>(
       if (kind === "fatal") throw err;
       stats.failovers++;
       stats.lastError = `${kind}: ${(err as Error)?.message?.slice(0, 120) ?? String(err)}`;
-      coolingUntil.set(key, Date.now() + COOLDOWN_MS[kind]);
+      coolKey(key, kind, keys);
       if (kind === "overloaded") overloaded = true;
       console.warn(`[gemini] key ${maskKey(key)} ${kind}; rotating. attempt ${attempt + 1}/${maxRetries}`);
       const remaining = deadline - Date.now();
