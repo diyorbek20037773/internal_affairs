@@ -47,7 +47,14 @@ const BACKOFF_CAP_MS = 2_000;
  * half a minute used to collapse the whole pool under load (a burst of 12
  * parallel turns left 30 of 35 keys cooling on server-side timeouts alone).
  */
-const COOLDOWN_MS = { quota: 60_000, overloaded: 8_000, invalid: 30 * 60_000, timeout: 5_000 } as const;
+const COOLDOWN_MS = {
+  quota: 60_000,
+  /** Daily (RPD) quota — the key is done until Google's reset, not in a minute. */
+  quota_day: 3 * 60 * 60_000,
+  overloaded: 8_000,
+  invalid: 30 * 60_000,
+  timeout: 5_000,
+} as const;
 /** Never park more than this share of the pool — the rest stay available. */
 const MAX_COOLING_SHARE = 0.5;
 
@@ -56,7 +63,7 @@ const clientCache = new Map<string, GoogleGenAI>();
 /** key → epoch ms until which the key is skipped. */
 const coolingUntil = new Map<string, number>();
 /** key → why it is cooling. Only "soft" reasons (the server's fault) may be released early. */
-const coolingKind = new Map<string, "quota" | "overloaded" | "invalid" | "timeout">();
+const coolingKind = new Map<string, CoolKind>();
 const stats = { requests: 0, failovers: 0, exhausted: 0, lastError: "" };
 
 export function loadKeys(): string[] {
@@ -119,7 +126,7 @@ export function pickKey(keys: string[], exclude: Set<string>): string | null {
  * the cap is reached the keys that recover soonest are released early, so a
  * wave of server-side errors can never take the whole pool out of service.
  */
-export function coolKey(key: string, kind: Exclude<FailKind, "fatal">, keys = loadKeys()): void {
+export function coolKey(key: string, kind: CoolKind, keys = loadKeys()): void {
   const now = Date.now();
   coolingUntil.set(key, now + COOLDOWN_MS[kind]);
   coolingKind.set(key, kind);
@@ -146,6 +153,18 @@ export function __resetPool() {
 }
 
 type FailKind = "quota" | "overloaded" | "invalid" | "timeout" | "fatal";
+/** What a key is parked for. `quota_day` is a daily limit, not a per-minute one. */
+export type CoolKind = Exclude<FailKind, "fatal"> | "quota_day";
+
+/**
+ * A 429 can mean "too many requests this minute" or "this key is done for the
+ * day" — Google says which in the quota metric / retry delay. Parking a daily
+ * exhaustion for 60 s makes every later request waste attempts on a dead key.
+ */
+export function quotaScope(err: unknown): "minute" | "day" {
+  const msg = (err as { message?: string })?.message ?? String(err);
+  return /per\s*day|perday|daily limit|requests per day|PerDayPer/i.test(msg) ? "day" : "minute";
+}
 
 /** Classify an error: what it means for THIS key and whether another key may succeed. */
 export function classifyKeyError(err: unknown): FailKind {
@@ -206,8 +225,8 @@ export async function withKeyFailover<T>(
       const kind = classifyKeyError(err);
       if (kind === "fatal") throw err;
       stats.failovers++;
-      stats.lastError = `${kind}: ${(err as Error)?.message?.slice(0, 120) ?? String(err)}`;
-      coolKey(key, kind, keys);
+      stats.lastError = `${kind}: ${(err as Error)?.message?.slice(0, 300) ?? String(err)}`;
+      coolKey(key, kind === "quota" && quotaScope(err) === "day" ? "quota_day" : kind, keys);
       if (kind === "overloaded") overloaded = true;
       console.warn(`[gemini] key ${maskKey(key)} ${kind}; rotating. attempt ${attempt + 1}/${maxRetries}`);
       const remaining = deadline - Date.now();
@@ -230,7 +249,7 @@ export function poolHealth() {
   const now = Date.now();
   const keys = loadKeys();
   const cooling = keys.filter((k) => (coolingUntil.get(k) ?? 0) > now).length;
-  const coolingByKind = { quota: 0, overloaded: 0, invalid: 0, timeout: 0 };
+  const coolingByKind = { quota: 0, quota_day: 0, overloaded: 0, invalid: 0, timeout: 0 };
   for (const k of keys) {
     if ((coolingUntil.get(k) ?? 0) <= now) continue;
     const kind = coolingKind.get(k);

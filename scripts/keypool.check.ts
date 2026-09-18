@@ -1,6 +1,6 @@
 process.env.GEMINI_API_KEYS = "k1,k2,k3,k4";
 
-import { __resetPool, coolKey, loadKeys, pickKey, poolHealth, classifyKeyError, withKeyFailover } from "@/lib/gemini/keyPool";
+import { __resetPool, coolKey, loadKeys, pickKey, poolHealth, quotaScope, classifyKeyError, withKeyFailover } from "@/lib/gemini/keyPool";
 
 let pass = 0, fail = 0;
 const check = (name: string, ok: boolean, note = "") => { ok ? pass++ : fail++; console.log(`${ok ? "PASS" : "FAIL"}  ${name}${note ? " — " + note : ""}`); };
@@ -69,6 +69,23 @@ async function main() {
     check("cooling capped at half the pool", h.cooling <= keys.length / 2 && h.healthy >= keys.length / 2, `healthy=${h.healthy} cooling=${h.cooling}`);
     const picks = [0, 1].map(() => pickKey(keys, none()));
     check("healthy keys still served after the wave", picks.every((k) => k !== null) && new Set(picks).size === 2, picks.join(","));
+  }
+
+  // 7) A daily quota is parked far longer than a per-minute one.
+  {
+    __resetPool();
+    const keys = loadKeys();
+    const perDay = new Error(
+      "429 RESOURCE_EXHAUSTED: Quota exceeded for metric generate_content_free_tier_requests, limit GenerateRequestsPerDayPerProjectPerModel"
+    );
+    check("quotaScope: daily message → day", quotaScope(perDay) === "day");
+    check("quotaScope: plain 429 → minute", quotaScope(quota()) === "minute");
+    coolKey("k1", "quota", keys);
+    coolKey("k2", "quota_day", keys);
+    const h = poolHealth();
+    check("health separates daily from per-minute quota", h.coolingByKind.quota === 1 && h.coolingByKind.quota_day === 1, JSON.stringify(h.coolingByKind));
+    const picks = [0, 1, 2, 3].map(() => pickKey(keys, none()));
+    check("both quota-parked keys skipped", !picks.includes("k1") && !picks.includes("k2"), picks.join(","));
   }
 
   check("classify: 429 → quota", classifyKeyError(quota()) === "quota");
