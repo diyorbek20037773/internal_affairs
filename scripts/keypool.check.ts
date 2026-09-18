@@ -100,6 +100,17 @@ async function main() {
     check("retryAfterMs capped at the daily park", retryAfterMs(new Error("retry in 99h"))! <= 3 * 60 * 60_000);
   }
 
+  // 9) Separator tolerance — operators paste comma, semicolon or newline lists.
+  {
+    const before = process.env.GEMINI_API_KEYS;
+    process.env.GEMINI_API_KEYS = "k1;k2,k3\n k4 ";
+    __resetPool();
+    const parsed = loadKeys();
+    check("comma / semicolon / newline all split", JSON.stringify(parsed) === JSON.stringify(["k1", "k2", "k3", "k4"]), parsed.join("|"));
+    process.env.GEMINI_API_KEYS = before;
+    __resetPool();
+  }
+
   check("classify: 429 → quota", classifyKeyError(quota()) === "quota");
   check("classify: 503 → overloaded", classifyKeyError(Object.assign(new Error("x"), { status: 503 })) === "overloaded");
   check("classify: bad key → invalid", classifyKeyError(new Error("API_KEY_INVALID")) === "invalid");

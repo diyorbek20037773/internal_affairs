@@ -3,7 +3,8 @@ import { GoogleGenAI } from "@google/genai";
 /**
  * Gemini API key pool.
  *
- * `GEMINI_API_KEYS` env var holds MULTIPLE keys (comma OR newline separated).
+ * `GEMINI_API_KEYS` env var holds MULTIPLE keys, separated by commas,
+ * semicolons or whitespace (newlines included) — whichever the operator pasted.
  * Requests walk the pool round-robin (each one starts at the key after the
  * previous request's), skipping cooling keys; on a rate-limit / quota / transient
  * error the request fails over to another key. Failures are remembered per key
@@ -72,7 +73,7 @@ export function loadKeys(): string[] {
   const keys = Array.from(
     new Set(
       raw
-        .split(/[\s,]+/)
+        .split(/[\s,;]+/)
         .map((k) => k.trim())
         .filter((k) => k.length > 0)
     )
