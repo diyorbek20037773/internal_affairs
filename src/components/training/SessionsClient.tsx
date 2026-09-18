@@ -33,7 +33,7 @@ export function SessionsClient() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `himoya360-sessions-${profile?.badgeId ?? "export"}.json`;
+    a.download = `klaster-sessions-${profile?.badgeId ?? "export"}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };

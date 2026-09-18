@@ -211,7 +211,7 @@ export const TrainingSessionSchema = z.object({
   finalScores: CompetencyScoresSchema.optional(),
 });
 
-/* ---------- profile / HIMOYA-ID ---------- */
+/* ---------- profile / Klaster-ID ---------- */
 
 export const TraineeProfileSchema = z.object({
   id: z.string(),

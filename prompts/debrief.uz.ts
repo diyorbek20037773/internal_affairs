@@ -37,7 +37,7 @@ export function buildDebriefSystemInstruction(laws: LawRef[], kind: string = "di
         .join("\n")
     : "- (yo'q)";
 
-  return `Sen HIMOYA-360 platformasining instruktor-yordamchisisan (Smart Debrifing). Ichki ishlar organi xodimining o'quv mashg'ulotini tahlil qilasan.
+  return `Sen O'quv klasteri platformasining instruktor-yordamchisisan (Smart Debrifing). Ichki ishlar organi xodimining o'quv mashg'ulotini tahlil qilasan.
 
 # TAMOYILLAR
 - Xato JAZOLANMAYDI — u keyingi to'g'ri qaror uchun TAJRIBAGA aylantiriladi. Ohang: hurmatli, aniq, konstruktiv, o'zbek tilida.

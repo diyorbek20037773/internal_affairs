@@ -1,6 +1,6 @@
 import type { LocalizedText } from "@/data/sops/types";
 
-/** HIMOYA-ID — 8 continuously-assessed competency axes (pptx slide 10). */
+/** Klaster-ID — 8 continuously-assessed competency axes (pptx slide 10). */
 export const COMPETENCIES = [
   "huquqiy_qaror",
   "vaziyat_tahlili",

@@ -1,14 +1,14 @@
-# 🛡 HIMOYA-360 — milliy smart-ta'lim modeli
+# 🛡 O'quv klasteri — milliy smart-ta'lim modeli
 
-**HIMOYA-360** — O'zbekiston Respublikasi IIV xodimlarini real xizmat vaziyatlariga tayyorlovchi **ssenariyli simulyatsion o'qitish platformasi** (Kasbiy rivojlanish markazi modeli). Ichida **«Mening Inspektorim»** — xizmat jarayonidagi AI yordamchi moduli.
+**O'quv klasteri** — O'zbekiston Respublikasi IIV xodimlarini real xizmat vaziyatlariga tayyorlovchi **ssenariyli simulyatsion o'qitish platformasi** (Kasbiy rivojlanish markazi modeli). Ichida **«Mening Inspektorim»** — xizmat jarayonidagi AI yordamchi moduli.
 
 > **Shior:** «Xodimni o'qitmaymiz — uni real xizmatga tayyorlaymiz». Sikl: VAZIYAT → TAHLIL → MULOQOT → QAROR → HARAKAT → NATIJA.
 
-📱 **PWA:** planshetda «Bosh ekranga qo'shish» — HIMOYA-360 ilova sifatida ochiladi (manifest + service worker, statik assetlar keshlanadi).
+📱 **PWA:** planshetda «Bosh ekranga qo'shish» — O'quv klasteri ilova sifatida ochiladi (manifest + service worker, statik assetlar keshlanadi).
 
 🌐 **Jonli:** https://internalaffairs-production.up.railway.app · 🗣 uz / ru / en · 📱 planshet brauzerida ishlaydi (Android, 4G) · ✅ E2E: `e2e/` (Playwright, jonli Gemini bilan) — `npm run e2e:qa` 21 tekshiruv, `e2e:tir`, `e2e:fps`
 
-## Trenajyorlar (HIMOYA-360)
+## Trenajyorlar (O'quv klasteri)
 
 | Xona | Route | Nima qiladi |
 |---|---|---|
@@ -17,10 +17,10 @@
 | **Qaror simulyatori (planshet)** | `/simulyator/qaror` | Tarmoqlanuvchi (branching) ssenariy, tugun taymeri, 3–5 variant. Har variantda **qonuniylik** va **mutanosiblik** (0–3). Tezlik baholanmaydi; «to'g'ri otmaslik» = a'lo. |
 | **Smart Mahalla** | `/simulyator/mahalla` | Virtual uchastka (SVG xarita, yashil/sariq/qizil), murojaatlar oqimi, TOP-3 muammo + harakat rejasi. Ustuvorlik deterministik, reja — AI rubrika bo'yicha. |
 | **Hujjatlashtirish** | `/simulyator/hujjat` | AI hujjat tekshiruvi (qonun va fakt): berilgan faktlardan bayonnoma/ma'lumotnoma, rubrika bo'yicha to'liqlik, o'ylab topilgan fakt/modda, aybdorlik xulosasi — xato. |
-| **Smart Debrifing** | `/simulyator/debrif/[id]` | 3 savol (to'g'ri / xato qayerda `turn:N`, `node:ID` / keyingi safar), 8 kompetensiya. `final = 0.6·tizim + 0.4·AI`. **Instruktor tasdiqlaydi** — shundan keyin HIMOYA-ID yangilanadi. |
-| **HIMOYA-ID + AI-Mentor** | `/mashgulotlarim`, `/simulyator` | 8 yo'nalishli kompetensiya radar (rolling mean). Har mashg'ulotdan keyin **avtomatik (dastlabki)** yangilanadi, instruktor tasdig'i yakunlaydi. Mentor: qoida bilan ssenariy tanlaydi + **Gemini shaxsiy tavsiya** (matn, e'tibor nuqtalari, mikro-mashq). |
+| **Smart Debrifing** | `/simulyator/debrif/[id]` | 3 savol (to'g'ri / xato qayerda `turn:N`, `node:ID` / keyingi safar), 8 kompetensiya. `final = 0.6·tizim + 0.4·AI`. **Instruktor tasdiqlaydi** — shundan keyin Klaster-ID yangilanadi. |
+| **Klaster-ID + AI-Mentor** | `/mashgulotlarim`, `/simulyator` | 8 yo'nalishli kompetensiya radar (rolling mean). Har mashg'ulotdan keyin **avtomatik (dastlabki)** yangilanadi, instruktor tasdig'i yakunlaydi. Mentor: qoida bilan ssenariy tanlaydi + **Gemini shaxsiy tavsiya** (matn, e'tibor nuqtalari, mikro-mashq). |
 | **Bir kunlik xizmat** | `/simulyator/imtihon` | Yakuniy imtihon — 09:00 hudud → 10:30 nizoli fuqaro → 13:00 xavfli vaziyat (TIR) → 15:00 hujjatlashtirish → **16:30 butun kun bo'yicha AI yakuniy xulosa** (O'TDI / SHARTLI / O'TMADI, mustaqil/nazorat ostida vaziyatlar, keyingi hafta rejasi). |
-| **Amaliy xizmat (KPI)** | `/mashgulotlarim` | 30–90 kunlik xizmat natijasi («Mening Inspektorim» ishlari) + instruktor KPI → HIMOYA-ID natijadorlik. |
+| **Amaliy xizmat (KPI)** | `/mashgulotlarim` | 30–90 kunlik xizmat natijasi («Mening Inspektorim» ishlari) + instruktor KPI → Klaster-ID natijadorlik. |
 | **Instruktor kabineti** | `/instruktor` | Tasdiq kutayotgan debriflar, o'quvchilar jadvali (profil roli = instruktor). |
 
 Ssenariylar — `data/scenarios/` da qo'lda yozilgan TS data (runtime'da LLM yaratmaydi → deterministik baho, instruktor tekshira oladi). Huquqiy asos faqat `data/sops/laws.ts` dagi tasdiqlangan moddalardan.
@@ -76,7 +76,7 @@ npm run dev                 # http://localhost:3000
 | `GEMINI_MODEL` | Ixtiyoriy. Default: `gemini-2.5-flash`. |
 | `NEXT_PUBLIC_DEFAULT_LOCALE` | Ixtiyoriy. Default: `uz`. |
 | `NEXT_PUBLIC_SITE_URL` | Ixtiyoriy. Sayt URL — OpenGraph/Telegram preview uchun. |
-| `DATABASE_URL` | Ixtiyoriy. Postgres — profil, mashg'ulotlar, HIMOYA-ID barcha planshetlar uchun bitta joyda (`/api/store/*`, sxema avtomatik). Yo'q bo'lsa — hammasi planshetda (localStorage), oflayn ishlaydi. |
+| `DATABASE_URL` | Ixtiyoriy. Postgres — profil, mashg'ulotlar, Klaster-ID barcha planshetlar uchun bitta joyda (`/api/store/*`, sxema avtomatik). Yo'q bo'lsa — hammasi planshetda (localStorage), oflayn ishlaydi. |
 | `DATABASE_SSL` | Ixtiyoriy. `false` — SSL'siz ulanish (lokal Postgres). |
 | `AUTH_SECRET` | `DATABASE_URL` bilan birga **majburiy** (production): sessiya cookie imzosi. Uzun tasodifiy satr. |
 | `INSTRUCTOR_BADGES` | Server rejimi: instruktor roli beriladigan xizmat ID'lar (`SH-0001,SH-0002`). |
@@ -101,7 +101,7 @@ npm run dev                 # http://localhost:3000
 
 ## Planshetda o'rnatish (Android, Chrome)
 
-1. Chrome'da saytni oching → menyu → **«Bosh ekranga qo'shish»** — HIMOYA-360 alohida ilova sifatida ochiladi (PWA, to'liq ekran).
+1. Chrome'da saytni oching → menyu → **«Bosh ekranga qo'shish»** — O'quv klasteri alohida ilova sifatida ochiladi (PWA, to'liq ekran).
 2. Birinchi ochilishda profilni to'ldiring (server rejimida — xizmat ID + PIN bilan kiring).
 3. Mikrofon ruxsatini bering — AI-Muloqotda ovoz bilan gapirish uchun (`/api/stt`).
 4. TIR poligoni planshetda **statik rejim**da ishlaydi (nishonga bosish); 3D sifat avtomatik tanlanadi (LQ — 1k panorama, post-effektsiz). Birinchi yuklanish ~10–15 MB.
@@ -123,18 +123,18 @@ npm run dev                 # http://localhost:3000
 
 ```
 prompts/system-prompt.uz.ts   # PROMPT.txt → Gemini system instruction (6-bo'limli format)
-prompts/virtual-citizen.uz.ts # HIMOYA-360: virtual fuqaro (yashirin holat + JSON baho)
-prompts/debrief.uz.ts         # HIMOYA-360: Smart Debrifing grader (3 savol + 8 kompetensiya)
-prompts/mahalla-grader.uz.ts  # HIMOYA-360: harakat rejasi rubrikasi
-prompts/document-checker.uz.ts# HIMOYA-360: hujjat tekshiruvi (qonun va fakt)
-data/scenarios/               # HIMOYA-360 ssenariylari: dialog/ decision/ mahalla/ document/ exam/ (+ competencies)
+prompts/virtual-citizen.uz.ts # O'quv klasteri: virtual fuqaro (yashirin holat + JSON baho)
+prompts/debrief.uz.ts         # O'quv klasteri: Smart Debrifing grader (3 savol + 8 kompetensiya)
+prompts/mahalla-grader.uz.ts  # O'quv klasteri: harakat rejasi rubrikasi
+prompts/document-checker.uz.ts# O'quv klasteri: hujjat tekshiruvi (qonun va fakt)
+data/scenarios/               # O'quv klasteri ssenariylari: dialog/ decision/ mahalla/ document/ exam/ (+ competencies)
 data/sops/                    # SOP ma'lumot modeli (hodisa turlari, bosqichlar, checklist, qonunlar)
 src/lib/gemini/keyPool.ts     # random key rotatsiya + failover
 src/lib/gemini/client.ts      # streamChat() — Gemini streaming
 src/app/api/chat|legal        # streaming route handler (nodejs runtime)
-src/app/api/sim/*             # HIMOYA-360: dialog, debrief, mahalla-grade, document-check (JSON mode)
-src/lib/training/             # HIMOYA-360: dialogState, decisionEngine, competency, mentor, debrief
-src/lib/storage/training.ts   # TrainingRepo (profil, sessiyalar, HIMOYA-ID) — localStorage
+src/app/api/sim/*             # O'quv klasteri: dialog, debrief, mahalla-grade, document-check (JSON mode)
+src/lib/training/             # O'quv klasteri: dialogState, decisionEngine, competency, mentor, debrief
+src/lib/storage/training.ts   # TrainingRepo (profil, sessiyalar, Klaster-ID) — localStorage
 src/components/training/      # trenajyor UI: dialog/ decision/ mahalla/ document/ debrief/ exam/ profile/ instructor/
 src/lib/workflow/             # deterministik bosqich + checklist engine
 src/hooks/useChatStream.ts    # stream o'qish + 6-bo'lim jonli parsing
@@ -151,4 +151,4 @@ messages/{uz,ru,en}.json      # tarjimalar
 
 ---
 
-O'zbekiston Respublikasi Ichki ishlar vazirligi — HIMOYA-360 v2.1
+O'zbekiston Respublikasi Ichki ishlar vazirligi — O'quv klasteri v2.1

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-/** Registers the service worker so the tablet can install HIMOYA-360 as an app ("E-O'quv" tile). */
+/** Registers the service worker so the tablet can install O'quv klasteri as an app ("E-O'quv" tile). */
 export function PwaRegister() {
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;

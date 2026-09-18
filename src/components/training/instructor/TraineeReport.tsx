@@ -16,7 +16,7 @@ import { avgScore } from "./cabinetFilters";
 import type { ReportDoc } from "@/lib/pdf/traineeReport";
 
 /**
- * Printable trainee report (HIMOYA-ID + sessions + exam sign-offs). Two ways
+ * Printable trainee report (Klaster-ID + sessions + exam sign-offs). Two ways
  * out: the browser's print dialog (`@media print` in globals.css keeps only
  * `#h360-print` on the page) and a real PDF from `/api/report/pdf` — the
  * component sends its already-localised rows, the server lays them out.
@@ -96,7 +96,7 @@ export function TraineeReport({
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `himoya360-${(profile?.badgeId ?? traineeId).replace(/[^\w-]+/g, "_")}.pdf`;
+      a.download = `klaster-${(profile?.badgeId ?? traineeId).replace(/[^\w-]+/g, "_")}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -121,7 +121,7 @@ export function TraineeReport({
       </div>
 
       <header className="border-b pb-3">
-        <p className="text-[11px] uppercase tracking-wider text-muted-foreground">HIMOYA-360 · {t("title")}</p>
+        <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{"O'quv klasteri"} · {t("title")}</p>
         <p className="text-xl font-bold">{profile?.name ?? traineeId}</p>
         <p className="text-sm text-muted-foreground">
           {profile?.badgeId ?? "—"}{profile?.rank ? ` · ${profile.rank}` : ""}{profile?.district ? ` · ${profile.district}` : ""}
@@ -131,7 +131,7 @@ export function TraineeReport({
 
       <section>
         <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          HIMOYA-ID {avg != null && <Badge>{avg}%</Badge>}
+          Klaster-ID {avg != null && <Badge>{avg}%</Badge>}
         </h4>
         <table className="w-full text-sm">
           <tbody>

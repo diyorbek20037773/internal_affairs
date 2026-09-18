@@ -20,7 +20,7 @@ function daysAgo(iso: string) {
 /**
  * AMALIY XIZMAT — 30–90 kunlik natija (pptx slide 2, stage 6). Pulls real
  * service activity from the "Mening Inspektorim" module (cases on this device)
- * and lets an instructor record a KPI score into HIMOYA-ID → natijadorlik.
+ * and lets an instructor record a KPI score into Klaster-ID → natijadorlik.
  */
 export function AmaliyXizmatCard({
   profile,

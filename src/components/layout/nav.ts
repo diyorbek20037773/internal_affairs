@@ -22,7 +22,7 @@ export interface NavEntry {
 }
 
 /**
- * HIMOYA-360 is the platform; "Mening Inspektorim" is a module inside it.
+ * O'quv klasteri is the platform; "Mening Inspektorim" is a module inside it.
  * Sidebar renders the two groups with headings (see Sidebar.tsx).
  */
 export const NAV_ENTRIES: NavEntry[] = [

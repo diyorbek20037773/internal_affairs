@@ -11,7 +11,7 @@ export type DebriefError = "ai_unavailable" | "no_keys_configured" | "bad_ai_out
 
 /**
  * Loads a session, generates the AI debrief once (if missing) and applies a
- * PROVISIONAL HIMOYA-ID update; the instructor's confirmation finalises it.
+ * PROVISIONAL Klaster-ID update; the instructor's confirmation finalises it.
  */
 export function useDebrief(sessionId: string, locale: string) {
   const [session, setSession] = useState<TrainingSession | null>(null);
@@ -56,7 +56,7 @@ export function useDebrief(sessionId: string, locale: string) {
         const llm = (await res.json()) as Omit<DebriefResult, "status">;
         const next = attachDebrief(cur, llm);
         await trainingRepo.saveSession(next);
-        // Provisional HIMOYA-ID update — instructor confirmation finalises it.
+        // Provisional Klaster-ID update — instructor confirmation finalises it.
         const scenario = getScenario(next.scenarioId);
         const current = (await trainingRepo.getHimoyaId(next.traineeId)) ?? newHimoyaId(next.traineeId);
         await trainingRepo.saveHimoyaId(applySessionToHimoyaId(current, next, assessedCompetencies(next, scenario?.tags ?? []), true));

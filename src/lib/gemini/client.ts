@@ -71,7 +71,7 @@ export async function generateText({
 }
 
 /* ------------------------------------------------------------------------ */
-/* Structured JSON generation (HIMOYA-360 trainers)                          */
+/* Structured JSON generation (O'quv klasteri trainers)                          */
 /* ------------------------------------------------------------------------ */
 
 export class JsonOutputError extends Error {

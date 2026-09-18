@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
       status: 200,
       headers: {
         "content-type": "application/pdf",
-        "content-disposition": `attachment; filename="himoya360-${safe}.pdf"`,
+        "content-disposition": `attachment; filename="klaster-${safe}.pdf"`,
         "cache-control": "no-store",
       },
     });

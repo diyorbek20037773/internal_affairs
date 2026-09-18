@@ -14,7 +14,7 @@ import { remoteStore, storeMode } from "./trainingRemote";
 import { embedPost } from "@/lib/embed/bridge";
 
 /**
- * HIMOYA-360 training persistence. Mirrors `CasesRepo` but async so a server
+ * O'quv klasteri training persistence. Mirrors `CasesRepo` but async so a server
  * (Postgres) adapter can replace `localTrainingRepo` without touching callers.
  */
 
@@ -31,7 +31,7 @@ const MAX_SESSIONS = 200;
 export interface TrainingRepo {
   getProfile(): Promise<TraineeProfile | null>;
   saveProfile(p: TraineeProfile): Promise<void>;
-  /** Forget the device profile (logout). Sessions/HIMOYA-ID stay for later sync. */
+  /** Forget the device profile (logout). Sessions/Klaster-ID stay for later sync. */
   clearProfile(): Promise<void>;
 
   listSessions(traineeId?: string): Promise<TrainingSession[]>;

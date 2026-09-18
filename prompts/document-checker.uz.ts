@@ -6,7 +6,7 @@ export function buildDocumentCheckerInstruction(laws: LawRef[]): string {
   const lawList = laws.length
     ? laws.map((l) => `- ${l.code}${l.article ? `, ${l.article}` : ""}${l.title ? ` — ${l.title}` : ""}`).join("\n")
     : "- (yo'q)";
-  return `Sen HIMOYA-360 platformasining hujjat tekshiruvchisisan. Ichki ishlar organi xodimi yozgan xizmat hujjatini (bayonnoma / ma'lumotnoma) BERILGAN FAKTLAR va RUBRIKA bo'yicha tekshirasan.
+  return `Sen O'quv klasteri platformasining hujjat tekshiruvchisisan. Ichki ishlar organi xodimi yozgan xizmat hujjatini (bayonnoma / ma'lumotnoma) BERILGAN FAKTLAR va RUBRIKA bo'yicha tekshirasan.
 
 # TEKSHIRUV MEZONLARI
 1. TO'LIQLIK — rubrikadagi har bir element hujjatda bormi (mazmunan, so'zma-so'z shart emas).

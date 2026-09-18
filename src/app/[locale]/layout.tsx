@@ -18,25 +18,25 @@ const inter = Inter({
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://internalaffairs-production.up.railway.app";
-const TITLE = "HIMOYA-360 — Milliy smart-ta'lim modeli";
+const TITLE = "O'quv klasteri — Milliy smart-ta'lim modeli";
 const DESCRIPTION =
-  "IIV xodimlarini real xizmatga tayyorlovchi ssenariyli simulyatsion o'qitish platformasi: AI-Muloqot, Qaror simulyatori, Smart Mahalla, Hujjatlashtirish, Smart Debrifing, HIMOYA-ID. Ichida — «Mening Inspektorim» AI yordamchisi.";
+  "IIV xodimlarini real xizmatga tayyorlovchi ssenariyli simulyatsion o'qitish platformasi: AI-Muloqot, Qaror simulyatori, Smart Mahalla, Hujjatlashtirish, Smart Debrifing, Klaster-ID. Ichida — «Mening Inspektorim» AI yordamchisi.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: TITLE, template: "%s · HIMOYA-360" },
+  title: { default: TITLE, template: "%s · O'quv klasteri" },
   description: DESCRIPTION,
-  applicationName: "HIMOYA-360",
+  applicationName: "O'quv klasteri",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/iiv_logo.svg", apple: "/icon-192.png" },
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "HIMOYA-360" },
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "O'quv klasteri" },
   openGraph: {
     type: "website",
-    siteName: "HIMOYA-360",
+    siteName: "O'quv klasteri",
     title: TITLE,
     description: DESCRIPTION,
     url: SITE_URL,
-    images: [{ url: "/iiv_logo.jpg", width: 512, height: 512, alt: "HIMOYA-360" }],
+    images: [{ url: "/iiv_logo.jpg", width: 512, height: 512, alt: "O'quv klasteri" }],
     locale: "uz_UZ",
   },
   twitter: { card: "summary", title: TITLE, description: DESCRIPTION, images: ["/iiv_logo.jpg"] },

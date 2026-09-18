@@ -1,12 +1,12 @@
 import type { HimoyaId, TraineeProfile, TrainingSession } from "@/lib/storage/trainingSchema";
 
 /**
- * E-O'quv embed bridge. HIMOYA-360 runs inside the tablet app either as an
+ * E-O'quv embed bridge. O'quv klasteri runs inside the tablet app either as an
  * <iframe> (messages go to `window.parent`) or an Android WebView with a
  * `@JavascriptInterface` object named `H360Host` (messages go to
  * `H360Host.postMessage(json)`). The page announces itself, receives the
  * officer profile from the host and reports every completed session and
- * HIMOYA-ID change back. Protocol: docs/embed-bridge.md.
+ * Klaster-ID change back. Protocol: docs/embed-bridge.md.
  *
  * Embed mode is on when the URL has `?embed=1` (remembered in sessionStorage
  * for in-app navigation) or when `H360Host` is present.

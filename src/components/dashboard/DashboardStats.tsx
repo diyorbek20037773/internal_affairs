@@ -9,7 +9,7 @@ import { COMPETENCIES } from "@/data/scenarios/competencies";
 import type { HimoyaId } from "@/lib/storage/trainingSchema";
 import { StatCard } from "./StatCard";
 
-/** Training KPIs for the signed-in officer: sessions, completed, confirmed debriefs, HIMOYA-ID average. */
+/** Training KPIs for the signed-in officer: sessions, completed, confirmed debriefs, Klaster-ID average. */
 export function DashboardStats() {
   const t = useTranslations("dashboard.stats");
   const { profile } = useTraineeProfile();

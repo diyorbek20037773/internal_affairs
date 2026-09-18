@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "HIMOYA-360",
+    "appName": "Training Cluster",
     "appSubtitle": "National smart training model",
     "ministry": "Ministry of Internal Affairs of the Republic of Uzbekistan",
     "cancel": "Cancel",
@@ -74,12 +74,12 @@
     "instruktor": "Instructor cabinet",
     "profil": "Profile",
     "groups": {
-      "himoya": "HIMOYA-360 trainers",
+      "himoya": "Training Cluster trainers",
       "inspektor": "My Inspector"
     }
   },
   "dashboard": {
-    "title": "HIMOYA-360 — we don't teach the officer, we prepare them for real service",
+    "title": "Training Cluster — we don't teach the officer, we prepare them for real service",
     "welcome": "Welcome",
     "subtitle": "Situation → Analysis → Communication → Decision → Action → Result.",
     "stats": {
@@ -89,7 +89,7 @@
       "conversations": "AI conversations",
       "sessions": "Sessions",
       "pendingDebriefs": "Debriefs awaiting confirmation",
-      "himoyaAvg": "HIMOYA-ID average"
+      "himoyaAvg": "Cluster-ID average"
     },
     "cards": {
       "inspektor": {
@@ -122,9 +122,9 @@
     "inspectorTitle": "My Inspector",
     "inspectorSubtitle": "AI assistant on duty — incident, SOP, legislation.",
     "setupProfile": "Fill in your profile to start",
-    "setupProfileDesc": "Name, service ID (e.g. SH-0473), rank and district — HIMOYA-ID is bound to this profile.",
+    "setupProfileDesc": "Name, service ID (e.g. SH-0473), rank and district — Cluster-ID is bound to this profile.",
     "statsTitle": "My indicators",
-    "statsSubtitle": "Sessions, debriefs and the HIMOYA-ID average.",
+    "statsSubtitle": "Sessions, debriefs and the Cluster-ID average.",
     "setupProfileCta": "Fill in the profile"
   },
   "chat": {
@@ -249,16 +249,16 @@
     "instructorTitle": "For the instructor",
     "moduleTitle": "“Mening Inspektorim” module",
     "trainee": {
-      "one": "Fill in the profile: full name, badge ID, rank, district. HIMOYA-ID is bound to it.",
+      "one": "Fill in the profile: full name, badge ID, rank, district. Cluster-ID is bound to it.",
       "two": "Pick a scenario under “Trainers”: AI Dialogue, Decision, Smart Mahalla, Documentation or the TIR range.",
       "three": "Speed is not graded — legality and proportionality are. “Correctly not shooting” is also a top mark.",
       "four": "After the session Smart Debriefing opens: what went right, where the mistake was, what to do differently.",
-      "five": "HIMOYA-ID updates provisionally; the instructor's confirmation makes it final. History and the radar are in “My sessions”.",
+      "five": "Cluster-ID updates provisionally; the instructor's confirmation makes it final. History and the radar are in “My sessions”.",
       "six": "“One day of service” is the final exam: 5 stages from 09:00 to 16:30 and a verdict for the whole day."
     },
     "instructor": {
       "one": "Choose the “Instructor” role in your profile (with the centre code) — the “Instructor cabinet” appears.",
-      "two": "Open pending debriefs in the cabinet, add a note and confirm — only then HIMOYA-ID is finalised.",
+      "two": "Open pending debriefs in the cabinet, add a note and confirm — only then Cluster-ID is finalised.",
       "three": "On the TIR range open the “Instructor station” in a second window: escalate, spawn actors, pause, ALL STOP.",
       "four": "Enter the 30–90 day service result in the “Field service (KPI)” card — it feeds the effectiveness competency."
     }
@@ -419,7 +419,7 @@
       "summary": "Summary",
       "pending": "Awaiting instructor confirmation",
       "confirmed": "Confirmed by instructor",
-      "confirm": "Confirm and write to HIMOYA-ID",
+      "confirm": "Confirm and write to Cluster-ID",
       "instructorNote": "Instructor note (optional)",
       "aiNote": "AI does not decide — every conclusion is confirmed by an instructor.",
       "transcript": "Session record",
@@ -433,11 +433,11 @@
       "notFoundDesc": "The link is outdated or the session was saved on another device.",
       "unfinishedTitle": "The session is not finished yet",
       "unfinishedDesc": "The debriefing is prepared once the session ends. Continue the session first.",
-      "confirmedToast": "Confirmed — HIMOYA-ID updated"
+      "confirmedToast": "Confirmed — Cluster-ID updated"
     },
     "sessions": {
       "title": "My sessions",
-      "subtitle": "History of all sessions and the HIMOYA-ID competency profile.",
+      "subtitle": "History of all sessions and the Cluster-ID competency profile.",
       "empty": "No sessions yet.",
       "emptyHint": "Start your first scenario in the Simulator.",
       "status": {
@@ -453,7 +453,7 @@
       "importFail": "Import failed — wrong file format"
     },
     "himoyaId": {
-      "title": "HIMOYA-ID",
+      "title": "Cluster-ID",
       "subtitle": "Not a certificate — a competency profile. Continuous assessment across 8 areas.",
       "empty": "Profile not formed yet — appears after the first confirmed debrief.",
       "strengths": "Strengths",
@@ -541,7 +541,7 @@
       }
     },
     "auth": {
-      "intro": "Server mode: sign in with your badge ID and PIN. Profile, sessions and HIMOYA-ID are the same on every tablet. Offline data stays on the device and syncs when connected.",
+      "intro": "Server mode: sign in with your badge ID and PIN. Profile, sessions and Cluster-ID are the same on every tablet. Offline data stays on the device and syncs when connected.",
       "login": "Sign in",
       "register": "Register",
       "badgeId": "Badge ID",
@@ -563,7 +563,7 @@
     },
     "profile": {
       "title": "Profile",
-      "subtitle": "HIMOYA-ID is bound to this profile.",
+      "subtitle": "Cluster-ID is bound to this profile.",
       "name": "Full name",
       "badgeId": "Service ID",
       "rank": "Rank",
@@ -599,7 +599,7 @@
       "allDone": "All stages completed. See the final debrief.",
       "passed": "PASSED means not «finished the course» but «RAN A REAL DAY INDEPENDENTLY».",
       "finalStage": "Debrief and grade",
-      "finalStageDesc": "3-question analysis, HIMOYA-ID update",
+      "finalStageDesc": "3-question analysis, Cluster-ID update",
       "summaryLoading": "Preparing the whole-day verdict...",
       "verdict": {
         "passed": "PASSED — ran a real day independently",
@@ -647,8 +647,8 @@
       "steps90": "90 days: completed steps",
       "autoKpi": "Auto-KPI (completion %)",
       "enter": "Service KPI score (0–100)",
-      "save": "Write to HIMOYA-ID",
-      "saved": "KPI added to the HIMOYA-ID effectiveness axis",
+      "save": "Write to Cluster-ID",
+      "saved": "KPI added to the Cluster-ID effectiveness axis",
       "note": "Source: cases from the «My Inspector» module (this device). The instructor enters the official KPI."
     },
     "model": {
@@ -681,7 +681,7 @@
         },
         "sertifikat": {
           "from": "Certificate",
-          "to": "Competency (HIMOYA-ID)"
+          "to": "Competency (Cluster-ID)"
         }
       },
       "traektoriya": "100 officers — 100 different learning paths. AI does not decide — every conclusion is confirmed by an instructor."

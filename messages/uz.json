@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "HIMOYA-360",
+    "appName": "O'quv klasteri",
     "appSubtitle": "Milliy smart-ta'lim modeli",
     "ministry": "O'zbekiston Respublikasi Ichki ishlar vazirligi",
     "cancel": "Bekor qilish",
@@ -74,12 +74,12 @@
     "instruktor": "Instruktor kabineti",
     "profil": "Profil",
     "groups": {
-      "himoya": "HIMOYA-360 trenajyorlar",
+      "himoya": "O'quv klasteri trenajyorlari",
       "inspektor": "Mening Inspektorim"
     }
   },
   "dashboard": {
-    "title": "HIMOYA-360 — xodimni o'qitmaymiz, uni real xizmatga tayyorlaymiz",
+    "title": "O'quv klasteri — xodimni o'qitmaymiz, uni real xizmatga tayyorlaymiz",
     "welcome": "Xush kelibsiz",
     "subtitle": "Vaziyat → Tahlil → Muloqot → Qaror → Harakat → Natija. Har bir mashg'ulot — real xizmat holati, har bir xato — tajriba.",
     "stats": {
@@ -89,7 +89,7 @@
       "conversations": "AI bilan suhbatlar",
       "sessions": "Mashg'ulotlar",
       "pendingDebriefs": "Tasdiq kutayotgan debrif",
-      "himoyaAvg": "HIMOYA-ID o'rtacha"
+      "himoyaAvg": "Klaster-ID o'rtacha"
     },
     "cards": {
       "inspektor": {
@@ -122,9 +122,9 @@
     "inspectorTitle": "Mening Inspektorim",
     "inspectorSubtitle": "Xizmat jarayonidagi AI yordamchi — hodisa, SOP, qonunchilik.",
     "setupProfile": "Boshlash uchun profilni to'ldiring",
-    "setupProfileDesc": "Ism, xizmat ID (masalan SH-0473), unvon va hudud — HIMOYA-ID shu profilga bog'lanadi.",
+    "setupProfileDesc": "Ism, xizmat ID (masalan SH-0473), unvon va hudud — Klaster-ID shu profilga bog'lanadi.",
     "statsTitle": "Mening ko'rsatkichlarim",
-    "statsSubtitle": "Mashg'ulotlar, debrifinglar va HIMOYA-ID o'rtacha bali.",
+    "statsSubtitle": "Mashg'ulotlar, debrifinglar va Klaster-ID o'rtacha bali.",
     "setupProfileCta": "Profilni to'ldirish"
   },
   "chat": {
@@ -249,16 +249,16 @@
     "instructorTitle": "Instruktor uchun",
     "moduleTitle": "«Mening Inspektorim» moduli",
     "trainee": {
-      "one": "Profilni to'ldiring: F.I.Sh., xizmat ID, unvon, hudud. HIMOYA-ID shu profilga bog'lanadi.",
+      "one": "Profilni to'ldiring: F.I.Sh., xizmat ID, unvon, hudud. Klaster-ID shu profilga bog'lanadi.",
       "two": "«Trenajyorlar» bo'limidan ssenariyni tanlang: AI-Muloqot, Qaror, Smart Mahalla, Hujjatlashtirish yoki TIR poligoni.",
       "three": "Mashg'ulot davomida baholanadigan narsa tezlik emas — qonuniylik va mutanosiblik. «To'g'ri otmaslik» ham a'lo baho.",
       "four": "Mashg'ulot tugagach Smart Debrifing ochiladi: nima to'g'ri bo'ldi, qayerda xato, keyingi safar nima boshqacha.",
-      "five": "HIMOYA-ID dastlabki ball bilan yangilanadi; instruktor tasdiqlagach yakuniy bo'ladi. «Mashg'ulotlarim»da tarix va radar.",
+      "five": "Klaster-ID dastlabki ball bilan yangilanadi; instruktor tasdiqlagach yakuniy bo'ladi. «Mashg'ulotlarim»da tarix va radar.",
       "six": "«Bir kunlik xizmat» — yakuniy imtihon: 09:00 dan 16:30 gacha 5 bosqich, oxirida butun kun bo'yicha xulosa."
     },
     "instructor": {
       "one": "Profilda «Instruktor» rolini tanlang (markaz kodi bilan) — «Instruktor kabineti» ochiladi.",
-      "two": "Kabinetda tasdiq kutayotgan debriflarni oching, izoh yozing va tasdiqlang — shundan keyin HIMOYA-ID yakuniy yangilanadi.",
+      "two": "Kabinetda tasdiq kutayotgan debriflarni oching, izoh yozing va tasdiqlang — shundan keyin Klaster-ID yakuniy yangilanadi.",
       "three": "TIR poligonida «Instruktor stansiyasi»ni ikkinchi oynada oching: keskinlashtirish, personaj kiritish, pauza, ALL STOP.",
       "four": "«Amaliy xizmat (KPI)» kartasida 30–90 kunlik xizmat natijasini kiriting — natijadorlik kompetensiyasiga qo'shiladi."
     }
@@ -419,7 +419,7 @@
       "summary": "Umumiy xulosa",
       "pending": "Instruktor tasdig'ini kutmoqda",
       "confirmed": "Instruktor tasdiqladi",
-      "confirm": "Tasdiqlash va HIMOYA-ID ga yozish",
+      "confirm": "Tasdiqlash va Klaster-ID ga yozish",
       "instructorNote": "Instruktor izohi (ixtiyoriy)",
       "aiNote": "AI qaror bermaydi — har bir xulosani instruktor tasdiqlaydi.",
       "transcript": "Mashg'ulot yozuvi",
@@ -433,11 +433,11 @@
       "notFoundDesc": "Havola eskirgan yoki mashg'ulot boshqa qurilmada saqlangan.",
       "unfinishedTitle": "Mashg'ulot hali yakunlanmagan",
       "unfinishedDesc": "Debrifing mashg'ulot tugagach tayyorlanadi. Avval mashg'ulotni davom ettiring.",
-      "confirmedToast": "Tasdiqlandi — HIMOYA-ID yangilandi"
+      "confirmedToast": "Tasdiqlandi — Klaster-ID yangilandi"
     },
     "sessions": {
       "title": "Mashg'ulotlarim",
-      "subtitle": "Barcha mashg'ulotlar tarixi va HIMOYA-ID kompetensiya profili.",
+      "subtitle": "Barcha mashg'ulotlar tarixi va Klaster-ID kompetensiya profili.",
       "empty": "Hali mashg'ulot yo'q.",
       "emptyHint": "Simulyator bo'limidan birinchi ssenariyni boshlang.",
       "status": {
@@ -453,7 +453,7 @@
       "importFail": "Import qilinmadi — fayl formati noto'g'ri"
     },
     "himoyaId": {
-      "title": "HIMOYA-ID",
+      "title": "Klaster-ID",
       "subtitle": "Sertifikat emas — kompetensiya profili. 8 yo'nalishda doimiy baholash.",
       "empty": "Profil hali shakllanmagan — birinchi tasdiqlangan debrifdan keyin paydo bo'ladi.",
       "strengths": "Kuchli tomonlar",
@@ -541,7 +541,7 @@
       }
     },
     "auth": {
-      "intro": "Server rejimi: xizmat ID va PIN bilan kiring. Profil, mashg'ulotlar va HIMOYA-ID barcha planshetlarda bir xil bo'ladi. Oflayn bo'lsa ma'lumot qurilmada saqlanib, ulanishda sinxronlanadi.",
+      "intro": "Server rejimi: xizmat ID va PIN bilan kiring. Profil, mashg'ulotlar va Klaster-ID barcha planshetlarda bir xil bo'ladi. Oflayn bo'lsa ma'lumot qurilmada saqlanib, ulanishda sinxronlanadi.",
       "login": "Kirish",
       "register": "Ro'yxatdan o'tish",
       "badgeId": "Xizmat ID",
@@ -563,7 +563,7 @@
     },
     "profile": {
       "title": "Profil",
-      "subtitle": "HIMOYA-ID shu profilga bog'lanadi.",
+      "subtitle": "Klaster-ID shu profilga bog'lanadi.",
       "name": "F.I.Sh.",
       "badgeId": "Xizmat ID",
       "rank": "Unvon",
@@ -599,7 +599,7 @@
       "allDone": "Barcha bosqichlar yakunlandi. Yakuniy debrifni ko'ring.",
       "passed": "O'TDI degani — «kursni tugatdi» emas, «REAL KUNNI MUSTAQIL BOSHQARDI» degani.",
       "finalStage": "Debrifing va baho",
-      "finalStageDesc": "3 savol tahlili, HIMOYA-ID yangilanadi",
+      "finalStageDesc": "3 savol tahlili, Klaster-ID yangilanadi",
       "summaryLoading": "Butun kun bo'yicha yakuniy tahlil tayyorlanmoqda...",
       "verdict": {
         "passed": "O'TDI — real kunni mustaqil boshqardi",
@@ -647,8 +647,8 @@
       "steps90": "90 kun: bajarilgan bosqichlar",
       "autoKpi": "Avto-KPI (yakunlanish %)",
       "enter": "Xizmat KPI bali (0–100)",
-      "save": "HIMOYA-ID ga yozish",
-      "saved": "KPI HIMOYA-ID natijadorlik yo'nalishiga qo'shildi",
+      "save": "Klaster-ID ga yozish",
+      "saved": "KPI Klaster-ID natijadorlik yo'nalishiga qo'shildi",
       "note": "Manba: «Mening Inspektorim» modulidagi ishlar (shu qurilma). Instruktor rasmiy KPI ni kiritadi."
     },
     "model": {
@@ -681,7 +681,7 @@
         },
         "sertifikat": {
           "from": "Sertifikat",
-          "to": "Kompetensiya (HIMOYA-ID)"
+          "to": "Kompetensiya (Klaster-ID)"
         }
       },
       "traektoriya": "100 xodim — 100 xil o'quv traektoriyasi. AI qaror bermaydi — har bir xulosani instruktor tasdiqlaydi."

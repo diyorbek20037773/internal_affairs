@@ -3,11 +3,11 @@ import { FeatureCard } from "@/components/dashboard/FeatureCard";
 
 export const TRAINERS = [
   { key: "dialog", href: "/simulyator/muloqot", icon: "MessageSquareWarning" },
-  { key: "tir", href: "/simulyator/tir", icon: "Crosshair" },
   { key: "decision", href: "/simulyator/qaror", icon: "Gauge" },
   { key: "mahalla", href: "/simulyator/mahalla", icon: "MapPinned" },
   { key: "document", href: "/simulyator/hujjat", icon: "FileText" },
   { key: "exam", href: "/simulyator/imtihon", icon: "GraduationCap" },
+  { key: "tir", href: "/simulyator/tir", icon: "Crosshair" },
 ] as const;
 
 export async function TrainersGrid() {

@@ -28,7 +28,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-white/10 shadow-elevated ring-1 ring-white/15">
           <Image
             src="/iiv_logo.svg"
-            alt="HIMOYA-360"
+            alt="O'quv klasteri"
             fill
             className="object-contain p-1"
             sizes="44px"

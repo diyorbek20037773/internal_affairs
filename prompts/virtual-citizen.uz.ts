@@ -2,7 +2,7 @@ import type { DialogHiddenState, DialogScenario } from "@/data/scenarios/types";
 import { budgetInstruction, type ReplyBudget } from "@/lib/training/replyBudget";
 
 /**
- * System instruction for the AI-Muloqot virtual citizen (HIMOYA-360, pptx
+ * System instruction for the AI-Muloqot virtual citizen (O'quv klasteri, pptx
  * slide 5). The model plays ONE citizen, in first person, in Uzbek, and returns
  * a JSON envelope: the citizen's reply + an assessment of the OFFICER's last
  * utterance. Hidden state numbers are given so the model's tone matches them;

@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 /**
  * AI-Mentor (pptx slide 8): "OLDIN zaif tomonni aniqlaydi • DAVOMIDA kuzatadi
  * • KEYIN individual tavsiya beradi". The rule engine picks the scenario;
- * Gemini writes the personal coaching note from the HIMOYA-ID profile and the
+ * Gemini writes the personal coaching note from the Klaster-ID profile and the
  * last sessions. The instructor still confirms every score — this only advises.
  */
 const BodySchema = z.object({
@@ -57,10 +57,10 @@ export async function POST(req: NextRequest) {
   const profile = COMPETENCIES.map((c) => `- ${c}: ${body.scores[c] ?? 0}% (${body.samples[c] ?? 0} mashg'ulot) — ${COMPETENCY_DEFINITIONS_UZ[c]}`).join("\n");
   const recent = body.recent.map((r) => `- ${r.at.slice(0, 10)} ${r.kind} ${r.scenarioId} → ${r.outcome ?? "-"}${r.avg != null ? ` (${r.avg}%)` : ""}`).join("\n") || "- (yo'q)";
 
-  const systemInstruction = `Sen HIMOYA-360 platformasining AI-Mentorisan — ichki ishlar organi xodimining shaxsiy raqamli treneri. Instruktor emassan, qaror chiqarmaysan: FAQAT tavsiya berasan ("AI qaror bermaydi — instruktor tasdiqlaydi").
+  const systemInstruction = `Sen O'quv klasteri platformasining AI-Mentorisan — ichki ishlar organi xodimining shaxsiy raqamli treneri. Instruktor emassan, qaror chiqarmaysan: FAQAT tavsiya berasan ("AI qaror bermaydi — instruktor tasdiqlaydi").
 Ohang: hurmatli, qisqa, aniq, motivatsion; "siz" bilan. ${lang} tilida yoz. Ballarni takrorlama — xulosa chiqar.
 CHIQISH — faqat JSON: {"text": 2–3 gap shaxsiy tavsiya (nega aynan shu ssenariy, qaysi ko'nikma), "focus": 2–3 ta aniq e'tibor nuqtasi (har biri ≤ 8 so'z), "drill": bitta mikro-mashq (bitta gap, mashg'ulotdan oldin 2 daqiqada bajariladigan)}`;
-  const user = `# HIMOYA-ID profili
+  const user = `# Klaster-ID profili
 ${profile}
 
 # Oxirgi mashg'ulotlar

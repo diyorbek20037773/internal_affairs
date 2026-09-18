@@ -151,7 +151,7 @@ export function tirDeterministic(p: TirPayload): Partial<CompetencyScores> {
 }
 
 /* ------------------------------------------------------------------------ */
-/* Blend + HIMOYA-ID update                                                  */
+/* Blend + Klaster-ID update                                                  */
 /* ------------------------------------------------------------------------ */
 
 /** final = 0.6·deterministic + 0.4·llm where deterministic exists, else llm. */
@@ -167,7 +167,7 @@ export function blendScores(
   return out;
 }
 
-/** Competencies this session is allowed to move on the HIMOYA-ID. */
+/** Competencies this session is allowed to move on the Klaster-ID. */
 export function assessedCompetencies(
   session: TrainingSession,
   scenarioTags: Competency[]

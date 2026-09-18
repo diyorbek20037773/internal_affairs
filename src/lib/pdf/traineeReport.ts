@@ -6,7 +6,7 @@ import { z } from "zod";
 /**
  * Server-side PDF of the instructor's trainee report. The client sends the
  * already-localised rows (it has the translations, scenario titles and the
- * HIMOYA-ID maths); this module only lays them out. DejaVu Sans is embedded
+ * Klaster-ID maths); this module only lays them out. DejaVu Sans is embedded
  * so Uzbek Latin (oʻ, gʻ) and Cyrillic render — PDF standard fonts cannot.
  */
 
@@ -62,7 +62,7 @@ const LINE = "#cccccc";
 
 export function renderTraineeReportPdf(r: ReportDoc): Promise<Buffer> {
   const f = loadFonts();
-  const doc = new PDFDocument({ size: "A4", margin: PAGE.margin, bufferPages: true, info: { Title: `${r.labels.title} — ${r.trainee.name}`, Author: "HIMOYA-360", Creator: "HIMOYA-360" } });
+  const doc = new PDFDocument({ size: "A4", margin: PAGE.margin, bufferPages: true, info: { Title: `${r.labels.title} — ${r.trainee.name}`, Author: "O'quv klasteri", Creator: "O'quv klasteri" } });
   doc.registerFont("R", f.regular);
   doc.registerFont("B", f.bold);
   const chunks: Buffer[] = [];
@@ -89,7 +89,7 @@ export function renderTraineeReportPdf(r: ReportDoc): Promise<Buffer> {
   };
 
   // header
-  doc.font("R").fontSize(8).fillColor(MUTED).text(`HIMOYA-360 · ${r.labels.title}`, left, PAGE.margin, { characterSpacing: 0.8 });
+  doc.font("R").fontSize(8).fillColor(MUTED).text(`O'quv klasteri · ${r.labels.title}`, left, PAGE.margin, { characterSpacing: 0.8 });
   doc.moveDown(0.3);
   doc.font("B").fontSize(18).fillColor(INK).text(r.trainee.name);
   doc.font("R").fontSize(10).fillColor(MUTED).text([r.trainee.badge, r.trainee.meta].filter(Boolean).join(" · "));
@@ -98,8 +98,8 @@ export function renderTraineeReportPdf(r: ReportDoc): Promise<Buffer> {
   doc.moveDown(0.5);
   rule();
 
-  // HIMOYA-ID
-  section(`HIMOYA-ID${r.himoya.avg != null ? ` · ${r.himoya.avg}%` : ""}`);
+  // Klaster-ID
+  section(`Klaster-ID${r.himoya.avg != null ? ` · ${r.himoya.avg}%` : ""}`);
   const barX = left + width - 200;
   const barW = 150;
   for (const row of r.himoya.rows) {

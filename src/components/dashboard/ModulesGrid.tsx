@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 interface ModuleDef {
   key: string;
   icon: string;
-  /** Internal route when the module exists in HIMOYA-360. */
+  /** Internal route when the module exists in O'quv klasteri. */
   href?: string;
 }
 
