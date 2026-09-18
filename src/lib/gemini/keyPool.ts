@@ -255,10 +255,15 @@ export async function withKeyFailover<T>(
       if (kind === "fatal") throw err;
       stats.failovers++;
       stats.lastError = `${kind}: ${quotaDetail(err)}`;
-      const quotaWait = kind === "quota" ? retryAfterMs(err) : null;
-      const coolAs: CoolKind =
-        kind === "quota" && (quotaScope(err) === "day" || (quotaWait ?? 0) > 5 * 60_000) ? "quota_day" : kind;
-      coolKey(key, coolAs, keys, quotaWait ?? undefined);
+      // Park for exactly what Gemini asked for when it said; otherwise fall back
+      // to the per-minute / per-day default. The label follows the real wait, so
+      // /api/health never reports a day-long park for a 40-second one.
+      const parkMs =
+        kind === "quota"
+          ? (retryAfterMs(err) ?? (quotaScope(err) === "day" ? COOLDOWN_MS.quota_day : COOLDOWN_MS.quota))
+          : COOLDOWN_MS[kind];
+      const coolAs: CoolKind = kind === "quota" && parkMs > 5 * 60_000 ? "quota_day" : kind;
+      coolKey(key, coolAs, keys, parkMs);
       if (kind === "overloaded") overloaded = true;
       console.warn(`[gemini] key ${maskKey(key)} ${kind}; rotating. attempt ${attempt + 1}/${maxRetries}`);
       const remaining = deadline - Date.now();
