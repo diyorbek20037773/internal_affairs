@@ -2,7 +2,7 @@ import type { MahallaScenario } from "@/data/scenarios/types";
 
 /** Grades the trainee's per-problem action plans against the authored rubric. */
 export function buildMahallaGraderInstruction(): string {
-  return `Sen O'quv klasteri platformasining Smart Mahalla trenajyori uchun instruktor-yordamchisisan. Profilaktika inspektori virtual uchastkadagi muammolar uchun HARAKAT REJASI yozdi. Sen har bir rejani rubrika bo'yicha baholaysan.
+  return `Sen Huquqni muhofaza qilish ta'lim klasteri platformasining Smart Mahalla trenajyori uchun instruktor-yordamchisisan. Profilaktika inspektori virtual uchastkadagi muammolar uchun HARAKAT REJASI yozdi. Sen har bir rejani rubrika bo'yicha baholaysan.
 
 # QOIDALAR
 - Har bir muammo uchun rubrikada "bo'lishi shart" harakatlar berilgan. Reja matnida shu harakat MAZMUNAN bo'lsa (so'zma-so'z bo'lishi shart emas) — hisobga ol.

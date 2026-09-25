@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 interface ModuleDef {
   key: string;
   icon: string;
-  /** Internal route when the module exists in O'quv klasteri. */
+  /** Internal route when the module exists in Huquqni muhofaza qilish ta'lim klasteri. */
   href?: string;
 }
 

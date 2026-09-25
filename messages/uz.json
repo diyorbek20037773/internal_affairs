@@ -1,8 +1,8 @@
 {
   "common": {
-    "appName": "O'quv klasteri",
-    "appSubtitle": "Milliy smart-ta'lim modeli",
-    "ministry": "O'zbekiston Respublikasi Ichki ishlar vazirligi",
+    "appName": "Huquqni muhofaza qilish ta'lim klasteri",
+    "appSubtitle": "IIV · Gvardiya · Bojxona · Prokuratura · FVV",
+    "ministry": "Huquqni muhofaza qiluvchi organlar uchun yagona ta'lim va kompetensiyalar platformasi",
     "cancel": "Bekor qilish",
     "save": "Saqlash",
     "continue": "Davom ettirish",
@@ -74,14 +74,20 @@
     "instruktor": "Instruktor kabineti",
     "profil": "Profil",
     "groups": {
-      "himoya": "O'quv klasteri trenajyorlari",
-      "inspektor": "Mening Inspektorim"
-    }
+      "himoya": "Trenajyorlar",
+      "inspektor": "Mening Inspektorim (profilaktika inspektori)",
+      "platforma": "Ta'lim klasteri"
+    },
+    "kasblar": "Kasb standartlari",
+    "klasterlar": "O'quv klasterlari",
+    "kasbSim": "Kasb simulyatorlari",
+    "tutor": "AI-Tutor",
+    "pasport": "Kompetensiya pasporti"
   },
   "dashboard": {
-    "title": "O'quv klasteri — xodimni o'qitmaymiz, uni real xizmatga tayyorlaymiz",
+    "title": "Huquqni muhofaza qilish ta'lim klasteri",
     "welcome": "Xush kelibsiz",
-    "subtitle": "Vaziyat → Tahlil → Muloqot → Qaror → Harakat → Natija. Har bir mashg'ulot — real xizmat holati, har bir xato — tajriba.",
+    "subtitle": "Ta'limni real xizmat faoliyati bilan bog'laymiz: kasb standarti → kompetensiya → o'quv klasteri → amaliyot → simulyator → baholash → kompetensiya pasporti → karyera.",
     "stats": {
       "todayIncidents": "Bugungi hodisalar",
       "completed": "Yakunlangan",
@@ -117,15 +123,24 @@
         "desc": "Platformadan foydalanish bo'yicha qisqa yo'riqnoma"
       }
     },
-    "trainersTitle": "Trenajyorlar",
+    "trainersTitle": "Umumiy trenajyorlar (muloqot, qaror, hujjat, TIR)",
     "trainersSubtitle": "Kasbiy rivojlanish markazining 6 trenajyori — bitta platformada.",
-    "inspectorTitle": "Mening Inspektorim",
+    "inspectorTitle": "«Mening Inspektorim» — profilaktika inspektori moduli",
     "inspectorSubtitle": "Xizmat jarayonidagi AI yordamchi — hodisa, SOP, qonunchilik.",
     "setupProfile": "Boshlash uchun profilni to'ldiring",
     "setupProfileDesc": "Ism, xizmat ID (masalan SH-0473), unvon va hudud — Klaster-ID shu profilga bog'lanadi.",
     "statsTitle": "Mening ko'rsatkichlarim",
     "statsSubtitle": "Mashg'ulotlar, debrifinglar va Klaster-ID o'rtacha bali.",
-    "setupProfileCta": "Profilni to'ldirish"
+    "setupProfileCta": "Profilni to'ldirish",
+    "kasbTitle": "Kasblar va simulyatsion muhitlar",
+    "kasbSubtitle": "Har bir kasb — o'z standarti, o'z simulyatori va o'z kompetensiya pasporti.",
+    "chainTitle": "Dinamik kasb standartlari zanjiri",
+    "chainSubtitle": "Qonunchilik va real xizmat talablari o'zgarsa — kompetensiya, fan, simulyator va baholash ham yangilanadi.",
+    "quick": {
+      "tutor": "AI-Tutor bilan ish jarayonini o'rganish",
+      "kasbSim": "Kasbingiz simulyatorini boshlash",
+      "pasport": "Kompetensiya pasportingiz"
+    }
   },
   "chat": {
     "title": "AI Inspektor",
@@ -355,7 +370,15 @@
       },
       "sttRecording": "Yozilmoqda... (to'xtatish uchun mikrofonni bosing)",
       "sttProcessing": "Nutq tanilmoqda (Gemini)...",
-      "tooLong": "Gap juda uzun (6000 belgidan ko'p). Qisqartirib, qayta yuboring."
+      "tooLong": "Gap juda uzun (6000 belgidan ko'p). Qisqartirib, qayta yuboring.",
+      "noSpeech": "Ovoz eshitilmadi — yana bir bor gapiring.",
+      "hearing": "Eshitilmoqda…",
+      "live": "Jonli suhbat",
+      "liveOn": "Jonli: yoqilgan",
+      "liveHint": "Qo'lsiz rejim: gapiring — jim bo'lganingizda gap o'zi yuboriladi, fuqaro ovoz bilan javob beradi va mikrofon yana yoqiladi.",
+      "liveSpeak": "Gapiring…",
+      "liveListening": "Tinglayapman — gapni tugatsangiz o'zi yuboriladi",
+      "liveSendNow": "Yuborish"
     },
     "decision": {
       "title": "Qaror simulyatori",

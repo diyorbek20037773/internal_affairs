@@ -1,8 +1,8 @@
 {
   "common": {
-    "appName": "Training Cluster",
-    "appSubtitle": "National smart training model",
-    "ministry": "Ministry of Internal Affairs of the Republic of Uzbekistan",
+    "appName": "Law Enforcement Education Cluster",
+    "appSubtitle": "Police · Guard · Customs · Prosecution · Emergencies",
+    "ministry": "One learning and competency platform for law-enforcement bodies",
     "cancel": "Cancel",
     "save": "Save",
     "continue": "Continue",
@@ -74,14 +74,20 @@
     "instruktor": "Instructor cabinet",
     "profil": "Profile",
     "groups": {
-      "himoya": "Training Cluster trainers",
-      "inspektor": "My Inspector"
-    }
+      "himoya": "Trainers",
+      "inspektor": "My Inspector (prevention inspector)",
+      "platforma": "Education Cluster"
+    },
+    "kasblar": "Professional standards",
+    "klasterlar": "Learning clusters",
+    "kasbSim": "Profession simulators",
+    "tutor": "AI Tutor",
+    "pasport": "Competency passport"
   },
   "dashboard": {
-    "title": "Training Cluster — we don't teach the officer, we prepare them for real service",
+    "title": "Law Enforcement Education Cluster",
     "welcome": "Welcome",
-    "subtitle": "Situation → Analysis → Communication → Decision → Action → Result.",
+    "subtitle": "Linking training to real service: professional standard → competencies → learning cluster → practice → simulator → assessment → competency passport → career.",
     "stats": {
       "todayIncidents": "Today's incidents",
       "completed": "Completed",
@@ -117,15 +123,24 @@
         "desc": "A short guide on using the platform"
       }
     },
-    "trainersTitle": "Trainers",
+    "trainersTitle": "Shared trainers (dialogue, decisions, documents, range)",
     "trainersSubtitle": "The professional development centre's 6 trainers — on one platform.",
-    "inspectorTitle": "My Inspector",
+    "inspectorTitle": "“My Inspector” — prevention inspector module",
     "inspectorSubtitle": "AI assistant on duty — incident, SOP, legislation.",
     "setupProfile": "Fill in your profile to start",
     "setupProfileDesc": "Name, service ID (e.g. SH-0473), rank and district — Cluster-ID is bound to this profile.",
     "statsTitle": "My indicators",
     "statsSubtitle": "Sessions, debriefs and the Cluster-ID average.",
-    "setupProfileCta": "Fill in the profile"
+    "setupProfileCta": "Fill in the profile",
+    "kasbTitle": "Professions and simulation environments",
+    "kasbSubtitle": "Every profession has its own standard, its own simulator and its own competency passport.",
+    "chainTitle": "Dynamic professional-standards chain",
+    "chainSubtitle": "When law and service requirements change, competencies, subjects, simulators and assessment follow.",
+    "quick": {
+      "tutor": "Learn a work process with the AI tutor",
+      "kasbSim": "Start your profession's simulator",
+      "pasport": "Your competency passport"
+    }
   },
   "chat": {
     "title": "AI Inspector",
@@ -355,7 +370,15 @@
       },
       "sttRecording": "Recording... (tap the mic to stop)",
       "sttProcessing": "Recognizing speech (Gemini)...",
-      "tooLong": "Your line is too long (over 6,000 characters). Shorten it and send again."
+      "tooLong": "Your line is too long (over 6,000 characters). Shorten it and send again.",
+      "noSpeech": "No speech heard — please say it again.",
+      "hearing": "Listening…",
+      "live": "Live talk",
+      "liveOn": "Live: on",
+      "liveHint": "Hands-free: just talk — your line is sent when you pause, the citizen answers aloud and the mic reopens.",
+      "liveSpeak": "Speak…",
+      "liveListening": "Listening — it sends when you pause",
+      "liveSendNow": "Send"
     },
     "decision": {
       "title": "Decision simulator",

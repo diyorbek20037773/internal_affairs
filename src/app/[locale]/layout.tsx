@@ -18,25 +18,25 @@ const inter = Inter({
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://internalaffairs-production.up.railway.app";
-const TITLE = "O'quv klasteri — Milliy smart-ta'lim modeli";
+const TITLE = "Huquqni muhofaza qilish ta'lim klasteri";
 const DESCRIPTION =
   "IIV xodimlarini real xizmatga tayyorlovchi ssenariyli simulyatsion o'qitish platformasi: AI-Muloqot, Qaror simulyatori, Smart Mahalla, Hujjatlashtirish, Smart Debrifing, Klaster-ID. Ichida — «Mening Inspektorim» AI yordamchisi.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: TITLE, template: "%s · O'quv klasteri" },
+  title: { default: TITLE, template: "%s · Ta'lim klasteri" },
   description: DESCRIPTION,
-  applicationName: "O'quv klasteri",
+  applicationName: "Huquqni muhofaza qilish ta'lim klasteri",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/iiv_logo.svg", apple: "/icon-192.png" },
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "O'quv klasteri" },
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Ta'lim klasteri" },
   openGraph: {
     type: "website",
-    siteName: "O'quv klasteri",
+    siteName: "Huquqni muhofaza qilish ta'lim klasteri",
     title: TITLE,
     description: DESCRIPTION,
     url: SITE_URL,
-    images: [{ url: "/iiv_logo.jpg", width: 512, height: 512, alt: "O'quv klasteri" }],
+    images: [{ url: "/iiv_logo.jpg", width: 512, height: 512, alt: "Huquqni muhofaza qilish ta'lim klasteri" }],
     locale: "uz_UZ",
   },
   twitter: { card: "summary", title: TITLE, description: DESCRIPTION, images: ["/iiv_logo.jpg"] },

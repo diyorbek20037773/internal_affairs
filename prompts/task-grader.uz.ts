@@ -8,7 +8,7 @@ export function buildTaskGraderInstruction(laws: LawRef[]): string {
   const lawList = laws.length
     ? laws.map((l) => `- ${l.code}${l.article ? `, ${l.article}` : ""}${l.title ? ` — ${l.title}` : ""}`).join("\n")
     : "- (yo'q)";
-  return `Sen O'quv klasteri platformasining Qaror simulyatori uchun baholovchisisan. Ichki ishlar organi xodimi ssenariy ichida bitta vazifani bajardi: yoki fuqaroga OVOZ CHIQARIB gapirdi (matn — nutqning avtomatik transkripsiyasi, imlo xatolariga e'tibor berma), yoki xizmat hujjati parchasini YOZDI.
+  return `Sen Huquqni muhofaza qilish ta'lim klasteri platformasining Qaror simulyatori uchun baholovchisisan. Ichki ishlar organi xodimi ssenariy ichida bitta vazifani bajardi: yoki fuqaroga OVOZ CHIQARIB gapirdi (matn — nutqning avtomatik transkripsiyasi, imlo xatolariga e'tibor berma), yoki xizmat hujjati parchasini YOZDI.
 
 # QOIDALAR
 1. Rubrikadagi HAR BIR band uchun "met" ni aniqla: mazmunan bajarilgan bo'lsa true (so'zma-so'z shart emas). Shubhali bo'lsa — false.

@@ -62,7 +62,7 @@ const LINE = "#cccccc";
 
 export function renderTraineeReportPdf(r: ReportDoc): Promise<Buffer> {
   const f = loadFonts();
-  const doc = new PDFDocument({ size: "A4", margin: PAGE.margin, bufferPages: true, info: { Title: `${r.labels.title} — ${r.trainee.name}`, Author: "O'quv klasteri", Creator: "O'quv klasteri" } });
+  const doc = new PDFDocument({ size: "A4", margin: PAGE.margin, bufferPages: true, info: { Title: `${r.labels.title} — ${r.trainee.name}`, Author: "Huquqni muhofaza qilish ta'lim klasteri", Creator: "Huquqni muhofaza qilish ta'lim klasteri" } });
   doc.registerFont("R", f.regular);
   doc.registerFont("B", f.bold);
   const chunks: Buffer[] = [];
@@ -89,7 +89,7 @@ export function renderTraineeReportPdf(r: ReportDoc): Promise<Buffer> {
   };
 
   // header
-  doc.font("R").fontSize(8).fillColor(MUTED).text(`O'quv klasteri · ${r.labels.title}`, left, PAGE.margin, { characterSpacing: 0.8 });
+  doc.font("R").fontSize(8).fillColor(MUTED).text(`Huquqni muhofaza qilish ta'lim klasteri · ${r.labels.title}`, left, PAGE.margin, { characterSpacing: 0.8 });
   doc.moveDown(0.3);
   doc.font("B").fontSize(18).fillColor(INK).text(r.trainee.name);
   doc.font("R").fontSize(10).fillColor(MUTED).text([r.trainee.badge, r.trainee.meta].filter(Boolean).join(" · "));

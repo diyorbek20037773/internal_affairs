@@ -1,4 +1,4 @@
-// O'quv klasteri service worker: app shell + static assets cache (network-first for pages,
+// Huquqni muhofaza qilish ta'lim klasteri service worker: app shell + static assets cache (network-first for pages,
 // cache-first for immutable /_next/static, models, hdri, textures). API calls are never cached.
 // __H360_VERSION__ is replaced by scripts/build-sw.mjs (prebuild) with the git / Railway commit SHA,
 // so every deploy invalidates the old shell cache without anyone bumping a constant.

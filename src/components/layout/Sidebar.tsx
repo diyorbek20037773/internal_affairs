@@ -28,14 +28,14 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-white/10 shadow-elevated ring-1 ring-white/15">
           <Image
             src="/iiv_logo.svg"
-            alt="O'quv klasteri"
+            alt="Huquqni muhofaza qilish ta'lim klasteri"
             fill
             className="object-contain p-1"
             sizes="44px"
           />
         </div>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold leading-tight tracking-tight">
+          <p className="line-clamp-2 text-sm font-semibold leading-tight tracking-tight">
             {tc("appName")}
           </p>
           <p className="truncate text-xs text-sidebar-foreground/55">
@@ -102,7 +102,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               className="h-8 w-8 object-contain"
             />
           </div>
-          <p className="text-[11px] leading-tight text-sidebar-foreground/50">
+          <p className="line-clamp-3 text-[11px] leading-tight text-sidebar-foreground/50">
             {tc("ministry")}
           </p>
         </div>

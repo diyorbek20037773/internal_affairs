@@ -1,6 +1,6 @@
-# HIMOYA-360 — Claude working rules
+# Huquqni muhofaza qilish ta'lim klasteri (ex O'quv klasteri / HIMOYA-360) — Claude working rules
 
-**What:** scenario-based simulation training platform for IIV (MoI Uzbekistan) officers. "Mening Inspektorim" is a module inside it. Next.js 15 App Router (React 19) + TS + Tailwind, next-intl 4 (uz/ru/en), Gemini (`@google/genai`), Three.js/r3f 9 + drei 10 for the TIR range (three pinned 0.160 / postprocessing 6.36 — newer postprocessing needs three ≥0.168).
+**What:** one learning & competency platform for Uzbek law-enforcement bodies (IIV, Milliy gvardiya, Bojxona, Prokuratura, FVV). Chain: kasb standarti → kompetensiya → o'quv klasteri → amaliyot → simulyator → baholash → kompetensiya pasporti → karyera. Professions/standards/clusters live in `data/kasblar/`, per-profession simulators in `data/kasblar/sims/` (`/kasb-simulyator`), AI tutor topics per agency in `data/tutor/` (`/tutor`), passport at `/pasport`. The original IIV trainers (muloqot, qaror, mahalla, hujjat, TIR) and "Mening Inspektorim" (profilaktika inspektori) remain modules inside it. Module UI strings live in `messages/{kasb,kasbsim,tutor}/<locale>.json` fragments. Next.js 15 App Router (React 19) + TS + Tailwind, next-intl 4 (uz/ru/en), Gemini (`@google/genai`), Three.js/r3f 9 + drei 10 for the TIR range (three pinned 0.160 / postprocessing 6.36 — newer postprocessing needs three ≥0.168).
 
 **Live:** https://internalaffairs-production.up.railway.app (Railway, deploy-on-push from `main`, `GEMINI_API_KEYS` set there; no local `.env`).
 

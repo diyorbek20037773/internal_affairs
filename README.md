@@ -1,14 +1,14 @@
-# 🛡 O'quv klasteri — milliy smart-ta'lim modeli
+# 🛡 Huquqni muhofaza qilish ta'lim klasteri
 
-**O'quv klasteri** — O'zbekiston Respublikasi IIV xodimlarini real xizmat vaziyatlariga tayyorlovchi **ssenariyli simulyatsion o'qitish platformasi** (Kasbiy rivojlanish markazi modeli). Ichida **«Mening Inspektorim»** — xizmat jarayonidagi AI yordamchi moduli.
+**Huquqni muhofaza qilish ta'lim klasteri** — O'zbekiston Respublikasi IIV xodimlarini real xizmat vaziyatlariga tayyorlovchi **ssenariyli simulyatsion o'qitish platformasi** (Kasbiy rivojlanish markazi modeli). Ichida **«Mening Inspektorim»** — xizmat jarayonidagi AI yordamchi moduli.
 
 > **Shior:** «Xodimni o'qitmaymiz — uni real xizmatga tayyorlaymiz». Sikl: VAZIYAT → TAHLIL → MULOQOT → QAROR → HARAKAT → NATIJA.
 
-📱 **PWA:** planshetda «Bosh ekranga qo'shish» — O'quv klasteri ilova sifatida ochiladi (manifest + service worker, statik assetlar keshlanadi).
+📱 **PWA:** planshetda «Bosh ekranga qo'shish» — Huquqni muhofaza qilish ta'lim klasteri ilova sifatida ochiladi (manifest + service worker, statik assetlar keshlanadi).
 
 🌐 **Jonli:** https://internalaffairs-production.up.railway.app · 🗣 uz / ru / en · 📱 planshet brauzerida ishlaydi (Android, 4G) · ✅ E2E: `e2e/` (Playwright, jonli Gemini bilan) — `npm run e2e:qa` 21 tekshiruv, `e2e:tir`, `e2e:fps`
 
-## Trenajyorlar (O'quv klasteri)
+## Trenajyorlar (Huquqni muhofaza qilish ta'lim klasteri)
 
 | Xona | Route | Nima qiladi |
 |---|---|---|
@@ -101,7 +101,7 @@ npm run dev                 # http://localhost:3000
 
 ## Planshetda o'rnatish (Android, Chrome)
 
-1. Chrome'da saytni oching → menyu → **«Bosh ekranga qo'shish»** — O'quv klasteri alohida ilova sifatida ochiladi (PWA, to'liq ekran).
+1. Chrome'da saytni oching → menyu → **«Bosh ekranga qo'shish»** — Huquqni muhofaza qilish ta'lim klasteri alohida ilova sifatida ochiladi (PWA, to'liq ekran).
 2. Birinchi ochilishda profilni to'ldiring (server rejimida — xizmat ID + PIN bilan kiring).
 3. Mikrofon ruxsatini bering — AI-Muloqotda ovoz bilan gapirish uchun (`/api/stt`).
 4. TIR poligoni planshetda **statik rejim**da ishlaydi (nishonga bosish); 3D sifat avtomatik tanlanadi (LQ — 1k panorama, post-effektsiz). Birinchi yuklanish ~10–15 MB.
@@ -123,17 +123,17 @@ npm run dev                 # http://localhost:3000
 
 ```
 prompts/system-prompt.uz.ts   # PROMPT.txt → Gemini system instruction (6-bo'limli format)
-prompts/virtual-citizen.uz.ts # O'quv klasteri: virtual fuqaro (yashirin holat + JSON baho)
-prompts/debrief.uz.ts         # O'quv klasteri: Smart Debrifing grader (3 savol + 8 kompetensiya)
-prompts/mahalla-grader.uz.ts  # O'quv klasteri: harakat rejasi rubrikasi
-prompts/document-checker.uz.ts# O'quv klasteri: hujjat tekshiruvi (qonun va fakt)
-data/scenarios/               # O'quv klasteri ssenariylari: dialog/ decision/ mahalla/ document/ exam/ (+ competencies)
+prompts/virtual-citizen.uz.ts # Huquqni muhofaza qilish ta'lim klasteri: virtual fuqaro (yashirin holat + JSON baho)
+prompts/debrief.uz.ts         # Huquqni muhofaza qilish ta'lim klasteri: Smart Debrifing grader (3 savol + 8 kompetensiya)
+prompts/mahalla-grader.uz.ts  # Huquqni muhofaza qilish ta'lim klasteri: harakat rejasi rubrikasi
+prompts/document-checker.uz.ts# Huquqni muhofaza qilish ta'lim klasteri: hujjat tekshiruvi (qonun va fakt)
+data/scenarios/               # Huquqni muhofaza qilish ta'lim klasteri ssenariylari: dialog/ decision/ mahalla/ document/ exam/ (+ competencies)
 data/sops/                    # SOP ma'lumot modeli (hodisa turlari, bosqichlar, checklist, qonunlar)
 src/lib/gemini/keyPool.ts     # random key rotatsiya + failover
 src/lib/gemini/client.ts      # streamChat() — Gemini streaming
 src/app/api/chat|legal        # streaming route handler (nodejs runtime)
-src/app/api/sim/*             # O'quv klasteri: dialog, debrief, mahalla-grade, document-check (JSON mode)
-src/lib/training/             # O'quv klasteri: dialogState, decisionEngine, competency, mentor, debrief
+src/app/api/sim/*             # Huquqni muhofaza qilish ta'lim klasteri: dialog, debrief, mahalla-grade, document-check (JSON mode)
+src/lib/training/             # Huquqni muhofaza qilish ta'lim klasteri: dialogState, decisionEngine, competency, mentor, debrief
 src/lib/storage/training.ts   # TrainingRepo (profil, sessiyalar, Klaster-ID) — localStorage
 src/components/training/      # trenajyor UI: dialog/ decision/ mahalla/ document/ debrief/ exam/ profile/ instructor/
 src/lib/workflow/             # deterministik bosqich + checklist engine
@@ -151,4 +151,4 @@ messages/{uz,ru,en}.json      # tarjimalar
 
 ---
 
-O'zbekiston Respublikasi Ichki ishlar vazirligi — O'quv klasteri v2.1
+O'zbekiston Respublikasi Ichki ishlar vazirligi — Huquqni muhofaza qilish ta'lim klasteri v2.1

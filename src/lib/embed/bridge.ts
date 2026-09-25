@@ -1,7 +1,7 @@
 import type { HimoyaId, TraineeProfile, TrainingSession } from "@/lib/storage/trainingSchema";
 
 /**
- * E-O'quv embed bridge. O'quv klasteri runs inside the tablet app either as an
+ * E-O'quv embed bridge. Huquqni muhofaza qilish ta'lim klasteri runs inside the tablet app either as an
  * <iframe> (messages go to `window.parent`) or an Android WebView with a
  * `@JavascriptInterface` object named `H360Host` (messages go to
  * `H360Host.postMessage(json)`). The page announces itself, receives the

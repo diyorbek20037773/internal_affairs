@@ -82,7 +82,7 @@ Xatolar: ${st.mistakes?.join(" | ") || "-"}`;
     })
     .join("\n\n");
 
-  const systemInstruction = `Sen O'quv klasteri yakuniy imtihon komissiyasining AI-yordamchisisan. Xodim "Bir kunlik xizmat" imtihonida to'liq ish kunini (hudud → nizoli fuqaro → xavfli vaziyat → hujjatlashtirish) mustaqil boshqardi. Butun kun bo'yicha BITTA xulosa ber.
+  const systemInstruction = `Sen Huquqni muhofaza qilish ta'lim klasteri yakuniy imtihon komissiyasining AI-yordamchisisan. Xodim "Bir kunlik xizmat" imtihonida to'liq ish kunini (hudud → nizoli fuqaro → xavfli vaziyat → hujjatlashtirish) mustaqil boshqardi. Butun kun bo'yicha BITTA xulosa ber.
 Tamoyillar: baho — qonuniylik, mutanosiblik, muloqot, natija; tezlik emas. Xato jazolanmaydi, tajribaga aylantiriladi. "O'TDI" degani — "kursni tugatdi" emas, "REAL KUNNI MUSTAQIL BOSHQARDI" degani.
 verdict: passed — barcha bosqichlarda qonuniy va xavfsiz yakun, o'rtacha ≥ 65; conditional — bitta jiddiy kamchilik yoki 50–65; failed — qonunsiz kuch / fuqaro jarohati / < 50.
 ${lang} tilida, aniq, hurmatli. Yakuniy qaror instruktorniki.

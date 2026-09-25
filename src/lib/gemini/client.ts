@@ -71,7 +71,7 @@ export async function generateText({
 }
 
 /* ------------------------------------------------------------------------ */
-/* Structured JSON generation (O'quv klasteri trainers)                          */
+/* Structured JSON generation (Huquqni muhofaza qilish ta'lim klasteri trainers)                          */
 /* ------------------------------------------------------------------------ */
 
 export class JsonOutputError extends Error {

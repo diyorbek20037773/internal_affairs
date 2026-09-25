@@ -1,6 +1,6 @@
 {
-  "name": "O'quv klasteri — Milliy smart-ta'lim modeli",
-  "short_name": "O'quv klasteri",
+  "name": "Huquqni muhofaza qilish ta'lim klasteri",
+  "short_name": "Ta'lim klasteri",
   "description": "IIV xodimlari uchun ssenariyli simulyatsion o'qitish platformasi",
   "start_url": "/uz",
   "scope": "/",

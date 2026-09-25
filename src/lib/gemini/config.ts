@@ -9,7 +9,7 @@ export const GENERATION_CONFIG = {
 };
 
 /**
- * Structured (JSON-mode) generation profiles used by the O'quv klasteri trainers.
+ * Structured (JSON-mode) generation profiles used by the Huquqni muhofaza qilish ta'lim klasteri trainers.
  * `citizen` — virtual citizen role-play: warmer, more varied.
  * `grader`  — debrief / rubric grading: cold and deterministic.
  */

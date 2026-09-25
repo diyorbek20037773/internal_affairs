@@ -14,7 +14,7 @@ import { remoteStore, storeMode } from "./trainingRemote";
 import { embedPost } from "@/lib/embed/bridge";
 
 /**
- * O'quv klasteri training persistence. Mirrors `CasesRepo` but async so a server
+ * Huquqni muhofaza qilish ta'lim klasteri training persistence. Mirrors `CasesRepo` but async so a server
  * (Postgres) adapter can replace `localTrainingRepo` without touching callers.
  */
 

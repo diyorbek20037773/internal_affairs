@@ -121,7 +121,7 @@ export function TraineeReport({
       </div>
 
       <header className="border-b pb-3">
-        <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{"O'quv klasteri"} · {t("title")}</p>
+        <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{"Huquqni muhofaza qilish ta'lim klasteri"} · {t("title")}</p>
         <p className="text-xl font-bold">{profile?.name ?? traineeId}</p>
         <p className="text-sm text-muted-foreground">
           {profile?.badgeId ?? "—"}{profile?.rank ? ` · ${profile.rank}` : ""}{profile?.district ? ` · ${profile.district}` : ""}
