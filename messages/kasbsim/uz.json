@@ -1,0 +1,153 @@
+{
+  "kasbsim": {
+    "hub": {
+      "title": "Kasb simulyatorlari",
+      "subtitle": "Har bir kasb uchun real ish muhitini takrorlaydigan mashg'ulot: jinoyat ishi papkasi, navbatchilik stoli, voqea joyi, bojxona posti va boshqalar. Har bir qaror natijaga ta'sir qiladi.",
+      "filter": "Kasb bo'yicha saralash",
+      "all": "Hammasi",
+      "empty": "Bu kasb uchun simulyator hali yo'q.",
+      "minutes": "{n} daq.",
+      "stages": "{n} bosqich",
+      "recent": "So'nggi natijalarim",
+      "noRecent": "Hali birorta simulyator o'tilmagan.",
+      "inProgress": "{n}/{total} bosqich"
+    },
+    "envKind": {
+      "case_file": "Jinoyat ishi materiallari",
+      "duty_desk": "Navbatchilik stoli",
+      "crime_scene": "Voqea joyi",
+      "cyber_sandbox": "Yopiq kiber-muhit",
+      "customs_post": "Bojxona nazorat posti",
+      "analytics_map": "Analitik xarita",
+      "prosecutor_review": "Ish materiallarini tekshirish",
+      "counseling": "Psixologik suhbat",
+      "guard_post": "Qo'riqlash posti",
+      "emergency": "Favqulodda vaziyat shtabi"
+    },
+    "kind": {
+      "choice": "Qaror tanlash",
+      "multi": "Bir nechta javob",
+      "order": "Ketma-ketlik",
+      "numeric": "Hisob-kitob",
+      "match": "Moslashtirish",
+      "grid": "Xaritada belgilash",
+      "text": "Yozma javob"
+    },
+    "env": {
+      "new": "Yangi",
+      "empty": "Bu bosqichda materiallar yo'q.",
+      "caseFile": {
+        "folder": "Jinoyat ishi",
+        "page": "{n}-varaq / {total}"
+      },
+      "dutyDesk": {
+        "inbox": "Kiruvchi murojaatlar",
+        "stamp": "Kelib tushdi",
+        "desk": "Stol ustidagi hujjatlar"
+      },
+      "crimeScene": {
+        "plan": "Voqea joyi sxemasi",
+        "evidence": "Ashyoviy dalil"
+      },
+      "cyber": {
+        "isolated": "yopiq-muhit",
+        "chat": "Messenjer",
+        "mail": "Pochta",
+        "bank": "Tranzaksiyalar",
+        "files": "Fayllar"
+      },
+      "customs": {
+        "box": "{n}-grafa",
+        "goods": "Tovarlar tavsifi",
+        "cargo": "Yuk hujjatlari"
+      },
+      "analytics": {
+        "heatmap": "Issiqlik xaritasi",
+        "low": "past",
+        "high": "yuqori",
+        "raw": "Dastlabki ma'lumotlar"
+      },
+      "prosecutor": {
+        "volume": "Ish jildi",
+        "sheet": "{n}-v.",
+        "margin": "Hoshiyadagi belgilar",
+        "flag": "Diqqat: tekshirilsin"
+      },
+      "counseling": {
+        "client": "Mijoz kartasi",
+        "notes": "Seans qaydlari"
+      },
+      "guard": {
+        "schema": "Post va hodisalar sxemasi",
+        "object": "Obyekt",
+        "gate": "KPP",
+        "radio": "Radio jurnal"
+      },
+      "emergency": {
+        "board": "Hodisa taxtasi",
+        "resources": "Resurslar",
+        "log": "Dispetcherlik jurnali"
+      }
+    },
+    "run": {
+      "reset": "Qaytadan",
+      "submit": "Javobni yuborish",
+      "selected": "Tanlandi: {n}",
+      "orderEmpty": "Pastdagi bandlarga bajarilish tartibida bosing.",
+      "remove": "Olib tashlash",
+      "placed": "{n} / {total}",
+      "numberPlaceholder": "Raqam kiriting",
+      "matchPickRight": "{n}-band uchun pastdan mos javobni tanlang",
+      "matchDone": "Barcha bandlar bog'landi. Tuzatish uchun bandga bosing.",
+      "textPlaceholder": "Javobingizni yozing yoki mikrofon orqali ayting…",
+      "stop": "To'xtatish",
+      "dictate": "Diktovka qilish",
+      "processing": "Nutq matnga aylantirilmoqda…",
+      "listening": "Tinglanmoqda… tugatish uchun yana bosing",
+      "micError": "Mikrofon ishlamadi. Javobni yozib kiriting.",
+      "words": "{n} so'z (tavsiya: kamida {min})",
+      "grading": "Baholanmoqda…",
+      "submitText": "Baholashga yuborish",
+      "gradeFailed": "Sun'iy intellekt hozir baholay olmadi.",
+      "retry": "Qayta urinish",
+      "skipUngraded": "Baholamasdan davom etish",
+      "stageOf": "{n}-bosqich / {total}",
+      "trains": "Rivojlantiriladigan kompetensiyalar",
+      "begin": "Simulyatsiyani boshlash",
+      "environment": "Ish muhiti",
+      "task": "Vazifa",
+      "newMaterials": "Yangi materiallar: {n} — ko'rish",
+      "stageScore": "Bosqich natijasi",
+      "ungraded": "Baholanmagan",
+      "consequence": "Xatolik oqibati",
+      "finish": "Yakunlash",
+      "next": "Keyingi bosqich"
+    },
+    "review": {
+      "yourAnswer": "Sizning javobingiz",
+      "best": "Eng to'g'ri qaror",
+      "missed": "O'tkazib yuborildi",
+      "correct": "To'g'ri javob",
+      "solution": "Yechim",
+      "gridLegend": "Yashil ramka — to'g'ri kataklar; qizil belgi — xato tanlov.",
+      "tooShort": "Javob tavsiya etilgan hajmdan qisqa — eng yuqori ball berilmaydi.",
+      "missing": "Yetishmagan jihatlar",
+      "model": "Namunaviy javob"
+    },
+    "result": {
+      "outcome": {
+        "success": "A'lo — vazifa muvaffaqiyatli bajarildi",
+        "partial": "Qisman — muhim xatolar bor",
+        "fail": "Qoniqarsiz — ish natijasi xavf ostida"
+      },
+      "ungradedNote": "Baholanmagan bosqichlar umumiy natijaga kiritilmadi; ularni instruktor baholaydi.",
+      "competencies": "Kompetensiyalar bo'yicha natija",
+      "stages": "Bosqichlar",
+      "ungraded": "baholanmagan",
+      "passportAdded": "Kompetensiya pasportiga qo'shildi",
+      "toPassport": "Pasportni ochish",
+      "retry": "Qayta o'tish",
+      "backToHub": "Barcha simulyatorlar"
+    }
+  }
+}

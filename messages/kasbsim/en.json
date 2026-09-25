@@ -1,0 +1,153 @@
+{
+  "kasbsim": {
+    "hub": {
+      "title": "Profession simulators",
+      "subtitle": "Training that mirrors the real working environment of each profession: a case file, the duty desk, a crime scene, a customs post and more. Every decision affects the outcome.",
+      "filter": "Filter by profession",
+      "all": "All",
+      "empty": "No simulator for this profession yet.",
+      "minutes": "{n} min",
+      "stages": "{n} stages",
+      "recent": "My recent results",
+      "noRecent": "You have not completed a simulator yet.",
+      "inProgress": "{n}/{total} stages"
+    },
+    "envKind": {
+      "case_file": "Case file",
+      "duty_desk": "Duty desk",
+      "crime_scene": "Crime scene",
+      "cyber_sandbox": "Cyber sandbox",
+      "customs_post": "Customs post",
+      "analytics_map": "Analytics map",
+      "prosecutor_review": "Case review",
+      "counseling": "Counselling session",
+      "guard_post": "Guard post",
+      "emergency": "Emergency board"
+    },
+    "kind": {
+      "choice": "Decision",
+      "multi": "Multiple answers",
+      "order": "Sequence",
+      "numeric": "Calculation",
+      "match": "Matching",
+      "grid": "Map selection",
+      "text": "Written answer"
+    },
+    "env": {
+      "new": "New",
+      "empty": "No materials at this stage.",
+      "caseFile": {
+        "folder": "Case file",
+        "page": "Sheet {n} / {total}"
+      },
+      "dutyDesk": {
+        "inbox": "Incoming applications",
+        "stamp": "Received",
+        "desk": "Papers on the desk"
+      },
+      "crimeScene": {
+        "plan": "Scene plan",
+        "evidence": "Evidence"
+      },
+      "cyber": {
+        "isolated": "isolated",
+        "chat": "Messenger",
+        "mail": "Mail",
+        "bank": "Transactions",
+        "files": "Files"
+      },
+      "customs": {
+        "box": "Box {n}",
+        "goods": "Goods description",
+        "cargo": "Cargo documents"
+      },
+      "analytics": {
+        "heatmap": "Heatmap",
+        "low": "low",
+        "high": "high",
+        "raw": "Raw data"
+      },
+      "prosecutor": {
+        "volume": "Case volume",
+        "sheet": "p. {n}",
+        "margin": "Margin notes",
+        "flag": "Attention: check"
+      },
+      "counseling": {
+        "client": "Client card",
+        "notes": "Session notes"
+      },
+      "guard": {
+        "schema": "Post and event map",
+        "object": "Object",
+        "gate": "Gate",
+        "radio": "Radio log"
+      },
+      "emergency": {
+        "board": "Incident board",
+        "resources": "Resources",
+        "log": "Dispatch log"
+      }
+    },
+    "run": {
+      "reset": "Reset",
+      "submit": "Submit",
+      "selected": "Selected: {n}",
+      "orderEmpty": "Tap the items below in the order of execution.",
+      "remove": "Remove",
+      "placed": "{n} / {total}",
+      "numberPlaceholder": "Enter a number",
+      "matchPickRight": "Pick the match for item {n} below",
+      "matchDone": "All items matched. Tap an item to change it.",
+      "textPlaceholder": "Type your answer or dictate it…",
+      "stop": "Stop",
+      "dictate": "Dictate",
+      "processing": "Transcribing…",
+      "listening": "Listening… tap again to finish",
+      "micError": "Microphone failed. Please type your answer.",
+      "words": "{n} words (recommended: {min}+)",
+      "grading": "Grading…",
+      "submitText": "Submit for grading",
+      "gradeFailed": "The AI could not grade right now.",
+      "retry": "Retry",
+      "skipUngraded": "Continue ungraded",
+      "stageOf": "Stage {n} of {total}",
+      "trains": "Competencies trained",
+      "begin": "Start the simulation",
+      "environment": "Environment",
+      "task": "Task",
+      "newMaterials": "New materials: {n} — view",
+      "stageScore": "Stage score",
+      "ungraded": "Ungraded",
+      "consequence": "Consequence of the mistake",
+      "finish": "Finish",
+      "next": "Next stage"
+    },
+    "review": {
+      "yourAnswer": "Your answer",
+      "best": "Best decision",
+      "missed": "Missed",
+      "correct": "Correct answer",
+      "solution": "Solution",
+      "gridLegend": "Green outline — correct cells; red mark — wrong pick.",
+      "tooShort": "The answer is shorter than recommended — the top band is not available.",
+      "missing": "What was missing",
+      "model": "Model answer"
+    },
+    "result": {
+      "outcome": {
+        "success": "Excellent — mission accomplished",
+        "partial": "Partial — significant mistakes",
+        "fail": "Unsatisfactory — the outcome is at risk"
+      },
+      "ungradedNote": "Ungraded stages are excluded from the total; an instructor will grade them.",
+      "competencies": "Results by competency",
+      "stages": "Stages",
+      "ungraded": "ungraded",
+      "passportAdded": "Added to the competency passport",
+      "toPassport": "Open passport",
+      "retry": "Try again",
+      "backToHub": "All simulators"
+    }
+  }
+}

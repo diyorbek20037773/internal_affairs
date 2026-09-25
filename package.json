@@ -12,6 +12,7 @@
     "check:dialog": "tsx --tsconfig tsconfig.json scripts/dialog-reply.check.ts",
     "check:keys": "tsx --tsconfig tsconfig.json scripts/keypool.check.ts",
     "check:decision": "tsx --tsconfig tsconfig.json scripts/decision.check.ts",
+    "check:kasb": "tsx --tsconfig tsconfig.json scripts/kasb-sim.check.ts && tsx --tsconfig tsconfig.json scripts/kasb-passport.check.ts",
     "probe:keys": "node scripts/probe-keys.mjs",
     "assets": "node scripts/fetch-assets.mjs",
     "prebuild": "node scripts/build-sw.mjs && node scripts/fetch-assets.mjs",

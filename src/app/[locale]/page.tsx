@@ -6,6 +6,14 @@ import { TrainersGrid } from "@/components/training/TrainersGrid";
 import { ProfileGate } from "@/components/training/profile/ProfileGate";
 import { MentorCard } from "@/components/training/profile/MentorCard";
 import { NAV_ENTRIES } from "@/components/layout/nav";
+import { ChainDiagram } from "@/components/kasb/ChainDiagram";
+import { ProfessionsExplorer } from "@/components/kasb/ProfessionsExplorer";
+
+const QUICK = [
+  { key: "kasbSim", href: "/kasb-simulyator", icon: "Workflow" },
+  { key: "tutor", href: "/tutor", icon: "BookOpenCheck" },
+  { key: "pasport", href: "/pasport", icon: "Award" },
+] as const;
 
 const CARD_KEYS = ["inspektor", "hodisa", "ishlarim", "qonunchilik", "guide"] as const;
 
@@ -19,6 +27,7 @@ export default async function DashboardPage(
   const t = await getTranslations("dashboard");
   const tc = await getTranslations("dashboard.cards");
   const tm = await getTranslations("modules");
+  const tn = await getTranslations("nav");
 
   const hrefOf = (key: string) => NAV_ENTRIES.find((e) => e.key === key)?.href ?? "/";
   const iconOf = (key: string) => NAV_ENTRIES.find((e) => e.key === key)?.icon ?? "CircleHelp";
@@ -35,6 +44,28 @@ export default async function DashboardPage(
 
       <section className="mb-6">
         <ProfileGate />
+      </section>
+
+      <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {QUICK.map((q) => (
+          <FeatureCard key={q.key} href={q.href} icon={q.icon} title={tn(q.key)} description={t(`quick.${q.key}`)} />
+        ))}
+      </section>
+
+      <section className="mb-8">
+        <div className="mb-4">
+          <h3 className="text-lg font-bold tracking-tight">{t("kasbTitle")}</h3>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t("kasbSubtitle")}</p>
+        </div>
+        <ProfessionsExplorer />
+      </section>
+
+      <section className="mb-8">
+        <div className="mb-4">
+          <h3 className="text-lg font-bold tracking-tight">{t("chainTitle")}</h3>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t("chainSubtitle")}</p>
+        </div>
+        <ChainDiagram variant="full" />
       </section>
 
       <section className="mb-8">
