@@ -2,7 +2,7 @@ import type { DialogHiddenState, DialogScenario } from "@/data/scenarios/types";
 import { budgetInstruction, type ReplyBudget } from "@/lib/training/replyBudget";
 
 /**
- * System instruction for the AI-Muloqot virtual citizen (O'quv klasteri, pptx
+ * System instruction for the AI-Muloqot virtual citizen (Huquqni muhofaza qilish ta'lim klasteri, pptx
  * slide 5). The model plays ONE citizen, in first person, in Uzbek, and returns
  * a JSON envelope: the citizen's reply + an assessment of the OFFICER's last
  * utterance. Hidden state numbers are given so the model's tone matches them;
@@ -138,4 +138,26 @@ export const CITIZEN_RESPONSE_SCHEMA = {
     },
   },
   required: ["reply", "assessment"],
+  propertyOrdering: ["reply", "assessment"],
 } as const;
+
+/**
+ * Voice-turn envelope: the officer's words arrive as audio, so the model first
+ * writes what it heard (`heard`), then replies. `propertyOrdering` keeps
+ * `heard` → `reply` → `assessment` so the transcript and the reply can both
+ * stream before the assessment is generated.
+ */
+export const CITIZEN_VOICE_RESPONSE_SCHEMA = {
+  ...CITIZEN_RESPONSE_SCHEMA,
+  properties: {
+    heard: { type: "STRING" },
+    ...CITIZEN_RESPONSE_SCHEMA.properties,
+  },
+  required: ["heard", "reply", "assessment"],
+  propertyOrdering: ["heard", "reply", "assessment"],
+} as const;
+
+export function voiceTurnInstruction(locale: string): string {
+  const lang = locale === "ru" ? "rus" : locale === "en" ? "ingliz" : "o'zbek (lotin yozuvi)";
+  return `Yuqoridagi audio — xodimning shu navbatdagi gapi. Avval "heard" maydoniga uning so'zlarini ${lang} tilida AYNAN yoz (tarjima qilma, tuzatma, izoh qo'shma). Agar nutq eshitilmasa yoki tushunarsiz bo'lsa, "heard" = "" va "reply" = "..." qaytar. Keyin fuqaro sifatida javob ber va xodim gapini baholagin.`;
+}

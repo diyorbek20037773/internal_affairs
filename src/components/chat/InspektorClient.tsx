@@ -174,23 +174,21 @@ export function InspektorClient({ initialCaseId, initialIncidentType }: Props) {
   }, [persist]);
 
   // ---- Ovozli rejim (STT -> yuborish, TTS -> javobni o'qish) ----
-  const speech = useSpeech({ locale });
-  const prevListeningRef = useRef(false);
+  // autoStop: the recording ends on its own after a short pause.
+  const speech = useSpeech({ locale, autoStop: true, maxRecordMs: 30000 });
   const spokenRef = useRef<string>("");
   const voiceModeRef = useRef(false); // oxirgi kiritish ovozli bo'lganmi
 
-  // Tinglash tugagach (final transkript) -> avtomatik yuborish
+  // Transkript tayyor bo'lgach -> avtomatik yuborish. Server STT'da matn
+  // tinglash tugagandan KEYIN keladi, shuning uchun o'tishni emas, holatni kuzatamiz.
   useEffect(() => {
-    if (prevListeningRef.current && !speech.listening) {
-      const text = speech.transcript.trim();
-      if (text) {
-        voiceModeRef.current = true;
-        handleSend(text);
-        speech.setTranscript("");
-      }
-    }
-    prevListeningRef.current = speech.listening;
-  }, [speech.listening, speech.transcript, handleSend, speech]);
+    if (speech.listening || speech.processing) return;
+    const text = speech.transcript.trim();
+    if (!text) return;
+    voiceModeRef.current = true;
+    speech.setTranscript("");
+    handleSend(text);
+  }, [speech.listening, speech.processing, speech.transcript, handleSend, speech]);
 
   // Javobni faqat ovozli so'rovdan keyin ovozli o'qish
   const lastAssistant = useMemo(
@@ -217,6 +215,7 @@ export function InspektorClient({ initialCaseId, initialIncidentType }: Props) {
   );
 
   const handleMic = useCallback(() => {
+    speech.unlockAudio();
     if (speech.speaking) {
       speech.stopSpeaking();
       return;

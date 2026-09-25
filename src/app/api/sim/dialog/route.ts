@@ -3,18 +3,24 @@ import { aiGuard } from "@/lib/aiGuard";
 import { z } from "zod";
 import type { Content, Schema } from "@google/genai";
 import { generateJson, streamJsonRaw, stripFences } from "@/lib/gemini/client";
-import { partialString } from "@/lib/gemini/partialJson";
+import { completedString, partialString } from "@/lib/gemini/partialJson";
 import { getDialogScenario } from "@/data/scenarios";
-import { buildCitizenSystemInstruction, CITIZEN_RESPONSE_SCHEMA } from "@/prompts/virtual-citizen.uz";
+import {
+  buildCitizenSystemInstruction,
+  CITIZEN_RESPONSE_SCHEMA,
+  CITIZEN_VOICE_RESPONSE_SCHEMA,
+  voiceTurnInstruction,
+} from "@/prompts/virtual-citizen.uz";
 import { DialogHiddenStateSchema, DialogTurnAssessmentSchema } from "@/lib/storage/trainingSchema";
 import { applyDelta, checkEnd, detectReveals } from "@/lib/training/dialogState";
-import { replyBudget } from "@/lib/training/replyBudget";
+import { adaptiveBudgetInstruction, replyBudget } from "@/lib/training/replyBudget";
 import { simErrorResponse } from "@/lib/training/apiErrors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const BodySchema = z.object({
+const BodySchema = z
+  .object({
   scenarioId: z.string(),
   locale: z.string().default("uz"),
   state: DialogHiddenStateSchema,
@@ -22,14 +28,26 @@ const BodySchema = z.object({
     .array(z.object({ role: z.enum(["officer", "citizen"]), text: z.string() }))
     .max(80)
     .default([]),
-  officerText: z.string().min(1).max(6000),
+  officerText: z.string().min(1).max(6000).optional(),
+  /**
+   * Voice turn: the officer's clip (16 kHz WAV, base64). The model transcribes
+   * and answers in ONE call — no separate /api/stt round-trip.
+   */
+  audio: z
+    .object({
+      data: z.string().min(100).max(6_000_000),
+      mimeType: z.string().default("audio/wav"),
+    })
+    .optional(),
   /** Officer turns so far INCLUDING this one. */
   officerTurns: z.number().int().min(1),
   /** Opt in to the SSE response (reply streams token by token). */
   stream: z.boolean().default(false),
-});
+  })
+  .refine((b) => !!b.officerText || !!b.audio, { message: "officerText or audio required" });
 
 const EnvelopeSchema = z.object({
+  heard: z.string().optional(),
   reply: z.string().min(1),
   assessment: DialogTurnAssessmentSchema,
 });
@@ -50,18 +68,24 @@ export async function POST(req: NextRequest) {
   const scenario = getDialogScenario(body.scenarioId);
   if (!scenario) return Response.json({ error: "scenario_not_found" }, { status: 404 });
 
-  const budget = replyBudget({
-    officerText: body.officerText,
-    state: body.state,
-    scenario,
-    turnIndex: body.officerTurns,
-  });
-  const systemInstruction = buildCitizenSystemInstruction({
-    scenario,
-    state: body.state,
-    locale: body.locale,
-    budget,
-  });
+  const voice = !body.officerText && !!body.audio;
+  const budget = voice
+    ? undefined
+    : replyBudget({
+        officerText: body.officerText!,
+        state: body.state,
+        scenario,
+        turnIndex: body.officerTurns,
+      });
+  const systemInstruction =
+    buildCitizenSystemInstruction({
+      scenario,
+      state: body.state,
+      locale: body.locale,
+      budget,
+    }) +
+    (voice ? adaptiveBudgetInstruction({ state: body.state, scenario, turnIndex: body.officerTurns }) : "");
+  const responseSchema = (voice ? CITIZEN_VOICE_RESPONSE_SCHEMA : CITIZEN_RESPONSE_SCHEMA) as unknown as Schema;
 
   // Citizen opening line seeds the model side; officer=user, citizen=model.
   const window = body.history.slice(-HISTORY_WINDOW);
@@ -71,7 +95,15 @@ export async function POST(req: NextRequest) {
       role: h.role === "officer" ? ("user" as const) : ("model" as const),
       parts: [{ text: h.text }],
     })),
-    { role: "user", parts: [{ text: body.officerText }] },
+    voice
+      ? {
+          role: "user",
+          parts: [
+            { inlineData: { mimeType: body.audio!.mimeType, data: body.audio!.data } },
+            { text: voiceTurnInstruction(body.locale) },
+          ],
+        }
+      : { role: "user", parts: [{ text: body.officerText! }] },
   ];
 
   /** Envelope → the turn result the client persists. */
@@ -80,6 +112,7 @@ export async function POST(req: NextRequest) {
     state = { ...state, revealed: detectReveals(envelope.reply, state, scenario) };
     const endReason = checkEnd(state, body.officerTurns, scenario);
     return {
+      heard: voice ? (envelope.heard ?? "").trim() : body.officerText!,
       reply: envelope.reply,
       assessment: envelope.assessment,
       state,
@@ -92,10 +125,13 @@ export async function POST(req: NextRequest) {
       const envelope = await generateJson({
         contents,
         systemInstruction,
-        responseSchema: CITIZEN_RESPONSE_SCHEMA as unknown as Schema,
+        responseSchema,
         parse: (raw) => EnvelopeSchema.parse(raw),
         profile: "citizen",
       });
+      if (voice && !(envelope.heard ?? "").trim()) {
+        return Response.json({ error: "no_speech" }, { status: 422 });
+      }
       return Response.json(settle(envelope));
     } catch (err) {
       return simErrorResponse("/api/sim/dialog", err);
@@ -105,7 +141,7 @@ export async function POST(req: NextRequest) {
   const generator = streamJsonRaw({
     contents,
     systemInstruction,
-    responseSchema: CITIZEN_RESPONSE_SCHEMA as unknown as Schema,
+    responseSchema,
     profile: "citizen",
   });
 
@@ -126,8 +162,21 @@ export async function POST(req: NextRequest) {
 
       let raw = "";
       let shown = "";
+      let heardSent = !voice;
+      let silent = false;
       const pump = (chunk: string) => {
         raw += chunk;
+        if (!heardSent) {
+          const heard = completedString(raw, "heard");
+          if (heard === null) return;
+          heardSent = true;
+          if (!heard.trim()) {
+            silent = true;
+            return;
+          }
+          send("heard", { text: heard.trim() });
+        }
+        if (silent) return;
         const reply = partialString(raw, "reply");
         if (reply.length > shown.length) {
           send("delta", { text: reply.slice(shown.length) });
@@ -137,7 +186,14 @@ export async function POST(req: NextRequest) {
 
       try {
         if (!firstChunk.done && firstChunk.value) pump(firstChunk.value);
-        for await (const chunk of generator) pump(chunk);
+        for await (const chunk of generator) {
+          pump(chunk);
+          if (silent) break;
+        }
+        if (silent) {
+          send("error", { error: "no_speech" });
+          return;
+        }
 
         let envelope: z.infer<typeof EnvelopeSchema> | null = null;
         try {
@@ -148,11 +204,15 @@ export async function POST(req: NextRequest) {
           envelope = await generateJson({
             contents,
             systemInstruction,
-            responseSchema: CITIZEN_RESPONSE_SCHEMA as unknown as Schema,
+            responseSchema,
             parse: (v) => EnvelopeSchema.parse(v),
             profile: "citizen",
             retries: 0,
           });
+        }
+        if (voice && !(envelope.heard ?? "").trim()) {
+          send("error", { error: "no_speech" });
+          return;
         }
         send("final", settle(envelope));
       } catch (err) {

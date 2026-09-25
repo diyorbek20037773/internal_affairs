@@ -13,13 +13,33 @@ import { trainingRepo } from "@/lib/storage/training";
 import { touch } from "@/lib/training/sessionFactory";
 
 interface DialogApiResponse {
+  /** What the model heard (voice turns) or the typed text. */
+  heard?: string;
   reply: string;
   assessment: DialogTurnAssessment;
   state: DialogHiddenState;
   ended: null | { reason: Exclude<DialogEndReason, "abandoned"> };
 }
 
-export type DialogSimError = "ai_unavailable" | "no_keys_configured" | "bad_ai_output" | "too_long" | "rate_limited" | "generic";
+export type DialogSimError =
+  | "ai_unavailable"
+  | "no_keys_configured"
+  | "bad_ai_output"
+  | "too_long"
+  | "rate_limited"
+  | "no_speech"
+  | "generic";
+
+/** A voice turn: the officer's recorded clip, sent straight to the dialog model. */
+export interface VoiceInput {
+  audio: string; // base64 WAV
+  mimeType: string;
+}
+
+/** Placeholder shown in the officer bubble until the model reports what it heard. */
+export const HEARING_PLACEHOLDER = "🎤 …";
+
+type StreamOutcome = { ok: true; data: DialogApiResponse } | { ok: false; error: string };
 
 /**
  * Consume the SSE turn stream: `delta` frames carry the citizen's reply as it
@@ -27,10 +47,11 @@ export type DialogSimError = "ai_unavailable" | "no_keys_configured" | "bad_ai_o
  */
 async function readTurnStream(
   res: Response,
-  onDelta: (text: string) => void
-): Promise<DialogApiResponse | null> {
+  onDelta: (text: string) => void,
+  onHeard: (text: string) => void
+): Promise<StreamOutcome> {
   const reader = res.body?.getReader();
-  if (!reader) return null;
+  if (!reader) return { ok: false, error: "bad_ai_output" };
   const decoder = new TextDecoder();
   let buffer = "";
   let shown = "";
@@ -52,17 +73,19 @@ async function readTurnStream(
         .join("");
       if (!event || !data) continue;
       const payload = JSON.parse(data);
-      if (event === "delta") {
+      if (event === "heard") {
+        onHeard(payload.text as string);
+      } else if (event === "delta") {
         shown += payload.text as string;
         onDelta(shown);
       } else if (event === "final") {
         final = payload as DialogApiResponse;
       } else if (event === "error") {
-        return null;
+        return { ok: false, error: (payload.error as string) || "bad_ai_output" };
       }
     }
   }
-  return final;
+  return final ? { ok: true, data: final } : { ok: false, error: "bad_ai_output" };
 }
 
 /**
@@ -87,11 +110,12 @@ export function useDialogSim(scenario: DialogScenario, initial: TrainingSession,
   }, []);
 
   const send = useCallback(
-    async (text: string) => {
+    async (input: string | VoiceInput, hooks?: { onDelta?: (text: string) => void }) => {
       const cur = sessionRef.current;
       const p = cur.payload as DialogPayload;
       if (busy || busyRef.current || cur.status !== "in_progress") return;
-      const trimmed = text.trim();
+      const voice = typeof input === "string" ? null : input;
+      const trimmed = voice ? HEARING_PLACEHOLDER : (input as string).trim();
       if (!trimmed) return;
 
       busyRef.current = true;
@@ -122,7 +146,7 @@ export function useDialogSim(scenario: DialogScenario, initial: TrainingSession,
             locale,
             state: p.state,
             history: p.transcript.slice(1).map((t) => ({ role: t.role, text: t.text })),
-            officerText: trimmed,
+            ...(voice ? { audio: { data: voice.audio, mimeType: voice.mimeType } } : { officerText: trimmed }),
             officerTurns: officerTurnsBefore + 1,
             stream: true,
           }),
@@ -137,21 +161,40 @@ export function useDialogSim(scenario: DialogScenario, initial: TrainingSession,
                 ? "too_long"
                 : code === "rate_limited"
                   ? "rate_limited"
-                  : "generic"
+                  : code === "no_speech"
+                    ? "no_speech"
+                    : "generic"
           );
           if (code === "invalid_request") console.warn("[dialog] invalid_request:", j.detail);
           setSession(cur);
           return;
         }
-        const data = await readTurnStream(res, setStreamingReply);
-        if (!data) {
-          setError("bad_ai_output");
+        let heardText = trimmed;
+        const outcome = await readTurnStream(
+          res,
+          (t) => {
+            setStreamingReply(t);
+            hooks?.onDelta?.(t);
+          },
+          (h) => {
+            heardText = h;
+            setSession(
+              touch(cur, {
+                payload: { ...p, transcript: [...p.transcript, { ...officerTurn, text: h }] },
+              })
+            );
+          }
+        );
+        if (!outcome.ok) {
+          setError(outcome.error === "no_speech" ? "no_speech" : "bad_ai_output");
           setSession(cur);
           return;
         }
+        const data = outcome.data;
 
         const officerWithAssessment: DialogTurn = {
           ...officerTurn,
+          text: (data.heard || heardText).trim() || heardText,
           assessment: data.assessment,
           stateAfter: data.state,
         };

@@ -118,3 +118,32 @@ export function budgetInstruction(b: ReplyBudget): string {
 - ${shape[b.mode]}
 - Gaplaring qisqa-qisqa bo'lib ketmasin; odam kabi to'liq gapir. Oldingi javobing bilan bir xil uzunlikda bo'lmasin.`;
 }
+
+/**
+ * Voice turns arrive as audio, so the server can't read the officer's words
+ * before the model call. Give the model the same three server-computed
+ * budgets and let it pick the one that fits what it hears.
+ */
+export function adaptiveBudgetInstruction({
+  state,
+  scenario,
+  turnIndex,
+}: {
+  state: DialogHiddenState;
+  scenario: DialogScenario;
+  turnIndex: number;
+}): string {
+  const short = replyBudget({ officerText: "ismingiz", state, scenario, turnIndex });
+  const mid = replyBudget({
+    officerText: "men sizni tushunaman keling shu masalani birga ko'rib chiqamiz nima qilsak bo'ladi",
+    state,
+    scenario,
+    turnIndex,
+  });
+  const long = replyBudget({ officerText: "boshidan batafsil aytib bering", state, scenario, turnIndex });
+  return `\n# BU NAVBATDAGI JAVOB HAJMI — MAJBURIY (xodim gapini eshitib o'zing tanla)
+- Xodim shaxsni aniqlovchi / hujjat haqida QISQA savol bersa yoki juda qisqa gapirsa: ${short.minWords}–${short.maxWords} so'z. ${"Faqat so'ralganini ayt."}
+- Oddiy gap yoki savol: ${mid.minWords}–${mid.maxWords} so'z; so'ralganiga javob ber va 1-2 yangi tafsilot qo'sh.
+- Xodim voqeani aytib berishga chaqirsa ("boshidan aytib bering", "nima bo'ldi?"): ${long.minWords}–${long.maxWords} so'z${long.mode === "portlash" ? ", hissiyotli, uzuq-yuluq" : ", kamida uchta aniq tafsilot bilan"}.
+- Bu ovozli suhbat: jonli og'zaki gapir, ro'yxat va belgilar ishlatma.`;
+}

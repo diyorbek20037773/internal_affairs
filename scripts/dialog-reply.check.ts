@@ -1,5 +1,6 @@
-import { replyBudget } from "@/lib/training/replyBudget";
-import { partialString } from "@/lib/gemini/partialJson";
+import { adaptiveBudgetInstruction, replyBudget } from "@/lib/training/replyBudget";
+import { completedString, partialString } from "@/lib/gemini/partialJson";
+import { speakable, splitHead } from "@/hooks/useSpeech";
 import { qoshniNizo } from "@/data/scenarios/dialog/qoshni-nizo";
 
 let pass = 0, fail = 0;
@@ -59,6 +60,20 @@ const st = (o: Partial<{ tension: number; trust: number; cooperation: number }> 
   check("partial \\u escape dropped", partialString('{"reply":"Salom\\u04', "reply") === "Salom");
   check("unicode escape decoded", partialString('{"reply":"\\u0421alom"', "reply") === "Сalom");
   check("key absent yet", partialString('{"rep', "reply") === "");
+}
+
+// 5) Voice turns: the heard transcript is released only once it is complete,
+//    and the adaptive budget offers all three lengths.
+{
+  check("heard: open string → null", completedString('{"heard":"Assalomu alay', "heard") === null);
+  check("heard: closed → text", completedString('{"heard":"Salom, \\"aka\\"","re', "heard") === 'Salom, "aka"');
+  check("heard: empty closed → ''", completedString('{"heard":"","reply":"', "heard") === "");
+  const txt = adaptiveBudgetInstruction({ state: st(), scenario: sc, turnIndex: 2 });
+  const ranges = txt.match(/\d+–\d+ so'z/g) ?? [];
+  check("adaptive budget lists 3 ranges", ranges.length === 3, ranges.join(" | "));
+  const [h, t] = splitHead("Men juda charchadim, aka. Uch kundan beri uxlamayman! Qo'shni har kecha baqiradi.");
+  check("splitHead: first sentence alone", h === "Men juda charchadim, aka." && t.startsWith("Uch kundan"), `${h} / ${t}`);
+  check("speakable drops remarks", speakable("(qo'lini silkitadi) Bo'ldi, **yetar**!") === "Bo'ldi, yetar!");
 }
 
 console.log(`\n${pass}/${pass + fail} dialog reply checks passed`);

@@ -98,7 +98,8 @@ function TirRunner({ scenario, initial }: { scenario: TirScenario; initial: Trai
   const tc = useTranslations("common");
   const locale = useLocale();
   const router = useRouter();
-  const speech = useSpeech({ locale });
+  // Short verbal commands: end the take on the first pause.
+  const speech = useSpeech({ locale, autoStop: true, maxRecordMs: 12000 });
 
   const [session, setSession] = useState(initial);
   const [state, setState] = useState<TirState>(() => initTir(scenario));

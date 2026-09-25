@@ -24,6 +24,26 @@ const BodySchema = z.object({
   locale: z.string().default("uz"),
 });
 
+/**
+ * Small in-memory LRU of finished WAVs. Authored texts (situations read aloud,
+ * tutor openings) repeat across trainees; a hit answers instantly and spends
+ * no quota. Per instance, bounded (~60 clips × ≤ ~1 MB).
+ */
+const CACHE_MAX = 60;
+const cache = new Map<string, Buffer>();
+function cacheGet(k: string): Buffer | undefined {
+  const v = cache.get(k);
+  if (v) {
+    cache.delete(k);
+    cache.set(k, v);
+  }
+  return v;
+}
+function cachePut(k: string, v: Buffer) {
+  cache.set(k, v);
+  while (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value as string);
+}
+
 function pcmToWav(pcm: Buffer, sampleRate: number): Buffer {
   const channels = 1;
   const bits = 16;
@@ -65,6 +85,13 @@ export async function POST(req: NextRequest) {
     voiceConfig: { prebuiltVoiceConfig: { voiceName: VOICE } },
   };
   const text = (LANG_HINT[body.locale] ?? "") + body.text;
+  const key = `${VOICE}|${body.locale}|${body.text}`;
+  const hit = cacheGet(key);
+  if (hit) {
+    return new Response(new Uint8Array(hit), {
+      headers: { "Content-Type": "audio/wav", "Cache-Control": "no-store", "X-TTS-Cache": "hit" },
+    });
+  }
 
   try {
     const { data, mime } = await withKeyFailover(async (ai) => {
@@ -84,6 +111,7 @@ export async function POST(req: NextRequest) {
 
     const pcm = Buffer.from(data, "base64");
     const wav = pcmToWav(pcm, rateFromMime(mime));
+    cachePut(key, wav);
 
     return new Response(new Uint8Array(wav), {
       headers: {

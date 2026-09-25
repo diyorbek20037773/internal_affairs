@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Volume2, VolumeX, ArrowRight, XCircle, User, ShieldCheck } from "lucide-react";
+import { Volume2, VolumeX, ArrowRight, XCircle, User, ShieldCheck, AudioLines, Mic } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatComposer } from "@/components/chat/ChatComposer";
 import { useSpeech } from "@/hooks/useSpeech";
-import { useDialogSim } from "@/hooks/useDialogSim";
+import { useDialogSim, HEARING_PLACEHOLDER } from "@/hooks/useDialogSim";
+import { useSentenceSpeaker } from "@/hooks/useSentenceSpeaker";
 import { useSessionBootstrap } from "@/hooks/useSessionBootstrap";
 import { newDialogSession } from "@/lib/training/sessionFactory";
 import { localized } from "@/data/sops/types";
@@ -53,39 +54,93 @@ function DialogRunner({ scenario, initial }: { scenario: DialogScenario; initial
   const locale = useLocale();
   const router = useRouter();
   const sim = useDialogSim(scenario, initial, locale);
-  const speech = useSpeech({ locale });
+  /** Hands-free: talk → auto-send on silence → the citizen answers aloud → mic reopens. */
+  const [live, setLive] = useState(false);
+  const speech = useSpeech({ locale, autoStop: live, direct: true, maxRecordMs: live ? 45000 : 60000 });
   const [speakReplies, setSpeakReplies] = useState(false);
+  const speaker = useSentenceSpeaker(speech, speakReplies);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const lastSpokenRef = useRef<number>(-1);
+  const lastSpokenRef = useRef<number>(sim.transcript[sim.transcript.length - 1]?.i ?? -1);
 
   // Auto-scroll.
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [sim.transcript.length, sim.busy, sim.streamingReply]);
 
-  // Voice: mic transcript → send.
+  const sendTurn = useCallback(
+    (input: Parameters<typeof sim.send>[0]) => {
+      speaker.reset();
+      void sim.send(input, { onDelta: speaker.feed });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sim.send, speaker.reset, speaker.feed]
+  );
+
+  // Voice (server mode): the recorded clip goes straight to the dialog model —
+  // it transcribes and answers in one call.
+  useEffect(() => {
+    if (!speech.clip) return;
+    const clip = speech.clip;
+    speech.clearClip();
+    sendTurn({ audio: clip.base64, mimeType: clip.mimeType });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speech.clip]);
+
+  // Voice (browser Web Speech fallback): mic transcript → send.
   useEffect(() => {
     if (!speech.listening && speech.transcript) {
       const text = speech.transcript;
       speech.setTranscript("");
-      void sim.send(text);
+      sendTurn(text);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [speech.listening, speech.transcript]);
 
-  // Voice: read the citizen's newest reply.
+  // Voice: finish reading the citizen's newest reply (its head was already
+  // spoken while it streamed).
   useEffect(() => {
-    if (!speakReplies) return;
     const last = sim.transcript[sim.transcript.length - 1];
     if (last && last.role === "citizen" && last.i !== lastSpokenRef.current && last.i > 0) {
       lastSpokenRef.current = last.i;
-      void speech.speak(last.text.replace(/\([^)]*\)/g, ""));
+      speaker.end(last.text);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sim.transcript.length, speakReplies]);
+  }, [sim.transcript.length]);
+
+  // Hands-free: reopen the mic once the citizen has finished speaking.
+  useEffect(() => {
+    if (!live || sim.ended || sim.busy || !speaker.idle || speech.listening || speech.processing) return;
+    const id = window.setTimeout(() => speech.startListening(), 350);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live, sim.ended, sim.busy, speaker.idle, speech.listening, speech.processing]);
+
+  useEffect(() => {
+    if (sim.ended && live) {
+      setLive(false);
+      speech.cancelListening();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sim.ended]);
+
+  const toggleLive = () => {
+    speech.unlockAudio();
+    if (live) {
+      setLive(false);
+      speech.cancelListening();
+      return;
+    }
+    setLive(true);
+    setSpeakReplies(true);
+  };
 
   useEffect(() => {
     if (!sim.error) return;
+    if (sim.error === "no_speech") {
+      if (!live) toast.message(t("noSpeech"));
+      sim.clearError();
+      return;
+    }
     toast.error(
       sim.error === "ai_unavailable"
         ? tc("aiUnavailable")
@@ -128,11 +183,25 @@ function DialogRunner({ scenario, initial }: { scenario: DialogScenario; initial
           <Badge variant="outline" className="hidden sm:inline-flex">
             {scenario.code}
           </Badge>
+          {speech.sttSupported && speech.sttMode === "server" && !sim.ended && (
+            <Button
+              variant={live ? "accent" : "outline"}
+              size="sm"
+              onClick={toggleLive}
+              aria-pressed={live}
+              title={t("liveHint")}
+              className="h-10"
+            >
+              <AudioLines className="h-4 w-4" />
+              <span className="hidden sm:inline">{live ? t("liveOn") : t("live")}</span>
+            </Button>
+          )}
           <Button
             variant={speakReplies ? "accent" : "ghost"}
             size="icon"
             onClick={() => {
-              if (speakReplies) speech.stopSpeaking();
+              speech.unlockAudio();
+              if (speakReplies) speaker.reset();
               setSpeakReplies((v) => !v);
             }}
             aria-label={t("speakReplies")}
@@ -167,7 +236,9 @@ function DialogRunner({ scenario, initial }: { scenario: DialogScenario; initial
                   <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wider opacity-60">
                     {turn.role === "officer" ? t("you") : t("citizen")}
                   </p>
-                  <p className="whitespace-pre-wrap">{turn.text}</p>
+                  <p className={cn("whitespace-pre-wrap", turn.text === HEARING_PLACEHOLDER && "animate-pulse")}>
+                    {turn.text === HEARING_PLACEHOLDER ? t("hearing") : turn.text}
+                  </p>
                 </div>
                 {turn.role === "officer" && (
                   <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
@@ -232,16 +303,56 @@ function DialogRunner({ scenario, initial }: { scenario: DialogScenario; initial
         {!sim.ended ? (
           <>
             {(speech.listening || speech.processing || speech.interim) && (
-              <p className={cn("px-4 pt-2 text-xs", speech.listening ? "text-destructive" : "text-muted-foreground")}>
-                🎤 {speech.processing ? t("sttProcessing") : speech.listening && speech.sttMode === "server" ? t("sttRecording") : speech.interim || "…"}
-              </p>
+              <div
+                className={cn(
+                  "flex items-center gap-3 px-4 pt-2 text-xs",
+                  speech.listening ? "text-destructive" : "text-muted-foreground"
+                )}
+              >
+                <Mic className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">
+                  {speech.processing
+                    ? t("sttProcessing")
+                    : speech.listening && speech.sttMode === "server"
+                      ? live
+                        ? speech.heard
+                          ? t("liveListening")
+                          : t("liveSpeak")
+                        : t("sttRecording")
+                      : speech.interim || "…"}
+                </span>
+                {speech.listening && speech.sttMode === "server" && (
+                  <span className="flex h-3 items-end gap-0.5" aria-hidden>
+                    {[0.35, 0.7, 1, 0.7, 0.35].map((k, i) => (
+                      <span
+                        key={i}
+                        className="w-1 rounded-full bg-destructive/80 transition-[height] duration-75"
+                        style={{ height: `${Math.max(15, Math.min(100, speech.level * 160 * k))}%` }}
+                      />
+                    ))}
+                  </span>
+                )}
+                {live && speech.listening && (
+                  <Button variant="ghost" size="sm" className="ml-auto h-8" onClick={() => speech.stopListening()}>
+                    {t("liveSendNow")}
+                  </Button>
+                )}
+              </div>
             )}
             <ChatComposer
-              onSend={(text) => void sim.send(text)}
+              onSend={(text) => sendTurn(text)}
               onStop={() => undefined}
               isStreaming={sim.busy}
               placeholder={t("placeholder")}
-              onMic={speech.sttSupported ? () => (speech.listening ? speech.stopListening() : speech.startListening()) : undefined}
+              onMic={
+                speech.sttSupported && !live
+                  ? () => {
+                      speech.unlockAudio();
+                      if (speech.listening) speech.stopListening();
+                      else speech.startListening();
+                    }
+                  : undefined
+              }
               micActive={speech.listening}
             />
             <div className="flex justify-end border-t border-border/50 px-3 py-1.5">

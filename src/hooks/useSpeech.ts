@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { canRecordPcm, startRecording, type ActiveRecording, type RecordedClip } from "@/lib/voice/recorder";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -8,38 +9,13 @@ interface UseSpeechOptions {
   locale: string;
   /** Hard cap for one server-STT recording. Default 15 s (a dialog turn). */
   maxRecordMs?: number;
-}
-
-
-/** Decode any recorded blob and re-encode as 16 kHz mono 16-bit PCM WAV (what the STT model expects). */
-async function blobToWav16k(blob: Blob): Promise<ArrayBuffer> {
-  const AC = (window as any).AudioContext || (window as any).webkitAudioContext;
-  const ctx: AudioContext = new AC();
-  const decoded = await ctx.decodeAudioData(await blob.arrayBuffer());
-  const target = 16000;
-  const length = Math.ceil(decoded.duration * target);
-  const OAC = (window as any).OfflineAudioContext || (window as any).webkitOfflineAudioContext;
-  const off: OfflineAudioContext = new OAC(1, length, target);
-  const src = off.createBufferSource();
-  src.buffer = decoded;
-  src.connect(off.destination);
-  src.start(0);
-  const rendered = await off.startRendering();
-  const pcm = rendered.getChannelData(0);
-  const out = new ArrayBuffer(44 + pcm.length * 2);
-  const v = new DataView(out);
-  const w = (o: number, t: string) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
-  w(0, "RIFF"); v.setUint32(4, 36 + pcm.length * 2, true); w(8, "WAVE"); w(12, "fmt ");
-  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
-  v.setUint32(24, target, true); v.setUint32(28, target * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
-  w(36, "data"); v.setUint32(40, pcm.length * 2, true);
-  let o = 44;
-  for (let i = 0; i < pcm.length; i++, o += 2) {
-    const x = Math.max(-1, Math.min(1, pcm[i]));
-    v.setInt16(o, x < 0 ? x * 0x8000 : x * 0x7fff, true);
-  }
-  try { await ctx.close(); } catch {}
-  return out;
+  /** End the recording by itself after ~1.1 s of silence (hands-free talk). */
+  autoStop?: boolean;
+  /**
+   * Skip /api/stt: expose the recorded clip as `clip` so the caller can send
+   * the audio straight to its own model call (one round-trip instead of two).
+   */
+  direct?: boolean;
 }
 
 const STT_LANG: Record<string, string[]> = {
@@ -54,7 +30,30 @@ const TTS_LANG: Record<string, string> = {
   en: "en-US",
 };
 
-export function useSpeech({ locale, maxRecordMs = 15000 }: UseSpeechOptions) {
+/** Clean text for reading aloud: drop stage remarks "(…)" and markdown marks. */
+export function speakable(text: string): string {
+  return text
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/[*_#>`]+/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+interface QueueItem {
+  text: string;
+  audio: Promise<ArrayBuffer | null>;
+}
+
+let playCtx: AudioContext | null = null;
+function playbackContext(): AudioContext | null {
+  if (typeof window === "undefined") return null;
+  const AC = (window as any).AudioContext || (window as any).webkitAudioContext;
+  if (!AC) return null;
+  if (!playCtx || playCtx.state === "closed") playCtx = new AC();
+  return playCtx;
+}
+
+export function useSpeech({ locale, maxRecordMs = 15000, autoStop = false, direct = false }: UseSpeechOptions) {
   const [sttSupported, setSttSupported] = useState(false);
   const [ttsSupported, setTtsSupported] = useState(false);
   const [listening, setListening] = useState(false);
@@ -62,100 +61,116 @@ export function useSpeech({ locale, maxRecordMs = 15000 }: UseSpeechOptions) {
   const [transcript, setTranscript] = useState("");
   const [interim, setInterim] = useState("");
   const [sttError, setSttError] = useState<string | null>(null);
+  const [level, setLevel] = useState(0);
+  const [heard, setHeard] = useState(false);
+  const [clip, setClip] = useState<RecordedClip | null>(null);
   const recognitionRef = useRef<any>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const streamRef = useRef<MediaStream | null>(null);
+  const recRef = useRef<ActiveRecording | null>(null);
   const [sttMode, setSttMode] = useState<"server" | "browser">("browser");
   const [processing, setProcessing] = useState(false);
 
+  // --- TTS queue state ---
+  const queueRef = useRef<QueueItem[]>([]);
+  const playingRef = useRef(false);
+  const genRef = useRef(0);
+  const sourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const htmlAudioRef = useRef<HTMLAudioElement | null>(null);
+
   useEffect(() => {
-    const SR =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
-    const canRecord =
-      typeof window !== "undefined" &&
-      typeof MediaRecorder !== "undefined" &&
-      !!navigator.mediaDevices?.getUserMedia;
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const canRecord = canRecordPcm();
     // Server STT (Gemini audio) handles Uzbek far better than Web Speech; use it whenever we can record.
     setSttMode(canRecord ? "server" : "browser");
     setSttSupported(canRecord || !!SR);
-    setTtsSupported(typeof window !== "undefined" && "speechSynthesis" in window);
+    setTtsSupported(typeof window !== "undefined" && ("speechSynthesis" in window || !!playbackContext()));
   }, []);
 
-  const pickMime = () => {
-    const c = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4", "audio/aac"];
-    return c.find((m) => typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(m)) ?? "";
-  };
+  const transcribe = useCallback(
+    async (c: RecordedClip) => {
+      setProcessing(true);
+      setInterim("…");
+      try {
+        const res = await fetch("/api/stt", {
+          signal: AbortSignal.timeout(30_000),
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ audio: c.base64, mimeType: c.mimeType, locale }),
+        });
+        if (!res.ok) throw new Error(String(res.status));
+        const j = (await res.json()) as { text?: string };
+        const text = (j.text ?? "").trim();
+        if (text) setTranscript(text);
+        else setSttError("no-speech");
+      } catch {
+        setSttError("network");
+      } finally {
+        setProcessing(false);
+        setInterim("");
+      }
+    },
+    [locale]
+  );
 
-  const startRecording = useCallback(async () => {
+  const startServerRecording = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-      streamRef.current = stream;
-      const mime = pickMime();
-      const rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
-      chunksRef.current = [];
-      rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      rec.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop());
-        streamRef.current = null;
-        setListening(false);
-        const blob = new Blob(chunksRef.current, { type: rec.mimeType || mime || "audio/webm" });
-        if (blob.size < 2000) { setInterim(""); return; }
-        setProcessing(true);
-        setInterim("…");
-        try {
-          // Gemini accepts wav/mp3/ogg/aac but not Chrome's webm — transcode to 16 kHz mono WAV in the browser.
-          const wav = await blobToWav16k(blob);
-          let bin = "";
-          const bytes = new Uint8Array(wav);
-          for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + 0x8000)));
-          const res = await fetch("/api/stt", {
-            signal: AbortSignal.timeout(45_000),
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ audio: btoa(bin), mimeType: "audio/wav", locale }),
-          });
-          if (!res.ok) throw new Error(String(res.status));
-          const j = (await res.json()) as { text?: string };
-          const text = (j.text ?? "").trim();
-          if (text) setTranscript(text);
-          else setSttError("no-speech");
-        } catch {
-          setSttError("network");
-        } finally {
-          setProcessing(false);
-          setInterim("");
-        }
-      };
-      recorderRef.current = rec;
+      recRef.current?.cancel();
       setTranscript("");
       setSttError(null);
       setInterim("");
-      rec.start();
+      setClip(null);
+      setHeard(false);
+      const rec = await startRecording({
+        autoStop,
+        maxMs: maxRecordMs,
+        onLevel: setLevel,
+        onSpeechStart: () => setHeard(true),
+      });
+      recRef.current = rec;
       setListening(true);
-      // hard cap — a talk turn is short
-      window.setTimeout(() => { if (recorderRef.current === rec && rec.state === "recording") rec.stop(); }, maxRecordMs);
+      const c = await rec.done;
+      if (recRef.current === rec) recRef.current = null;
+      setListening(false);
+      setLevel(0);
+      if (!c) return;
+      if (!c.speech || c.durationMs < 300) {
+        setSttError("no-speech");
+        return;
+      }
+      if (direct) setClip(c);
+      else await transcribe(c);
     } catch (err: any) {
       setListening(false);
+      setLevel(0);
       setSttError(err?.name === "NotAllowedError" ? "not-allowed" : "start_failed");
     }
-  }, [locale, maxRecordMs]);
+  }, [autoStop, direct, maxRecordMs, transcribe]);
+
+  const stopSpeakingInternal = useCallback(() => {
+    genRef.current++;
+    queueRef.current = [];
+    playingRef.current = false;
+    try {
+      sourceRef.current?.stop();
+    } catch {}
+    sourceRef.current = null;
+    htmlAudioRef.current?.pause();
+    htmlAudioRef.current = null;
+    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    setSpeaking(false);
+  }, []);
 
   const startListening = useCallback(() => {
+    // Never record our own voice output.
+    stopSpeakingInternal();
     if (sttMode === "server") {
-      void startRecording();
+      void startServerRecording();
       return;
     }
-    const SR =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
       setSttError("unsupported");
       return;
     }
-    // stop any previous instance
     try {
       recognitionRef.current?.abort?.();
     } catch {}
@@ -197,90 +212,167 @@ export function useSpeech({ locale, maxRecordMs = 15000 }: UseSpeechOptions) {
       setListening(false);
       setSttError(err?.name === "InvalidStateError" ? "busy" : "start_failed");
     }
-  }, [locale, sttMode, startRecording]);
+  }, [locale, sttMode, startServerRecording, stopSpeakingInternal]);
 
   const clearSttError = useCallback(() => setSttError(null), []);
+  const clearClip = useCallback(() => setClip(null), []);
 
   const stopListening = useCallback(() => {
-    if (recorderRef.current && recorderRef.current.state === "recording") {
-      recorderRef.current.stop();
+    if (recRef.current) {
+      recRef.current.stop();
       return;
     }
     recognitionRef.current?.stop();
     setListening(false);
   }, []);
 
-  // Browser SpeechSynthesis — fallback only (limited/no Uzbek voice).
-  const browserSpeak = useCallback(
-    (text: string) => {
-      if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = TTS_LANG[locale] ?? "uz-UZ";
-      const voices = window.speechSynthesis.getVoices();
-      const match =
-        voices.find((v) => v.lang === utter.lang) ||
-        voices.find((v) => v.lang.startsWith(utter.lang.slice(0, 2)));
-      if (match) utter.voice = match;
-      utter.onstart = () => setSpeaking(true);
-      utter.onend = () => setSpeaking(false);
-      window.speechSynthesis.speak(utter);
+  /** Discard the current recording (nothing is sent). */
+  const cancelListening = useCallback(() => {
+    if (recRef.current) {
+      recRef.current.cancel();
+      recRef.current = null;
+    }
+    try {
+      recognitionRef.current?.abort?.();
+    } catch {}
+    setListening(false);
+    setLevel(0);
+  }, []);
+
+  // ---------------------------------------------------------------- TTS
+
+  const fetchTts = useCallback(
+    async (text: string): Promise<ArrayBuffer | null> => {
+      try {
+        const res = await fetch("/api/tts", {
+          signal: AbortSignal.timeout(25_000),
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: text.slice(0, 1200), locale }),
+        });
+        if (!res.ok) return null;
+        return await res.arrayBuffer();
+      } catch {
+        return null;
+      }
     },
     [locale]
   );
 
-  // High-quality server TTS (Gemini) with browser fallback. Works for uz/ru/en.
-  const speak = useCallback(
-    async (text: string) => {
-      const trimmed = text.trim();
-      if (!trimmed) return;
-
-      // stop any current playback
-      audioRef.current?.pause();
-      audioRef.current = null;
-      if (typeof window !== "undefined" && "speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-      }
-
-      setSpeaking(true);
-      try {
-        const res = await fetch("/api/tts", {
-          signal: AbortSignal.timeout(30_000),
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: trimmed.slice(0, 1200), locale }),
-        });
-        if (!res.ok) throw new Error("tts_failed");
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        audioRef.current = audio;
-        audio.onended = () => {
-          setSpeaking(false);
-          URL.revokeObjectURL(url);
-          if (audioRef.current === audio) audioRef.current = null;
-        };
-        audio.onerror = () => {
-          setSpeaking(false);
-          URL.revokeObjectURL(url);
-        };
-        await audio.play();
-      } catch {
-        // fallback to browser voice
-        browserSpeak(trimmed);
-      }
-    },
-    [locale, browserSpeak]
+  const browserSpeak = useCallback(
+    (text: string) =>
+      new Promise<void>((resolve) => {
+        if (typeof window === "undefined" || !("speechSynthesis" in window)) return resolve();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = TTS_LANG[locale] ?? "uz-UZ";
+        const voices = window.speechSynthesis.getVoices();
+        const match =
+          voices.find((v) => v.lang === utter.lang) || voices.find((v) => v.lang.startsWith(utter.lang.slice(0, 2)));
+        if (match) utter.voice = match;
+        utter.onend = () => resolve();
+        utter.onerror = () => resolve();
+        window.speechSynthesis.speak(utter);
+      }),
+    [locale]
   );
 
-  const stopSpeaking = useCallback(() => {
-    audioRef.current?.pause();
-    audioRef.current = null;
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
+  const playBuffer = useCallback(async (buf: ArrayBuffer, gen: number): Promise<void> => {
+    const ctx = playbackContext();
+    if (ctx) {
+      try {
+        if (ctx.state === "suspended") await ctx.resume();
+        const decoded = await ctx.decodeAudioData(buf.slice(0));
+        if (gen !== genRef.current) return;
+        await new Promise<void>((resolve) => {
+          const src = ctx.createBufferSource();
+          src.buffer = decoded;
+          src.connect(ctx.destination);
+          src.onended = () => resolve();
+          sourceRef.current = src;
+          src.start();
+        });
+        return;
+      } catch {
+        // fall through to <audio>
+      }
     }
-    setSpeaking(false);
+    const url = URL.createObjectURL(new Blob([buf], { type: "audio/wav" }));
+    try {
+      await new Promise<void>((resolve) => {
+        const a = new Audio(url);
+        htmlAudioRef.current = a;
+        a.onended = () => resolve();
+        a.onerror = () => resolve();
+        a.play().catch(() => resolve());
+      });
+    } finally {
+      URL.revokeObjectURL(url);
+    }
   }, []);
+
+  const pump = useCallback(async () => {
+    if (playingRef.current) return;
+    const gen = genRef.current;
+    playingRef.current = true;
+    setSpeaking(true);
+    while (queueRef.current.length && gen === genRef.current) {
+      const item = queueRef.current[0];
+      const buf = await item.audio;
+      if (gen !== genRef.current) break;
+      if (buf && buf.byteLength > 44) await playBuffer(buf, gen);
+      else await browserSpeak(item.text);
+      if (gen !== genRef.current) break;
+      queueRef.current.shift();
+    }
+    if (gen === genRef.current) {
+      playingRef.current = false;
+      setSpeaking(false);
+    }
+  }, [browserSpeak, playBuffer]);
+
+  /** Queue a chunk; its audio is fetched right away (prefetch), played in order. */
+  const enqueueSpeech = useCallback(
+    (text: string) => {
+      const clean = speakable(text);
+      if (!clean) return;
+      queueRef.current.push({ text: clean, audio: fetchTts(clean) });
+      void pump();
+    },
+    [fetchTts, pump]
+  );
+
+  /**
+   * Speak a whole text. The first sentence goes out as its own request so the
+   * voice starts after one short synthesis instead of the full reply's.
+   */
+  const speak = useCallback(
+    async (text: string) => {
+      stopSpeakingInternal();
+      const clean = speakable(text);
+      if (!clean) return;
+      const [head, tail] = splitHead(clean);
+      enqueueSpeech(head);
+      if (tail) enqueueSpeech(tail);
+    },
+    [enqueueSpeech, stopSpeakingInternal]
+  );
+
+  /** Call from a user gesture (e.g. the speaker toggle) so later playback isn't autoplay-blocked. */
+  const unlockAudio = useCallback(() => {
+    const ctx = playbackContext();
+    if (ctx && ctx.state === "suspended") void ctx.resume();
+  }, []);
+
+  useEffect(
+    () => () => {
+      recRef.current?.cancel();
+      genRef.current++;
+      try {
+        sourceRef.current?.stop();
+      } catch {}
+    },
+    []
+  );
 
   return {
     sttSupported,
@@ -288,15 +380,38 @@ export function useSpeech({ locale, maxRecordMs = 15000 }: UseSpeechOptions) {
     processing,
     ttsSupported,
     listening,
+    /** VAD heard speech in the current recording. */
+    heard,
+    /** 0..1 live input level while recording. */
+    level,
     speaking,
     transcript,
     interim,
     sttError,
     clearSttError,
     setTranscript,
+    /** Recorded clip when `direct` is on. */
+    clip,
+    clearClip,
     startListening,
     stopListening,
+    cancelListening,
     speak,
-    stopSpeaking,
+    enqueueSpeech,
+    stopSpeaking: stopSpeakingInternal,
+    unlockAudio,
   };
+}
+
+export type SpeechApi = ReturnType<typeof useSpeech>;
+
+/** Split off the first sentence (≤ ~160 chars) so audio can start early. */
+export function splitHead(text: string): [string, string] {
+  const m = /^(.{20,160}?[.!?…])(\s+|$)/s.exec(text);
+  if (!m) {
+    if (text.length <= 180) return [text, ""];
+    const cut = text.lastIndexOf(" ", 140);
+    return [text.slice(0, cut > 40 ? cut : 140), text.slice(cut > 40 ? cut + 1 : 140)];
+  }
+  return [m[1], text.slice(m[0].length).trim()];
 }
