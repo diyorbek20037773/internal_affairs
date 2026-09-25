@@ -95,7 +95,7 @@ ${bullets(topic.questions, "uz")}
 - Har javob bitta aniq savol bilan tugasin (yakuniy xulosadan tashqari).
 
 # BIRINCHI JAVOB
-Tinglovchi darsni boshlaganda: qisqa salomlash, o'zingni ${agencyName} instruktori sifatida tanishtir, dars maqsadini 1–2 gapda ayt (ish jarayonining nechta bosqichi borligini ham), birinchi bosqichni qisqa tushuntir va birinchi savolni ber.`;
+Tinglovchi darsni boshlaganda: qisqa salomlash, o'zingni ism aytmasdan tanishtir (masalan: «Men ${agencyName} instruktoriman»; «Senman», «Sen …» kabi shakllarni ishlatma — tinglovchiga faqat «siz» deb murojaat qil), dars maqsadini 1–2 gapda ayt (ish jarayonining nechta bosqichi borligini ham), birinchi bosqichni qisqa tushuntir va birinchi savolni ber.`;
 }
 
 /** The user-side text for the opening turn (so the conversation starts with a user message). */
