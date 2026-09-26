@@ -109,7 +109,9 @@ function TutorRunner({ topic, traineeId }: { topic: TutorTopic; traineeId: strin
   );
 
   /* ---------------- voice ---------------- */
-  const speech = useSpeech({ locale, maxRecordMs: 60000, autoStop: true });
+  // direct: the recorded clip goes straight to /api/tutor (transcribe + answer
+  // in one streamed call). Browsers without PCM capture fall back to Web Speech → text.
+  const speech = useSpeech({ locale, maxRecordMs: 60000, autoStop: true, direct: true });
   const [speakOn, setSpeakOn] = useState(false);
   const [live, setLive] = useState(false);
   const speaker = useSentenceSpeaker(speech, speakOn || live);
@@ -122,6 +124,17 @@ function TutorRunner({ topic, traineeId }: { topic: TutorTopic; traineeId: strin
     onDone: (full) => speaker.end(full),
     onTurn: () => persist({ turns: progRef.current.turns + 1 }),
   });
+
+  // Voice turn: the clip goes to the tutor as is — no separate STT round-trip.
+  useEffect(() => {
+    const clip = speech.clip;
+    if (!clip) return;
+    speech.clearClip();
+    if (!chat.started || chat.busy) return;
+    speaker.reset();
+    chat.sendAudio(clip);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speech.clip]);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -182,11 +195,11 @@ function TutorRunner({ topic, traineeId }: { topic: TutorTopic; traineeId: strin
   // flight, start listening again.
   useEffect(() => {
     if (!live || !chat.started || chat.busy || !speaker.idle) return;
-    if (speech.listening || speech.processing || speech.speaking || speech.transcript) return;
+    if (speech.listening || speech.processing || speech.speaking || speech.transcript || speech.clip) return;
     const id = window.setTimeout(() => speech.startListening(), 450);
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [live, chat.started, chat.busy, speaker.idle, speech.listening, speech.processing, speech.speaking, speech.transcript]);
+  }, [live, chat.started, chat.busy, speaker.idle, speech.listening, speech.processing, speech.speaking, speech.transcript, speech.clip]);
 
   const startLesson = () => {
     speech.unlockAudio();
@@ -351,7 +364,7 @@ function TutorRunner({ topic, traineeId }: { topic: TutorTopic; traineeId: strin
           ) : (
             <div className="space-y-3">
               {chat.messages.map((m) => (
-                <Bubble key={m.id} role={m.role} text={m.text} />
+                <Bubble key={m.id} role={m.role} text={m.pending ? "🎤 …" : m.text} />
               ))}
               {chat.busy && (
                 chat.streaming ? (

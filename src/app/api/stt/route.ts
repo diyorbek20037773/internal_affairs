@@ -3,6 +3,7 @@ import { aiGuard } from "@/lib/aiGuard";
 import { z } from "zod";
 import { withKeyFailover } from "@/lib/gemini/keyPool";
 import { simErrorResponse } from "@/lib/training/apiErrors";
+import { cleanTranscript, NO_SPEECH as EMPTY } from "@/lib/voice/transcript";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,33 +25,6 @@ const LANG: Record<string, string> = {
   ru: "rus",
   en: "ingliz",
 };
-
-/** Marker the model answers when it hears no speech. */
-const EMPTY = "[NUTQ_YOQ]";
-
-const words = (t: string) =>
-  t
-    .toLowerCase()
-    .replace(/[‘’ʻʼ`]/g, "'")
-    .split(/[^\p{L}\p{N}']+/u)
-    .filter((w) => w.length > 2);
-
-/**
- * Drop anything that is not a transcript: the "no speech" marker, and output
- * that mostly repeats the instruction (a known Gemini failure on silent clips).
- */
-function cleanTranscript(raw: string, instruction: string): string {
-  const text = raw.replace(/^["«']|["»']$/g, "").trim();
-  if (!text || text.includes(EMPTY) || /NUTQ_YO/i.test(text)) return "";
-  const out = words(text);
-  if (out.length >= 5) {
-    const ref = new Set(words(instruction));
-    const hit = out.filter((w) => ref.has(w)).length;
-    if (hit / out.length > 0.6) return "";
-  }
-  if (/transkripsiya|speech-to-text|matnga o'giruvchi/i.test(text)) return "";
-  return text;
-}
 
 export async function POST(req: NextRequest) {
   const blocked = await aiGuard(req, { cost: 1 });

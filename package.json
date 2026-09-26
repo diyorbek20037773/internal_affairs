@@ -9,6 +9,7 @@
     "lint": "next lint",
     "check:tir": "tsx --tsconfig tsconfig.json scripts/tir-engine.check.ts",
     "check:tir:fps": "tsx --tsconfig tsconfig.json scripts/tir-fps.check.ts",
+    "check:voice": "tsx --tsconfig tsconfig.json scripts/voice-turn.check.ts",
     "check:dialog": "tsx --tsconfig tsconfig.json scripts/dialog-reply.check.ts",
     "check:keys": "tsx --tsconfig tsconfig.json scripts/keypool.check.ts",
     "check:decision": "tsx --tsconfig tsconfig.json scripts/decision.check.ts",

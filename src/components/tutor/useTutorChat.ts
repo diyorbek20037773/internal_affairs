@@ -7,6 +7,13 @@ export interface TutorMsg {
   id: string;
   role: "learner" | "tutor";
   text: string;
+  /** Voice turn whose words the server has not sent back yet. */
+  pending?: boolean;
+}
+
+export interface TutorClip {
+  base64: string;
+  mimeType: string;
 }
 
 const START = "__start__";
@@ -21,6 +28,8 @@ interface Options {
   onDone?: (full: string) => void;
   /** A tutor reply to a learner message completed (one Q&A turn). */
   onTurn?: () => void;
+  /** A voice turn held no speech (nothing was sent to the chat). */
+  onNoSpeech?: () => void;
 }
 
 /** Parse one SSE block ("event: x\ndata: {...}"). */
@@ -40,7 +49,7 @@ function parseBlock(block: string): { event: string; data: unknown } | null {
 }
 
 /** Streaming Q&A with /api/tutor. */
-export function useTutorChat({ topicId, locale, onDelta, onDone, onTurn }: Options) {
+export function useTutorChat({ topicId, locale, onDelta, onDone, onTurn, onNoSpeech }: Options) {
   const [messages, setMessages] = useState<TutorMsg[]>([]);
   const [streaming, setStreaming] = useState("");
   const [busy, setBusy] = useState(false);
@@ -48,8 +57,8 @@ export function useTutorChat({ topicId, locale, onDelta, onDone, onTurn }: Optio
   const msgsRef = useRef<TutorMsg[]>([]);
   const abortRef = useRef<AbortController | null>(null);
   const busyRef = useRef(false);
-  const cbRef = useRef({ onDelta, onDone, onTurn });
-  cbRef.current = { onDelta, onDone, onTurn };
+  const cbRef = useRef({ onDelta, onDone, onTurn, onNoSpeech });
+  cbRef.current = { onDelta, onDone, onTurn, onNoSpeech };
 
   const commit = useCallback((next: TutorMsg[]) => {
     msgsRef.current = next;
@@ -57,11 +66,17 @@ export function useTutorChat({ topicId, locale, onDelta, onDone, onTurn }: Optio
   }, []);
 
   const run = useCallback(
-    async (message: string) => {
+    async (input: string | TutorClip) => {
       if (busyRef.current) return;
+      const clip = typeof input === "string" ? null : input;
+      const message = typeof input === "string" ? input : "";
       const isStart = message === START;
       const history = msgsRef.current.slice(-MAX_HISTORY).map(({ role, text }) => ({ role, text }));
-      if (!isStart) commit([...msgsRef.current, { id: uid(), role: "learner", text: message }]);
+      const learnerId = uid();
+      if (!isStart) {
+        commit([...msgsRef.current, { id: learnerId, role: "learner", text: message, pending: !!clip }]);
+      }
+      let noSpeech = false;
 
       busyRef.current = true;
       setBusy(true);
@@ -76,7 +91,12 @@ export function useTutorChat({ topicId, locale, onDelta, onDone, onTurn }: Optio
         const res = await fetch("/api/tutor", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ topicId, locale, history: isStart ? [] : history, message }),
+          body: JSON.stringify({
+            topicId,
+            locale,
+            history: isStart ? [] : history,
+            ...(clip ? { audio: { data: clip.base64, mimeType: clip.mimeType } } : { message }),
+          }),
           signal: ctrl.signal,
         });
         if (!res.ok || !res.body) {
@@ -104,6 +124,12 @@ export function useTutorChat({ topicId, locale, onDelta, onDone, onTurn }: Optio
                   setStreaming(acc);
                   cbRef.current.onDelta?.(acc);
                 }
+              } else if (ev.event === "heard") {
+                const h = ((ev.data as { text?: string }).text ?? "").trim();
+                commit(msgsRef.current.map((m) => (m.id === learnerId ? { ...m, text: h || "🎤", pending: false } : m)));
+              } else if (ev.event === "nospeech") {
+                noSpeech = true;
+                finished = true;
               } else if (ev.event === "error") {
                 failed = (ev.data as { error?: string }).error ?? "error";
                 finished = true;
@@ -118,6 +144,13 @@ export function useTutorChat({ topicId, locale, onDelta, onDone, onTurn }: Optio
       } finally {
         abortRef.current = null;
       }
+
+      // A voice turn that never got its words back (no speech / failure) leaves no bubble.
+      const learner = msgsRef.current.find((m) => m.id === learnerId);
+      if (learner?.pending) {
+        commit(msgsRef.current.filter((m) => m.id !== learnerId));
+      }
+      if (noSpeech) cbRef.current.onNoSpeech?.();
 
       const text = acc.trim();
       if (text) {
@@ -140,8 +173,10 @@ export function useTutorChat({ topicId, locale, onDelta, onDone, onTurn }: Optio
     const t = text.trim();
     if (t) void run(t.slice(0, 4000));
   }, [run]);
+  /** Voice turn: the clip goes straight to the tutor model (one call). */
+  const sendAudio = useCallback((clip: TutorClip) => void run(clip), [run]);
   const stop = useCallback(() => abortRef.current?.abort(), []);
   const clearError = useCallback(() => setError(null), []);
 
-  return { messages, streaming, busy, error, start, send, stop, clearError, started: messages.length > 0 };
+  return { messages, streaming, busy, error, start, send, sendAudio, stop, clearError, started: messages.length > 0 };
 }
