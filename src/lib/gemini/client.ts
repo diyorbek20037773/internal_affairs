@@ -10,6 +10,12 @@ import {
 export interface StreamChatArgs {
   contents: Content[];
   systemInstruction: string;
+  /**
+   * Gemini 2.5 "thinking" budget. Unset → the model's dynamic default, which
+   * can hold the first token back for several seconds. Conversational voice
+   * turns pass 0 so the reply (and its speech) starts at once.
+   */
+  thinkingBudget?: number;
 }
 
 /**
@@ -20,6 +26,7 @@ export interface StreamChatArgs {
 export async function* streamChat({
   contents,
   systemInstruction,
+  thinkingBudget,
 }: StreamChatArgs): AsyncGenerator<string> {
   const { first, iterator } = await withKeyFailover(async (ai, _key, ctx) => {
     const response = await ai.models.generateContentStream({
@@ -31,6 +38,7 @@ export async function* streamChat({
         topP: GENERATION_CONFIG.topP,
         maxOutputTokens: GENERATION_CONFIG.maxOutputTokens,
         safetySettings: SAFETY_SETTINGS as unknown as never,
+        ...(thinkingBudget !== undefined ? { thinkingConfig: { thinkingBudget } } : {}),
       },
     });
     const it = response[Symbol.asyncIterator]();

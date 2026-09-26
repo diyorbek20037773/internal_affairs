@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
 
   const contents = toContents(body.messages);
 
-  const generator = streamChat({ contents, systemInstruction });
+  const generator = streamChat({ contents, systemInstruction, thinkingBudget: 0 });
 
   // Pull the first chunk here so key-pool failover / exhaustion surfaces as a
   // proper HTTP status before we commit to a streaming response.

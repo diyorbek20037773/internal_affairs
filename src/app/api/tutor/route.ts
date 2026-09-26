@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
   if (!topic) return Response.json({ error: "topic_not_found" }, { status: 404 });
 
   const systemInstruction = buildTutorSystemInstruction({ topic, locale: body.locale });
-  const generator = streamChat({ contents: toContents(body), systemInstruction });
+  const generator = streamChat({ contents: toContents(body), systemInstruction, thinkingBudget: 0 });
 
   // Pull the first chunk before committing to a 200 stream so key-pool
   // failover / exhaustion answers with the documented status codes.
