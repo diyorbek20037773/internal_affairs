@@ -77,11 +77,16 @@ function toContents(body: z.infer<typeof BodySchema>): Content[] {
   }
   const contents: Content[] = merged.map((m) => ({ role: m.role, parts: [{ text: m.text }] }));
   if (body.audio) {
-    // Audio only in the user part — the format rule sits in the system instruction.
-    const part = { inlineData: { mimeType: body.audio.mimeType, data: body.audio.data } };
+    // The full format rule sits in the system instruction; a one-line reminder
+    // after the clip is what makes the model actually open with the HEARD line
+    // (live: without it the reply came back with no HEARD line at all).
+    const parts = [
+      { inlineData: { mimeType: body.audio.mimeType, data: body.audio.data } },
+      { text: `(Ovozli javob. Birinchi qatorga «${HEARD_PREFIX} …» — audiodagi so'zlarni aynan yoz, keyin javob ber.)` },
+    ];
     const last = contents[contents.length - 1];
-    if (last.role === "user") last.parts!.push(part);
-    else contents.push({ role: "user", parts: [part] });
+    if (last.role === "user") last.parts!.push(...parts);
+    else contents.push({ role: "user", parts });
   }
   return contents;
 }
