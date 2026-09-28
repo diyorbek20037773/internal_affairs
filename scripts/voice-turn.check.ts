@@ -68,6 +68,10 @@ check("stream ends inside HEARD line (words, no reply)", r.heard === "salom" && 
 r = run([""]);
 check("empty stream → nospeech", r.noSpeech, r);
 
+check(
+  "clean: answer made of lesson words is kept (checked against voice rules only)",
+  cleanTranscript("Deklaratsiyaga tashqi savdo shartnomasi, invoys va transport hujjatlari ilova qilinadi.", INSTR) !== ""
+);
 check("clean: plain text kept", cleanTranscript("Deklaratsiya qabul qilinadi", INSTR) === "Deklaratsiya qabul qilinadi");
 check("clean: marker dropped", cleanTranscript("[NUTQ_YOQ]", INSTR) === "");
 check(

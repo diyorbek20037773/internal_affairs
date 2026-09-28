@@ -43,6 +43,9 @@ const BodySchema = z.object({
 }).refine((b) => !!b.message || !!b.audio, { message: "message or audio required" });
 
 
+/** One-line reminder placed right after the clip. */
+const VOICE_REMINDER = `(Ovozli javob. Birinchi qatorga «${HEARD_PREFIX} …» — audiodagi so'zlarni aynan yoz, keyin javob ber.)`;
+
 function voiceInstruction(locale: string): string {
   const lang = locale === "ru" ? "rus" : locale === "en" ? "ingliz" : "o'zbek (lotin yozuvi)";
   return `
@@ -82,7 +85,7 @@ function toContents(body: z.infer<typeof BodySchema>): Content[] {
     // (live: without it the reply came back with no HEARD line at all).
     const parts = [
       { inlineData: { mimeType: body.audio.mimeType, data: body.audio.data } },
-      { text: `(Ovozli javob. Birinchi qatorga «${HEARD_PREFIX} …» — audiodagi so'zlarni aynan yoz, keyin javob ber.)` },
+      { text: VOICE_REMINDER },
     ];
     const last = contents[contents.length - 1];
     if (last.role === "user") last.parts!.push(...parts);
@@ -136,7 +139,9 @@ export async function POST(req: NextRequest) {
       const splitter = voice
         ? createHeardSplitter(
             { heard: (text) => send("heard", { text }), noSpeech: () => send("nospeech", {}), delta },
-            systemInstruction
+            // Echo check against the voice rules only: the learner's answer
+            // legitimately shares words with the lesson text.
+            voiceInstruction(body.locale) + VOICE_REMINDER
           )
         : null;
       const emit = (chunk: string) => (splitter ? splitter.push(chunk) : delta(chunk));
